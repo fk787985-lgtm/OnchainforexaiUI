@@ -239,6 +239,7 @@ export default function SignUp() {
     setLoading(true)
     
     try {
+      console.log('📤 Sending signup request...')
       const response = await api.post('/api/auth/signup', {
         email: email.toLowerCase(),
         password: formData.password,
@@ -247,11 +248,26 @@ export default function SignUp() {
       }, {
         timeout: 10000
       })
+      console.log('✅ Signup response received:', response.data)
       
       if (response.data.success) {
         window.location.href = '/confirm-email?email=' + encodeURIComponent(email)
       }
     } catch (err) {
+      // Log error for debugging
+      console.error('❌ Signup error:', err)
+      console.error('Error details:', {
+        message: err.message,
+        code: err.code,
+        response: err.response?.data,
+        status: err.response?.status,
+        config: {
+          url: err.config?.url,
+          baseURL: err.config?.baseURL,
+          method: err.config?.method
+        }
+      })
+      
       // Better error handling with specific messages
       if (err.response?.data?.message) {
         const errorMessage = err.response.data.message

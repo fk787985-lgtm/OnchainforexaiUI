@@ -1,6 +1,15 @@
 import axios from 'axios'
 import { API_URL } from './apiUrl.js'
 
+// Log API configuration in development
+if (import.meta.env.DEV) {
+  console.log('🔧 API Configuration:', {
+    baseURL: API_URL || '(empty - using Vite proxy)',
+    mode: import.meta.env.MODE,
+    viteApiUrl: import.meta.env.VITE_API_URL || '(not set)'
+  })
+}
+
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true // Include cookies
