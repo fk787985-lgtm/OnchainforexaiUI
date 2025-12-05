@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../utils/axios'
 import { useTheme } from '../context/ThemeContext'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 import ThemeToggle from '../components/ThemeToggle'
@@ -28,17 +28,20 @@ export default function ConfirmEmail() {
 
   const verifyEmail = async (verificationToken) => {
     try {
-      const response = await axios.post('/api/auth/verify-email', { 
+      console.log('📧 Verifying email with token:', verificationToken.substring(0, 10) + '...')
+      const response = await api.post('/api/auth/verify-email', { 
         token: verificationToken 
       }, {
         timeout: 10000
       })
       
+      console.log('✅ Verification response:', response.data)
       if (response.data.success) {
         setStatus('success')
         setMessage('Your email has been verified successfully!')
       }
     } catch (err) {
+      console.error('❌ Verification error:', err)
       setStatus('error')
       setMessage(err.response?.data?.message || 'Verification failed. The link may have expired.')
     }
@@ -48,16 +51,19 @@ export default function ConfirmEmail() {
     if (!email) return
     
     try {
-      const response = await axios.post('/api/auth/resend-verification', { 
+      console.log('📧 Resending verification email to:', email)
+      const response = await api.post('/api/auth/resend-verification', { 
         email: email.toLowerCase() 
       }, {
         timeout: 10000
       })
       
+      console.log('✅ Resend response:', response.data)
       if (response.data.success) {
         setMessage('Verification email has been resent. Please check your inbox.')
       }
     } catch (err) {
+      console.error('❌ Resend error:', err)
       setMessage(err.response?.data?.message || 'Failed to resend email. Please try again.')
     }
   }
