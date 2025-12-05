@@ -274,7 +274,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                         <div className="flex flex-col items-center space-y-1 sm:space-y-2">
                           {coin.image ? (
                             <img
-                              src={coin.image.startsWith('http') ? coin.image : `http://localhost:5000${coin.image}`}
+                              src={coin.image.startsWith('http') ? coin.image : `https://api.onchainforexai.com${coin.image}`}
                               alt={coin.symbol}
                               className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
                             />
@@ -310,7 +310,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                         <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                           {coin.image ? (
                             <img
-                              src={coin.image.startsWith('http') ? coin.image : `http://localhost:5000${coin.image}`}
+                              src={coin.image.startsWith('http') ? coin.image : `https://api.onchainforexai.com${coin.image}`}
                               alt={coin.symbol}
                               className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex-shrink-0"
                             />
@@ -346,7 +346,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                   <div className="flex items-center space-x-2 sm:space-x-3">
                     {selectedPaymentCoin.image ? (
                       <img
-                        src={selectedPaymentCoin.image.startsWith('http') ? selectedPaymentCoin.image : `http://localhost:5000${selectedPaymentCoin.image}`}
+                        src={selectedPaymentCoin.image.startsWith('http') ? selectedPaymentCoin.image : `https://api.onchainforexai.com${selectedPaymentCoin.image}`}
                         alt={selectedPaymentCoin.symbol}
                         className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0"
                       />
@@ -451,7 +451,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                   <div className="flex items-center space-x-3 mb-2">
                     {selectedPaymentCoin.image ? (
                       <img
-                        src={selectedPaymentCoin.image.startsWith('http') ? selectedPaymentCoin.image : `http://localhost:5000${selectedPaymentCoin.image}`}
+                        src={selectedPaymentCoin.image.startsWith('http') ? selectedPaymentCoin.image : `https://api.onchainforexai.com${selectedPaymentCoin.image}`}
                         alt={selectedPaymentCoin.symbol}
                         className="w-12 h-12 rounded-full"
                       />

@@ -64,7 +64,7 @@ export default function KYCLogList() {
     return <div className="text-center py-10">Loading...</div>
   }
 
-  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+  const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'
 
   return (
     <div className="space-y-4">

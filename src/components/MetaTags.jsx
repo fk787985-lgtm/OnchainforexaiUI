@@ -47,7 +47,7 @@ export default function MetaTags() {
         faviconLink.setAttribute('rel', 'icon')
         document.head.appendChild(faviconLink)
       }
-      faviconLink.setAttribute('href', `http://localhost:5000${favicon}`)
+      faviconLink.setAttribute('href', `https://api.onchainforexai.com${favicon}`)
     }
 
     // Update meta description
@@ -61,9 +61,9 @@ export default function MetaTags() {
     updateOGTag('og:description', seo.ogDescription || seo.metaDescription || `Trade cryptocurrencies and forex on ${siteName}`)
     updateOGTag('og:type', 'website')
     if (seo.ogImage) {
-      updateOGTag('og:image', seo.ogImage.startsWith('http') ? seo.ogImage : `http://localhost:5000${seo.ogImage}`)
+      updateOGTag('og:image', seo.ogImage.startsWith('http') ? seo.ogImage : `https://api.onchainforexai.com${seo.ogImage}`)
     } else if (settings.site?.logo) {
-      updateOGTag('og:image', `http://localhost:5000${settings.site.logo}`)
+      updateOGTag('og:image', `https://api.onchainforexai.com${settings.site.logo}`)
     }
     updateOGTag('og:site_name', siteName)
 
@@ -72,9 +72,9 @@ export default function MetaTags() {
     updateMetaTag('twitter:title', seo.ogTitle || metaTitle)
     updateMetaTag('twitter:description', seo.ogDescription || seo.metaDescription || `Trade cryptocurrencies and forex on ${siteName}`)
     if (seo.ogImage) {
-      updateMetaTag('twitter:image', seo.ogImage.startsWith('http') ? seo.ogImage : `http://localhost:5000${seo.ogImage}`)
+      updateMetaTag('twitter:image', seo.ogImage.startsWith('http') ? seo.ogImage : `https://api.onchainforexai.com${seo.ogImage}`)
     } else if (settings.site?.logo) {
-      updateMetaTag('twitter:image', `http://localhost:5000${settings.site.logo}`)
+      updateMetaTag('twitter:image', `https://api.onchainforexai.com${settings.site.logo}`)
     }
   }, [settings])
 

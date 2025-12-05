@@ -84,7 +84,7 @@ export default function CoinsList() {
       conversionRate: coin.conversionRate || ''
     })
     setImageFile(null)
-    setImagePreview(coin.image ? `http://localhost:5000${coin.image}` : null)
+    setImagePreview(coin.image ? `https://api.onchainforexai.com${coin.image}` : null)
     setShowCreateModal(true)
   }
 
@@ -210,7 +210,7 @@ export default function CoinsList() {
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       {coin.image ? (
                         <img
-                          src={`http://localhost:5000${coin.image}`}
+                          src={`https://api.onchainforexai.com${coin.image}`}
                           alt={coin.symbol}
                           className="w-10 h-10 rounded-full"
                           onError={(e) => {

@@ -178,7 +178,7 @@ export default function SignIn() {
           <Link to="/" className="inline-flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
             {siteSettings.site.logo ? (
               <img
-                src={`http://localhost:5000${siteSettings.site.logo}`}
+                src={`https://api.onchainforexai.com${siteSettings.site.logo}`}
                 alt={siteSettings.site.name}
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain"
               />

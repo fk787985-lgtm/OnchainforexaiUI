@@ -58,7 +58,7 @@ export default function Asset() {
           low24h: coin.low24h || 0,
           volume: coin.volume || 0,
           marketCap: coin.marketCap || 0,
-          image: coin.image ? `http://localhost:5000${coin.image}` : null,
+          image: coin.image ? `https://api.onchainforexai.com${coin.image}` : null,
           rank: coin.rank || index + 1
         }))
         setCryptoAssets(sortedData)

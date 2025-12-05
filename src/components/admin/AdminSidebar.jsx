@@ -158,7 +158,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             <div className="flex items-center space-x-3">
               {siteSettings.site.logo ? (
                 <img
-                  src={`http://localhost:5000${siteSettings.site.logo}`}
+                  src={`https://api.onchainforexai.com${siteSettings.site.logo}`}
                   alt={siteSettings.site.name}
                   className="w-10 h-10 rounded-xl object-contain"
                 />
