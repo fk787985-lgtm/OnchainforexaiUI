@@ -7,12 +7,15 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'https://api.onchainforexai.com',
-        changeOrigin: true
+        target: process.env.VITE_API_URL || 'https://api.onchainforexai.com',
+        changeOrigin: true,
+        secure: true
       }
     }
   }
 })
+
+
 
 
 

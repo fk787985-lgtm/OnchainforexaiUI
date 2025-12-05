@@ -85,10 +85,17 @@ export default function Trade() {
   })
 
   const formatPrice = (price) => {
-    if (!price) return '0.00'
-    if (price < 0.01) return price.toFixed(6)
-    if (price < 1) return price.toFixed(4)
-    return price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    // Convert to number first
+    const numPrice = typeof price === 'string' ? parseFloat(price) : Number(price)
+    
+    // Check if valid number
+    if (!price && price !== 0) return '0.00'
+    if (isNaN(numPrice)) return '0.00'
+    
+    // Format based on value
+    if (numPrice < 0.01) return numPrice.toFixed(6)
+    if (numPrice < 1) return numPrice.toFixed(4)
+    return numPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
   const formatChange = (change) => {
@@ -192,10 +199,11 @@ export default function Trade() {
                 </div>
               ) : (
                 filteredAssets.map((asset, index) => {
-                  const price = asset.price || asset.lastPrice || 0
-                  const change = asset.change24h || asset.change || 0
-                  const high24h = asset.high24h || asset.high || 0
-                  const low24h = asset.low24h || asset.low || 0
+                  // Ensure all values are numbers
+                  const price = parseFloat(asset.price || asset.lastPrice || 0) || 0
+                  const change = parseFloat(asset.change24h || asset.change || 0) || 0
+                  const high24h = parseFloat(asset.high24h || asset.high || 0) || 0
+                  const low24h = parseFloat(asset.low24h || asset.low || 0) || 0
                   const name = selectedType === 'forex' ? asset.pair : asset.name
                   const symbol = selectedType === 'forex' ? asset.pair : asset.symbol
                   const image = asset.image || (selectedType === 'crypto' ? `https://assets.coingecko.com/coins/images/${Math.floor(Math.random() * 1000)}/small/${symbol?.toLowerCase() || 'bitcoin'}.png` : null)
@@ -290,7 +298,7 @@ export default function Trade() {
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
               </svg>
               <span className="text-xs font-medium">{item.name}</span>

@@ -58,7 +58,7 @@ export default function Asset() {
           low24h: coin.low24h || 0,
           volume: coin.volume || 0,
           marketCap: coin.marketCap || 0,
-          image: coin.image ? `https://api.onchainforexai.com${coin.image}` : null,
+          image: coin.image ? (coin.image.startsWith('http') ? coin.image : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${coin.image}`) : null,
           rank: coin.rank || index + 1
         }))
         setCryptoAssets(sortedData)
@@ -341,7 +341,7 @@ export default function Asset() {
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
               </svg>
               <span className="text-xs font-medium">{item.name}</span>

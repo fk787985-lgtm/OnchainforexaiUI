@@ -366,7 +366,7 @@ export default function CustomerService() {
                               {message.attachments.map((attachment, idx) => (
                                 <a
                                   key={idx}
-                                  href={`https://api.onchainforexai.com${attachment.path}`}
+                                  href={`${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${attachment.path}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className={`block text-sm flex items-center space-x-2 p-2 rounded-lg transition ${

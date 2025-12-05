@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useSiteSettings } from '../context/SiteSettingsContext'
@@ -101,21 +101,27 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [expandedNotifications, setExpandedNotifications] = useState(new Set())
+  const userInteractedRef = useRef(false)
+  const audioContextRef = useRef(null)
   const [cryptoLoading, setCryptoLoading] = useState(false)
   const [userBalance, setUserBalance] = useState(0)
   const [showAddFundsModal, setShowAddFundsModal] = useState(false)
+  const [showLanguageModal, setShowLanguageModal] = useState(false)
+  const [userLanguage, setUserLanguage] = useState('en')
   const { theme, toggleTheme } = useTheme()
   const { settings: siteSettings } = useSiteSettings()
   const navigate = useNavigate()
   const location = useLocation()
 
   useEffect(() => {
-    // Fetch user balance
+    // Fetch user balance and language
     const fetchUserBalance = async () => {
       try {
         const response = await api.get('/api/auth/me')
         if (response.data.success) {
           setUserBalance(response.data.user.balance || 0)
+          setUserLanguage(response.data.user.language || 'en')
         }
       } catch (error) {
         console.error('Error fetching user balance:', error)
@@ -238,11 +244,57 @@ export default function Dashboard() {
     }
   }, [navigate])
 
+  // Track user interaction for audio playback
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      userInteractedRef.current = true
+      // Initialize audio context on first interaction
+      if (!audioContextRef.current) {
+        try {
+          audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)()
+        } catch (e) {
+          console.log('Audio context initialization failed:', e)
+        }
+      }
+    }
+    
+    // Listen for any user interaction
+    document.addEventListener('click', handleUserInteraction, { once: true })
+    document.addEventListener('keydown', handleUserInteraction, { once: true })
+    document.addEventListener('touchstart', handleUserInteraction, { once: true })
+    
+    return () => {
+      document.removeEventListener('click', handleUserInteraction)
+      document.removeEventListener('keydown', handleUserInteraction)
+      document.removeEventListener('touchstart', handleUserInteraction)
+    }
+  }, [])
+
   const playNotificationSound = () => {
+    // Only play sound if user has interacted with the page
+    if (!userInteractedRef.current) {
+      console.log('Sound playback skipped: user has not interacted with page yet')
+      return
+    }
+    
     try {
       const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OSfTQ8MUKfj8LZjHAY4kdfyzHksBSR3x/DdkEAKFF606euoVRQKRp/g8r5sIQUrgc7y2Yk2CBtpvfDkn00PDFCn4/C2YxwGOJHX8sx5LAUkd8fw3ZBACg==')
       audio.volume = 0.5
-      audio.play().catch(e => console.log('Sound play failed:', e))
+      
+      // Resume audio context if suspended (required by some browsers)
+      if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume().catch(e => console.log('Audio context resume failed:', e))
+      }
+      
+      const playPromise = audio.play()
+      if (playPromise !== undefined) {
+        playPromise.catch(e => {
+          // Only log if it's not a user interaction error
+          if (e.name !== 'NotAllowedError') {
+            console.log('Sound play failed:', e)
+          }
+        })
+      }
     } catch (error) {
       console.log('Sound notification error:', error)
     }
@@ -273,35 +325,94 @@ export default function Dashboard() {
 
   const markAsRead = async (notificationId) => {
     try {
-      console.log('🔔 Marking notification as read:', notificationId)
-      // Optimistically update the UI first
-      setNotifications(prev => prev.map(n => 
-        n._id === notificationId ? { ...n, read: true } : n
-      ))
-      setUnreadCount(prev => Math.max(0, prev - 1))
+      // Convert to string for comparison
+      const notificationIdStr = String(notificationId).trim()
+      console.log('🔔 [Frontend] Marking notification as read:', notificationIdStr)
       
-      const response = await api.put(`/api/auth/notifications/${notificationId}/read`)
-      if (response.data.success) {
-        console.log('✅ Notification marked as read successfully')
-        // Refresh notifications to ensure sync with server
-        fetchNotifications()
-      } else {
-        // If API call failed, revert the optimistic update
-        fetchNotifications()
+      // Find the notification
+      const notification = notifications.find(n => String(n._id).trim() === notificationIdStr)
+      if (!notification) {
+        console.error('❌ [Frontend] Notification not found in local state:', notificationIdStr)
+        return
+      }
+      
+      // Optimistically update the UI first - mark as read (even if already read, to ensure sync)
+      const wasUnread = !notification.read
+      setNotifications(prev => {
+        const updated = prev.map(n => {
+          const nIdStr = String(n._id).trim()
+          if (nIdStr === notificationIdStr) {
+            console.log('🔔 [Frontend] Optimistically marking as read:', nIdStr)
+            return { ...n, read: true }
+          }
+          return n
+        })
+        return updated
+      })
+      
+      // Update unread count immediately if it was unread
+      if (wasUnread) {
+        setUnreadCount(prev => {
+          const newCount = Math.max(0, prev - 1)
+          console.log('🔔 [Frontend] Unread count updated immediately:', prev, '->', newCount)
+          return newCount
+        })
+      }
+      
+      // Make API call - ALWAYS call API to ensure server sync
+      try {
+        const response = await api.put(`/api/auth/notifications/${encodeURIComponent(notificationIdStr)}/read`)
+        console.log('🔔 [Frontend] API response:', response.data)
+        
+        if (response.data.success) {
+          console.log('✅ [Frontend] Notification marked as read successfully')
+          // Refresh notifications to get updated unread count from server
+          await fetchNotifications()
+        } else {
+          console.error('❌ [Frontend] API returned success: false')
+          await fetchNotifications()
+        }
+      } catch (apiError) {
+        console.error('❌ [Frontend] API call error:', apiError)
+        // Still refresh to sync with server
+        await fetchNotifications()
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error)
-      // Revert optimistic update on error
-      fetchNotifications()
+      console.error('❌ [Frontend] Error marking notification as read:', error)
+      console.error('❌ [Frontend] Error details:', error.response?.data)
+      // Refresh on error to sync with server
+      await fetchNotifications()
     }
   }
 
   const markAllAsRead = async () => {
     try {
-      await api.put('/api/auth/notifications/read-all')
-      fetchNotifications()
+      console.log('🔔 [Frontend] Marking all notifications as read')
+      
+      // Optimistically update the UI first
+      const currentUnreadCount = unreadCount
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+      setUnreadCount(0)
+      console.log('🔔 [Frontend] Optimistically marked all as read. Previous unread count:', currentUnreadCount)
+      
+      const response = await api.put('/api/auth/notifications/read-all')
+      console.log('🔔 [Frontend] Mark all as read API response:', response.data)
+      
+      if (response.data.success) {
+        console.log('✅ [Frontend] All notifications marked as read successfully')
+        // Immediately refresh notifications to ensure sync with server
+        await fetchNotifications()
+      } else {
+        console.error('❌ [Frontend] API returned success: false')
+        // If API call failed, revert the optimistic update
+        await fetchNotifications()
+      }
     } catch (error) {
-      console.error('Error marking all as read:', error)
+      console.error('❌ [Frontend] Error marking all as read:', error)
+      console.error('❌ [Frontend] Error details:', error.response?.data)
+      // Revert optimistic update on error
+      await fetchNotifications()
+      alert('Failed to mark all notifications as read. Please try again.')
     }
   }
 
@@ -362,7 +473,7 @@ export default function Dashboard() {
             <div className="flex items-center space-x-2">
               {siteSettings.site.logo ? (
                 <img
-                  src={`https://api.onchainforexai.com${siteSettings.site.logo}`}
+                  src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${siteSettings.site.logo}`}
                   alt={siteSettings.site.name}
                   className="w-8 h-8 rounded-lg object-contain"
                 />
@@ -419,55 +530,92 @@ export default function Dashboard() {
               
               {/* Notifications Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-hidden flex flex-col">
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                    <h3 className="font-bold text-gray-900 dark:text-white">Notifications</h3>
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-[80vh] overflow-hidden flex flex-col">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+                    <h3 className="font-bold text-gray-900 dark:text-white">Notifications ({notifications.length})</h3>
                     {unreadCount > 0 && (
                       <button
-                        onClick={markAllAsRead}
-                        className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                        onClick={async (e) => {
+                          e.stopPropagation()
+                          await markAllAsRead()
+                        }}
+                        className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
                       >
                         Mark all as read
                       </button>
                     )}
                   </div>
-                  <div className="overflow-y-auto flex-1">
+                  <div className="overflow-y-auto flex-1" style={{ maxHeight: 'calc(80vh - 80px)' }}>
                     {notifications.length > 0 ? (
                       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {notifications.map((notification) => (
-                          <div
-                            key={notification._id}
-                            onClick={() => {
-                              if (!notification.read) markAsRead(notification._id)
-                            }}
-                            className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition ${
-                              !notification.read ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
-                            }`}
-                          >
-                            <div className="flex items-start space-x-3">
-                              <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                                notification.type === 'success' ? 'bg-green-500' :
-                                notification.type === 'warning' ? 'bg-yellow-500' :
-                                notification.type === 'error' ? 'bg-red-500' :
-                                'bg-blue-500'
-                              }`}></div>
-                              <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-sm text-gray-900 dark:text-white mb-1">
-                                  {notification.title}
+                        {notifications.map((notification) => {
+                          const notifId = String(notification._id).trim()
+                          const isExpanded = expandedNotifications.has(notifId)
+                          const messageLength = notification.message?.length || 0
+                          const shouldTruncate = messageLength > 150
+                          const displayMessage = shouldTruncate && !isExpanded 
+                            ? notification.message.substring(0, 150) + '...'
+                            : notification.message
+
+                          return (
+                            <div
+                              key={notification._id}
+                              onClick={async (e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                // ALWAYS mark as read when clicked (even if already read, to ensure sync)
+                                console.log('🔔 [Frontend] Clicked notification, marking as read:', notifId)
+                                await markAsRead(notifId)
+                              }}
+                              className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition ${
+                                !notification.read ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
+                              }`}
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                                  notification.type === 'success' ? 'bg-green-500' :
+                                  notification.type === 'warning' ? 'bg-yellow-500' :
+                                  notification.type === 'error' ? 'bg-red-500' :
+                                  'bg-blue-500'
+                                }`}></div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-semibold text-sm text-gray-900 dark:text-white mb-1">
+                                    {notification.title}
+                                  </div>
+                                  <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap break-words">
+                                    {displayMessage}
+                                  </div>
+                                  {shouldTruncate && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        setExpandedNotifications(prev => {
+                                          const newSet = new Set(prev)
+                                          if (isExpanded) {
+                                            newSet.delete(notifId)
+                                          } else {
+                                            newSet.add(notifId)
+                                          }
+                                          return newSet
+                                        })
+                                      }}
+                                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline mt-1 font-medium"
+                                    >
+                                      {isExpanded ? 'Show less' : 'Show more'}
+                                    </button>
+                                  )}
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                    {new Date(notification.createdAt).toLocaleString()}
+                                  </div>
                                 </div>
-                                <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-                                  {notification.message}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                  {new Date(notification.createdAt).toLocaleString()}
-                                </div>
+                                {!notification.read && (
+                                  <div className="w-2 h-2 bg-indigo-600 rounded-full flex-shrink-0 mt-2"></div>
+                                )}
                               </div>
-                              {!notification.read && (
-                                <div className="w-2 h-2 bg-indigo-600 rounded-full flex-shrink-0 mt-2"></div>
-                              )}
                             </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     ) : (
                       <div className="p-8 text-center text-gray-500 dark:text-gray-400">
@@ -678,7 +826,10 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
 
           {/* Sidebar Footer */}
           <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 space-y-1 sm:space-y-2">
-            <button className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base">
+            <button 
+              onClick={() => setShowLanguageModal(true)}
+              className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base"
+            >
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
               </svg>
@@ -695,6 +846,18 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
               <span>Customer Service</span>
+            </button>
+            <button 
+              onClick={async () => {
+                setSidebarOpen(false)
+                await handleLogout()
+              }}
+              className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base text-red-600 dark:text-red-400"
+            >
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>Logout</span>
             </button>
           </div>
         </div>
@@ -994,9 +1157,17 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           ].map((item, index) => (
             <button
               key={index}
-              onClick={() => item.route && navigate(item.route)}
+              onClick={async () => {
+                if (item.isAction && item.action) {
+                  await item.action()
+                } else if (item.route) {
+                  navigate(item.route)
+                }
+              }}
               className={`flex flex-col items-center space-y-1 px-2 py-1.5 rounded-lg transition flex-1 ${
-                location.pathname === item.route
+                item.isAction
+                  ? 'text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300'
+                  : location.pathname === item.route
                   ? 'text-indigo-600 dark:text-indigo-400'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
@@ -1009,6 +1180,75 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           ))}
         </div>
       </nav>
+
+      {/* Language Selection Modal */}
+      {showLanguageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Select Language</h3>
+              <button
+                onClick={() => setShowLanguageModal(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-2">
+              {[
+                { code: 'en', name: 'English', flag: '🇺🇸' },
+                { code: 'es', name: 'Español', flag: '🇪🇸' },
+                { code: 'fr', name: 'Français', flag: '🇫🇷' },
+                { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+                { code: 'zh', name: '中文', flag: '🇨🇳' },
+                { code: 'ja', name: '日本語', flag: '🇯🇵' },
+                { code: 'ko', name: '한국어', flag: '🇰🇷' },
+                { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+                { code: 'pt', name: 'Português', flag: '🇵🇹' },
+                { code: 'ru', name: 'Русский', flag: '🇷🇺' }
+              ].map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={async () => {
+                    try {
+                      const response = await api.put('/api/auth/language', { language: lang.code })
+                      if (response.data.success) {
+                        setUserLanguage(lang.code)
+                        setShowLanguageModal(false)
+                        // Show success message
+                        const toast = (await import('react-hot-toast')).default
+                        toast.success(`Language changed to ${lang.name}`)
+                      }
+                    } catch (error) {
+                      console.error('Error updating language:', error)
+                      const toast = (await import('react-hot-toast')).default
+                      toast.error('Failed to update language')
+                    }
+                  }}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition flex items-center space-x-3 ${
+                    userLanguage === lang.code
+                      ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white'
+                  }`}
+                >
+                  <span className="text-2xl">{lang.flag}</span>
+                  <span className="font-medium">{lang.name}</span>
+                  {userLanguage === lang.code && (
+                    <svg className="w-5 h-5 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
+              Language preference is saved and will be used for chat and customer service
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Funds Modal */}
       <AddFundsModal

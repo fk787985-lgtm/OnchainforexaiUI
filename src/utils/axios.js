@@ -1,7 +1,8 @@
 import axios from 'axios'
+import { API_URL } from './apiUrl.js'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com',
+  baseURL: API_URL,
   withCredentials: true // Include cookies
 })
 
@@ -32,6 +33,8 @@ api.interceptors.response.use(
 )
 
 export default api
+
+
 
 
 

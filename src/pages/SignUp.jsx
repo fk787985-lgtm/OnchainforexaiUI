@@ -22,6 +22,8 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false)
   const [checkingEmail, setCheckingEmail] = useState(false)
   const [fieldTouched, setFieldTouched] = useState({})
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const navigate = useNavigate()
   const { theme } = useTheme()
   const emailCheckTimeoutRef = useRef(null)
@@ -55,7 +57,19 @@ export default function SignUp() {
       return 'Password is required'
     }
     if (password.length < 8) {
-      return 'Password must be at least 8 characters'
+      return 'Password must be at least 8 characters long'
+    }
+    if (!/[A-Z]/.test(password)) {
+      return 'Password must contain at least one uppercase letter'
+    }
+    if (!/[a-z]/.test(password)) {
+      return 'Password must contain at least one lowercase letter'
+    }
+    if (!/[0-9]/.test(password)) {
+      return 'Password must contain at least one number'
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      return 'Password must contain at least one special character (!@#$%^&*)'
     }
     return ''
   }
@@ -238,7 +252,29 @@ export default function SignUp() {
         window.location.href = '/confirm-email?email=' + encodeURIComponent(email)
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred. Please try again.')
+      // Better error handling with specific messages
+      if (err.response?.data?.message) {
+        const errorMessage = err.response.data.message
+        
+        // Check for specific error types
+        if (errorMessage.includes('email') || errorMessage.includes('Email')) {
+          setError('This email is already registered. Please sign in instead.')
+        } else if (errorMessage.includes('phone') || errorMessage.includes('Phone')) {
+          setError('This phone number is already in use. Please use a different number.')
+        } else if (errorMessage.includes('password') || errorMessage.includes('Password')) {
+          setError('Password does not meet requirements. Please check the password requirements above.')
+        } else if (errorMessage.includes('validation') || errorMessage.includes('Validation')) {
+          setError('Please check all fields and ensure they meet the requirements.')
+        } else {
+          setError(errorMessage)
+        }
+      } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        setError('Request timed out. Please check your internet connection and try again.')
+      } else if (err.message.includes('Network Error')) {
+        setError('Network error. Please check your internet connection and try again.')
+      } else {
+        setError('An error occurred while creating your account. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -361,7 +397,7 @@ export default function SignUp() {
           <Link to="/" className="inline-flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
             {siteSettings.site.logo ? (
               <img
-                src={`https://api.onchainforexai.com${siteSettings.site.logo}`}
+                src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${siteSettings.site.logo}`}
                 alt={siteSettings.site.name}
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain"
               />
@@ -526,21 +562,62 @@ export default function SignUp() {
                   <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                     Password
                   </label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    onBlur={() => handleBlur('password')}
-                    required
-                    className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 dark:bg-gray-700 border rounded-lg text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${
-                      errors.password && fieldTouched.password ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    }`}
-                    placeholder="Create a password (min. 8 characters)"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      onBlur={() => handleBlur('password')}
+                      required
+                      className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-10 bg-gray-50 dark:bg-gray-700 border rounded-lg text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${
+                        errors.password && fieldTouched.password ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                      }`}
+                      placeholder="Create a strong password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.29 3.29m13.42 13.42l-3.29-3.29M3 3l18 18" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   {errors.password && fieldTouched.password && (
                     <p className="mt-1 text-xs text-red-600 dark:text-red-400 animate-fade-in">{errors.password}</p>
+                  )}
+                  {!errors.password && formData.password && fieldTouched.password && (
+                    <div className="mt-1.5 space-y-1">
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Password requirements:</p>
+                      <ul className="text-xs text-gray-500 dark:text-gray-500 space-y-0.5 ml-3">
+                        <li className={formData.password.length >= 8 ? 'text-green-600 dark:text-green-400' : ''}>
+                          {formData.password.length >= 8 ? '✓' : '○'} At least 8 characters
+                        </li>
+                        <li className={/[A-Z]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}>
+                          {/[A-Z]/.test(formData.password) ? '✓' : '○'} One uppercase letter
+                        </li>
+                        <li className={/[a-z]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}>
+                          {/[a-z]/.test(formData.password) ? '✓' : '○'} One lowercase letter
+                        </li>
+                        <li className={/[0-9]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}>
+                          {/[0-9]/.test(formData.password) ? '✓' : '○'} One number
+                        </li>
+                        <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}>
+                          {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? '✓' : '○'} One special character
+                        </li>
+                      </ul>
+                    </div>
                   )}
                 </div>
 
@@ -548,23 +625,42 @@ export default function SignUp() {
                   <label htmlFor="confirmPassword" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                     Confirm Password
                   </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    onBlur={() => handleBlur('confirmPassword')}
-                    required
-                    className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 dark:bg-gray-700 border rounded-lg text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${
-                      errors.confirmPassword && fieldTouched.confirmPassword ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    }`}
-                    placeholder="Confirm your password"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      onBlur={() => handleBlur('confirmPassword')}
+                      required
+                      className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-10 bg-gray-50 dark:bg-gray-700 border rounded-lg text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${
+                        errors.confirmPassword && fieldTouched.confirmPassword ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                      }`}
+                      placeholder="Re-enter your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.29 3.29m13.42 13.42l-3.29-3.29M3 3l18 18" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   {errors.confirmPassword && fieldTouched.confirmPassword && (
                     <p className="mt-1 text-xs text-red-600 dark:text-red-400 animate-fade-in">{errors.confirmPassword}</p>
                   )}
-                  {formData.confirmPassword && formData.password === formData.confirmPassword && (
+                  {formData.confirmPassword && formData.password === formData.confirmPassword && !errors.confirmPassword && (
                     <p className="mt-1 text-xs text-green-600 dark:text-green-400">✓ Passwords match</p>
                   )}
                 </div>
