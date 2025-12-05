@@ -181,7 +181,7 @@ export default function KYCVerify() {
     
     // Allow resubmission only if rejected
     if (existingKYC && existingKYC.status === 'pending' || existingKYC.status === 'under_review') {
-      toast.error('Your KYC verification is already pending review. Please wait for admin approval before submitting again.')
+      toast.error('Your KYC verification is already pending review. Please wait for verification to complete before submitting again.')
       return
     }
     
@@ -330,7 +330,7 @@ export default function KYCVerify() {
                     </>
                   )}
                   {(existingKYC.status === 'pending' || existingKYC.status === 'under_review') && 
-                    'Your KYC verification is currently under review. Please wait for admin approval before submitting new documents.'}
+                    'Your KYC verification is currently under review. Please wait for verification to complete before submitting new documents.'}
                 </p>
               </div>
             </div>
@@ -518,7 +518,7 @@ export default function KYCVerify() {
                     <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200">KYC Verification Pending</h3>
                     <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
                       Your KYC verification is currently {existingKYC.status === 'pending' ? 'pending' : 'under review'}. 
-                      Please wait for admin approval before submitting new documents.
+                      Please wait for verification to complete before submitting new documents.
                     </p>
                   </div>
                 </div>

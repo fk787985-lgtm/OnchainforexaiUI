@@ -943,7 +943,7 @@ export default function Profile() {
               </div>
               {selectedWithdrawal.adminNotes && (
                 <div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Admin Notes</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Transaction Notes</div>
                   <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-2 rounded">{selectedWithdrawal.adminNotes}</div>
                 </div>
               )}

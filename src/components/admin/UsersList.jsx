@@ -259,7 +259,7 @@ export default function UsersList() {
         logToDeposit,
         logToWithdrawal,
         notifyUserEmail,
-        description: addBalance ? 'Admin added balance' : 'Admin subtracted balance'
+        description: addBalance ? 'Deposit' : 'Withdrawal'
       })
       if (response.data.success) {
         alert(addBalance ? 'Balance added successfully' : 'Balance subtracted successfully')

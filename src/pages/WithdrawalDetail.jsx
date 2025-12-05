@@ -262,7 +262,7 @@ export default function WithdrawalDetail() {
             )}
             {withdrawal.adminNotes && (
               <div className="pt-2">
-                <span className="text-gray-600 dark:text-gray-400 block mb-2">Admin Notes</span>
+                <span className="text-gray-600 dark:text-gray-400 block mb-2">Transaction Notes</span>
                 <p className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                   {withdrawal.adminNotes}
                 </p>
