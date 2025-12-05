@@ -12,6 +12,8 @@ export default function ConfirmEmail() {
   const token = searchParams.get('token')
   const [status, setStatus] = useState('loading') // loading, success, error
   const [message, setMessage] = useState('')
+  const [resendCooldown, setResendCooldown] = useState(0) // Countdown timer in seconds
+  const [isResending, setIsResending] = useState(false)
   const { theme } = useTheme()
 
   useEffect(() => {
@@ -25,6 +27,23 @@ export default function ConfirmEmail() {
       setMessage('Invalid confirmation link.')
     }
   }, [token, email])
+
+  // Countdown timer for resend button
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setInterval(() => {
+        setResendCooldown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+
+      return () => clearInterval(timer)
+    }
+  }, [resendCooldown])
 
   const verifyEmail = async (verificationToken) => {
     try {
@@ -48,8 +67,9 @@ export default function ConfirmEmail() {
   }
 
   const resendEmail = async () => {
-    if (!email) return
+    if (!email || resendCooldown > 0 || isResending) return
     
+    setIsResending(true)
     try {
       console.log('📧 Resending verification email to:', email)
       const response = await api.post('/api/auth/resend-verification', { 
@@ -61,11 +81,21 @@ export default function ConfirmEmail() {
       console.log('✅ Resend response:', response.data)
       if (response.data.success) {
         setMessage('Verification email has been resent. Please check your inbox.')
+        // Start 1 minute (60 seconds) cooldown
+        setResendCooldown(60)
       }
     } catch (err) {
       console.error('❌ Resend error:', err)
       setMessage(err.response?.data?.message || 'Failed to resend email. Please try again.')
+    } finally {
+      setIsResending(false)
     }
+  }
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   return (
@@ -137,9 +167,20 @@ export default function ConfirmEmail() {
               {email && (
                 <button
                   onClick={resendEmail}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 sm:py-3 rounded-lg font-bold hover:from-indigo-700 hover:to-purple-700 transition mb-3 sm:mb-4 text-sm sm:text-base shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
+                  disabled={resendCooldown > 0 || isResending}
+                  className={`w-full py-2.5 sm:py-3 rounded-lg font-bold transition mb-3 sm:mb-4 text-sm sm:text-base shadow-lg ${
+                    resendCooldown > 0 || isResending
+                      ? 'bg-gray-400 dark:bg-gray-600 text-white cursor-not-allowed'
+                      : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 transform hover:scale-[1.02] active:scale-[0.98]'
+                  }`}
                 >
-                  Resend Verification Email
+                  {isResending ? (
+                    'Sending...'
+                  ) : resendCooldown > 0 ? (
+                    `Resend in ${formatTime(resendCooldown)}`
+                  ) : (
+                    'Resend Verification Email'
+                  )}
                 </button>
               )}
               <Link
@@ -167,9 +208,20 @@ export default function ConfirmEmail() {
               </p>
               <button
                 onClick={resendEmail}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 sm:py-3 rounded-lg font-bold hover:from-indigo-700 hover:to-purple-700 transition mb-3 sm:mb-4 text-sm sm:text-base shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
+                disabled={resendCooldown > 0 || isResending}
+                className={`w-full py-2.5 sm:py-3 rounded-lg font-bold transition mb-3 sm:mb-4 text-sm sm:text-base shadow-lg ${
+                  resendCooldown > 0 || isResending
+                    ? 'bg-gray-400 dark:bg-gray-600 text-white cursor-not-allowed'
+                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 transform hover:scale-[1.02] active:scale-[0.98]'
+                }`}
               >
-                Resend Verification Email
+                {isResending ? (
+                  'Sending...'
+                ) : resendCooldown > 0 ? (
+                  `Resend in ${formatTime(resendCooldown)}`
+                ) : (
+                  'Resend Verification Email'
+                )}
               </button>
               <Link
                 to="/signin"
