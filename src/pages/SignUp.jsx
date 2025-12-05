@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
-import axios from 'axios'
+import api from '../utils/axios'
 import { useTheme } from '../context/ThemeContext'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 import ThemeToggle from '../components/ThemeToggle'
@@ -133,7 +133,7 @@ export default function SignUp() {
 
       setCheckingEmail(true)
       try {
-        const response = await axios.post('/api/auth/check-email', { 
+        const response = await api.post('/api/auth/check-email', { 
           email: emailValue.toLowerCase() 
         }, {
           timeout: 5000 // 5 second timeout
@@ -185,7 +185,7 @@ export default function SignUp() {
     setCheckingEmail(true)
 
     try {
-      const response = await axios.post('/api/auth/check-email', { 
+      const response = await api.post('/api/auth/check-email', { 
         email: email.toLowerCase() 
       }, {
         timeout: 5000
@@ -239,7 +239,7 @@ export default function SignUp() {
     setLoading(true)
     
     try {
-      const response = await axios.post('/api/auth/signup', {
+      const response = await api.post('/api/auth/signup', {
         email: email.toLowerCase(),
         password: formData.password,
         fullName: formData.fullName.trim(),
