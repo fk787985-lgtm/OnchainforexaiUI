@@ -165,8 +165,8 @@ export default function PrivacyPolicy() {
             </p>
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
               <p className="text-gray-700 dark:text-gray-300">
-                <strong>Email:</strong> support@onchainbittles.online<br />
-                <strong>Support:</strong> support@onchainbittles.online
+                <strong>Email:</strong> {siteSettings.site.contact?.email || 'support@onchainbittles.online'}<br />
+                <strong>Support:</strong> {siteSettings.site.contact?.email || 'support@onchainbittles.online'}
               </p>
             </div>
           </section>

@@ -199,7 +199,7 @@ export default function AdminSignIn() {
                       ? 'border-red-400/50 focus:ring-red-400/50' 
                       : 'border-white/20 dark:border-gray-600/50 focus:bg-white/15'
                   }`}
-                  placeholder="admin@xcrypto.com"
+                  placeholder="admin@peter.com"
                 />
                 {errors.email && fieldTouched.email && (
                   <div className="mt-2 flex items-center space-x-1.5 animate-fade-in">

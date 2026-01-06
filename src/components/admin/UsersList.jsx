@@ -5,6 +5,8 @@ import ToggleSwitch from './ToggleSwitch'
 
 export default function UsersList() {
   const [users, setUsers] = useState([])
+  const [filteredUsers, setFilteredUsers] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState(null)
   const isSubAdmin = currentUser?.role === 'subadmin'
@@ -83,6 +85,7 @@ export default function UsersList() {
       const response = await api.get('/api/admin/users')
       if (response.data.success) {
         setUsers(response.data.users)
+        setFilteredUsers(response.data.users)
       }
     } catch (error) {
       console.error('Error fetching users:', error)
@@ -90,6 +93,28 @@ export default function UsersList() {
       setLoading(false)
     }
   }
+
+  // Filter users based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredUsers(users)
+      return
+    }
+
+    const query = searchQuery.toLowerCase().trim()
+    const filtered = users.filter(user => {
+      const searchFields = [
+        user.fullName?.toLowerCase() || '',
+        user.email?.toLowerCase() || '',
+        user.username?.toLowerCase() || '',
+        user.uniqueId?.toLowerCase() || '',
+        user.payid?.toLowerCase() || '',
+        user._id?.toString().toLowerCase() || ''
+      ]
+      return searchFields.some(field => field.includes(query))
+    })
+    setFilteredUsers(filtered)
+  }, [searchQuery, users])
 
   const handleEdit = async (user) => {
     setSelectedUser(user._id)
@@ -432,15 +457,22 @@ export default function UsersList() {
     }
   }
 
-  const formatDate = (date) => {
-    return new Date(date).toLocaleString()
-  }
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     }).format(amount || 0)
+  }
+
+  const formatDate = (date) => {
+    if (!date) return 'N/A'
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
   if (loading) {
@@ -456,28 +488,51 @@ export default function UsersList() {
     <>
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg sm:text-xl font-bold">All Users</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h2 className="text-lg sm:text-xl font-bold">All Users</h2>
+            {/* Search Input */}
+            <div className="relative w-full sm:w-auto sm:max-w-md">
+              <input
+                type="text"
+                placeholder="Search by name, email, username, ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <svg className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px]">
+          <table className="w-full min-w-[1200px]">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">PayID</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Unique ID</th>
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Email</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Balance</th>
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Name</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Balance</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Date Joined</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Last Login</th>
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Verified</th>
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {users.length > 0 ? (
-                users.map((user) => (
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
                   <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-mono">{user.payid || 'N/A'}</td>
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-mono">{user.uniqueId || user.payid || 'N/A'}</td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm">{user.email}</td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-semibold">{formatCurrency(user.balance || 0)}</td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm">{user.fullName}</td>
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-semibold">{formatCurrency(user.balance || 0)}</td>
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                      {formatDate(user.createdAt || user.accountCreatedAt)}
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                      {formatDate(user.lastLogin?.loginAt)}
+                    </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs rounded-full ${
                         user.isEmailVerified 
@@ -519,8 +574,8 @@ export default function UsersList() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                    No users found
+                  <td colSpan="8" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                    {searchQuery ? 'No users found matching your search' : 'No users found'}
                   </td>
                 </tr>
               )}
@@ -640,13 +695,16 @@ export default function UsersList() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">PayID</label>
+                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Unique ID</label>
                       <input
                         type="text"
-                        value={userDetails.payid || ''}
-                        onChange={(e) => setUserDetails({ ...userDetails, payid: e.target.value })}
+                        value={userDetails.uniqueId || userDetails.payid || ''}
+                        onChange={(e) => setUserDetails({ ...userDetails, uniqueId: e.target.value, payid: e.target.value })}
                         className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition font-mono"
+                        disabled
+                        title="Unique ID cannot be changed"
                       />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Unique identifier for this user</p>
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Phone</label>
@@ -673,7 +731,7 @@ export default function UsersList() {
                     onClick={async () => {
                       try {
                         const response = await api.put(`/api/admin/users/${userDetails._id}`, {
-                          payid: userDetails.payid,
+                          uniqueId: userDetails.uniqueId || userDetails.payid,
                           fullName: userDetails.fullName,
                           phone: userDetails.phone,
                           isEmailVerified: userDetails.isEmailVerified

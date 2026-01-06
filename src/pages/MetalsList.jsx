@@ -11,10 +11,10 @@ export default function MetalsList() {
   useEffect(() => {
     fetchMetals()
     
-    // Auto-refresh every 5 seconds (reduced to avoid rate limiting)
+    // Auto-refresh every 1 second for REAL-TIME updates (like TradingView)
     const interval = setInterval(() => {
       fetchMetals(false)
-    }, 5000)
+    }, 1000) // 1 second - maximum real-time feel
     
     return () => clearInterval(interval)
   }, [])
@@ -23,17 +23,28 @@ export default function MetalsList() {
     if (showLoading) setLoading(true)
     
     try {
+      const startTime = Date.now()
       const data = await getAllMetals()
-      setMetals(data)
+      const fetchTime = Date.now() - startTime
+      
+      // Only update state if we got valid data
+      if (data && data.length > 0) {
+        setMetals(data)
+        const goldPrice = data.find(m => m.symbol === 'XAU')?.price || 'N/A'
+        const silverPrice = data.find(m => m.symbol === 'XAG')?.price || 'N/A'
+        console.log(`✅ [${fetchTime}ms] Metals updated at ${new Date().toLocaleTimeString()}: Gold=$${goldPrice}, Silver=$${silverPrice}`)
+      } else {
+        console.warn('⚠️ No valid metals data received')
+      }
     } catch (error) {
-      console.error('Error fetching metals:', error)
+      console.error('❌ Error fetching metals:', error.message || error)
     } finally {
       if (showLoading) setLoading(false)
     }
   }
 
   const formatPrice = (price) => {
-    if (price === 0 || !price) return '0.00'
+    if (price === null || price === undefined || price === 0) return '0.00'
     if (price < 1) {
       return price.toFixed(4)
     }

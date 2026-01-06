@@ -167,9 +167,9 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-20">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg">
         <div className="px-4 py-4 flex items-center space-x-3">
           <button
             onClick={() => navigate(-1)}
@@ -200,7 +200,7 @@ export default function Profile() {
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold">{user?.fullName || 'N/A'}</h2>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">{user?.fullName || 'N/A'}</h2>
                   <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
                   <p className="text-sm text-gray-500 dark:text-gray-500">ID: {user?.uniqueId || 'N/A'}</p>
                 </div>
@@ -209,11 +209,11 @@ export default function Profile() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
                   <span className="text-gray-600 dark:text-gray-400">Phone</span>
-                  <span className="font-semibold">{user?.phone || 'N/A'}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{user?.phone || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
                   <span className="text-gray-600 dark:text-gray-400">Balance</span>
-                  <span className="font-semibold">{user?.balance?.toFixed(2) || '0.00'} USDT</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{user?.balance?.toFixed(2) || '0.00'} USDT</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
                   <span className="text-gray-600 dark:text-gray-400">Email Verified</span>
@@ -227,7 +227,7 @@ export default function Profile() {
             {/* KYC Status Card */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold">KYC Verification</h3>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">KYC Verification</h3>
                 {kycStatus?.isVerified ? (
                   <span className="px-3 py-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-sm font-medium flex items-center space-x-1">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,7 +401,17 @@ export default function Profile() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex-shrink-0">
+                        <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                          {deposit.status && (
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              deposit.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400' :
+                              deposit.status === 'approved' ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400' :
+                              deposit.status === 'rejected' ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' :
+                              'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                            }`}>
+                              {deposit.status.charAt(0).toUpperCase() + deposit.status.slice(1)}
+                            </span>
+                          )}
                           <span className="inline-block px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-md text-xs font-semibold whitespace-nowrap">
                             {deposit.type === 'admin_add' ? 'Deposit' : deposit.type}
                           </span>
@@ -622,9 +632,9 @@ export default function Profile() {
         )}
 
         {activeSection === 'transfers' && (
-          <div className="space-y-4">
+          <div className="space-y-4 min-h-[calc(100vh-8rem)]">
             {/* Filters */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-200/50 dark:border-gray-700/50 p-5 shadow-lg">
               <div className="flex flex-col gap-3">
                 {/* Search */}
                 <div className="w-full">
@@ -739,8 +749,8 @@ export default function Profile() {
               }
 
               return filteredTransfers.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 px-2">
+                <div className="space-y-4 min-h-[600px]">
+                  <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 px-2 font-medium">
                     Showing {filteredTransfers.length} of {transfers.length} transfers
                   </div>
                   {filteredTransfers.map((transfer) => {
@@ -748,7 +758,7 @@ export default function Profile() {
                     return (
                       <div 
                         key={transfer._id} 
-                        className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-4 sm:p-5 cursor-pointer hover:shadow-md dark:hover:shadow-lg transition-all duration-200 hover:border-indigo-300 dark:hover:border-indigo-700"
+                        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-5 sm:p-6 cursor-pointer hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 hover:border-indigo-300 dark:hover:border-indigo-600 hover:scale-[1.01]"
                         onClick={() => setSelectedTransfer(transfer)}
                       >
                         <div className="flex items-start justify-between gap-3 mb-3">
@@ -783,7 +793,7 @@ export default function Profile() {
                             </span>
                           </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-500 dark:text-gray-500 pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
                           <div className="flex items-center space-x-1">
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -802,13 +812,13 @@ export default function Profile() {
                   })}
                 </div>
               ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-10 sm:p-12">
+                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-200/50 dark:border-gray-700/50 p-16 sm:p-20 shadow-lg min-h-[500px] flex items-center justify-center">
                   <div className="text-center">
-                    <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-gray-400 dark:text-gray-500 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <p className="text-gray-500 dark:text-gray-400 font-medium text-sm sm:text-base">No transfers found</p>
-                    <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500 mt-1">Try adjusting your filters</p>
+                    <p className="text-gray-600 dark:text-gray-300 font-semibold text-base sm:text-lg mb-2">No transfers found</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Try adjusting your filters or search criteria</p>
                   </div>
                 </div>
               )
@@ -873,6 +883,35 @@ export default function Profile() {
                 <div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Balance After</div>
                   <div className="text-sm text-gray-900 dark:text-white">{selectedDeposit.balanceAfter?.toFixed(2) || '0.00'} USDT</div>
+                </div>
+              )}
+              <div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Status</div>
+                <div>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    selectedDeposit.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400' :
+                    selectedDeposit.status === 'approved' ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400' :
+                    selectedDeposit.status === 'rejected' ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' :
+                    'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                  }`}>
+                    {selectedDeposit.status ? (selectedDeposit.status.charAt(0).toUpperCase() + selectedDeposit.status.slice(1)) : 'Completed'}
+                  </span>
+                </div>
+              </div>
+              {selectedDeposit.adminNotes && (
+                <div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Admin Notes</div>
+                  <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-2 rounded">{selectedDeposit.adminNotes}</div>
+                </div>
+              )}
+              {selectedDeposit.screenshot && (
+                <div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Screenshot</div>
+                  <img
+                    src={selectedDeposit.screenshot.startsWith('http') ? selectedDeposit.screenshot : `${window.location.origin}${selectedDeposit.screenshot}`}
+                    alt="Deposit screenshot"
+                    className="w-full max-w-md rounded-lg border border-gray-200 dark:border-gray-700"
+                  />
                 </div>
               )}
               <div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../../utils/axios'
 import toast from 'react-hot-toast'
+import { API_URL } from '../../utils/apiUrl.js'
 
 export default function SiteSettings() {
   const [loading, setLoading] = useState(false)
@@ -459,7 +460,7 @@ export default function SiteSettings() {
           {settings.site.logo && (
             <div className="flex-shrink-0">
               <img
-                src={settings.site.logo.startsWith('http') ? settings.site.logo : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${settings.site.logo}`}
+                src={settings.site.logo.startsWith('http') ? settings.site.logo : `${API_URL}${settings.site.logo}`}
                 alt="Site Logo"
                 className="w-32 h-32 object-contain border border-gray-200 dark:border-gray-700 rounded-lg p-2"
               />
@@ -494,7 +495,7 @@ export default function SiteSettings() {
           {settings.site.favicon && (
             <div className="flex-shrink-0">
               <img
-                src={settings.site.favicon.startsWith('http') ? settings.site.favicon : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${settings.site.favicon}`}
+                src={settings.site.favicon.startsWith('http') ? settings.site.favicon : `${API_URL}${settings.site.favicon}`}
                 alt="Site Favicon"
                 className="w-16 h-16 object-contain border border-gray-200 dark:border-gray-700 rounded-lg p-2"
               />

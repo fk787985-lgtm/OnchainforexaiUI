@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import api from '../utils/axios'
+import toast from 'react-hot-toast'
 import AddFundsModal from '../components/AddFundsModal'
 import WithdrawalModal from '../components/WithdrawalModal'
 import TransferModal from '../components/TransferModal'
+import { API_URL } from '../utils/apiUrl.js'
 
 export default function Asset() {
   const navigate = useNavigate()
@@ -19,26 +21,66 @@ export default function Asset() {
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false)
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [selectedCoinForDeposit, setSelectedCoinForDeposit] = useState(null)
+  const [todayPNL, setTodayPNL] = useState(0)
 
   useEffect(() => {
-    const fetchUserBalance = async () => {
+    const fetchUserData = async () => {
       try {
         const response = await api.get('/api/auth/me')
         if (response.data.success) {
           setUserBalance(response.data.user.balance || 0)
         }
       } catch (error) {
-        console.error('Error fetching user balance:', error)
+        console.error('Error fetching user data:', error)
+      }
+    }
+
+    const fetchTodayPNL = async () => {
+      try {
+        // Get trades from last 24 hours
+        const response = await api.get('/api/trades/history')
+        if (response.data.success && response.data.trades) {
+          const now = new Date()
+          const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          
+          // Filter closed trades from last 24 hours and sum profit
+          const closedTrades24h = response.data.trades.filter(trade => {
+            const tradeDate = trade.closedAt ? new Date(trade.closedAt) : new Date(trade.createdAt)
+            return trade.status === 'closed' && tradeDate >= last24Hours && trade.profit != null
+          })
+          
+          const totalProfit = closedTrades24h.reduce((sum, trade) => {
+            const profit = parseFloat(trade.profit) || 0
+            return sum + profit
+          }, 0)
+          
+          setTodayPNL(totalProfit)
+        }
+      } catch (error) {
+        console.error('Error fetching today PNL:', error)
+        setTodayPNL(0)
+      }
+    }
+
+    const fetchKYCStatus = async () => {
+      try {
+        await api.get('/api/kyc/status')
+      } catch (error) {
+        console.error('Error fetching KYC status:', error)
       }
     }
     
-    fetchUserBalance()
+    fetchUserData()
+    fetchKYCStatus()
     fetchCryptoAssets()
+    fetchTodayPNL()
     
+    // Real-time updates: Fetch every 1 second for live price updates
     const interval = setInterval(() => {
       fetchCryptoAssets()
-      fetchUserBalance()
-    }, 5000)
+      fetchUserData()
+      fetchTodayPNL()
+    }, 1000) // Changed from 5000ms to 1000ms for real-time updates
     
     return () => clearInterval(interval)
   }, [])
@@ -58,7 +100,7 @@ export default function Asset() {
           low24h: coin.low24h || 0,
           volume: coin.volume || 0,
           marketCap: coin.marketCap || 0,
-          image: coin.image ? (coin.image.startsWith('http') ? coin.image : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${coin.image}`) : null,
+          image: coin.image ? (coin.image.startsWith('http') ? coin.image : `${API_URL}${coin.image}`) : null,
           rank: coin.rank || index + 1
         }))
         setCryptoAssets(sortedData)
@@ -89,25 +131,30 @@ export default function Asset() {
   }
 
   const getUserHoldings = () => {
-    return cryptoAssets
-      .slice(0, 20)
-      .map(asset => ({
-        ...asset,
-        balance: Math.random() * 1000,
-        avgPrice: asset.price * (0.95 + Math.random() * 0.1),
-        todayPNL: (Math.random() - 0.5) * 100
-      }))
+    return cryptoAssets.map(asset => ({
+      ...asset,
+      balance: 0, // Set balance to 0
+      avgPrice: asset.price || 0,
+      todayPNL: 0 // Set individual asset PNL to 0
+    }))
   }
 
   const userHoldings = getUserHoldings()
   const totalValueUSDT = userBalance
   const totalValueBTC = userBalance / 50000
-  const todayPNL = userHoldings.reduce((sum, coin) => sum + (coin.todayPNL || 0), 0)
+  // todayPNL is now fetched from actual trades
 
-  const filteredAssets = userHoldings.filter(asset =>
-    asset.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    asset.symbol?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredAssets = userHoldings.filter(asset => {
+    // Filter by search query only
+    if (searchQuery) {
+      const matchesSearch = asset.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        asset.symbol?.toLowerCase().includes(searchQuery.toLowerCase())
+      return matchesSearch
+    }
+    
+    // Show all assets if no search query
+    return true
+  })
 
   const formatMasked = (value) => {
     if (balanceVisible) {
@@ -188,7 +235,40 @@ export default function Asset() {
                 Add Funds
               </button>
               <button 
-                onClick={() => setShowWithdrawalModal(true)}
+                onClick={async () => {
+                  // Check if user is verified and allowed to withdraw
+                  try {
+                    // Fetch latest user data
+                    const userResponse = await api.get('/api/auth/me')
+                    const kycResponse = await api.get('/api/kyc/status')
+                    
+                    if (userResponse.data.success && kycResponse.data.success) {
+                      const user = userResponse.data.user
+                      const kyc = kycResponse.data
+                      
+                      // Check if user is allowed to withdraw
+                      if (!user.allowWithdraw) {
+                        toast.error('Withdrawals are not allowed for your account. Please contact support.')
+                        return
+                      }
+                      
+                      // Check if user account is verified
+                      if (!kyc.isVerified || kyc.kyc?.status !== 'approved') {
+                        toast.error('Your account must be verified before you can withdraw. Please complete KYC verification.', {
+                          duration: 5000
+                        })
+                        navigate('/kyc/verify')
+                        return
+                      }
+                      
+                      // All checks passed, open withdrawal modal
+                      setShowWithdrawalModal(true)
+                    }
+                  } catch (error) {
+                    console.error('Error checking withdrawal eligibility:', error)
+                    toast.error('Unable to verify withdrawal eligibility. Please try again.')
+                  }
+                }}
                 className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-2.5 px-4 rounded-lg text-sm transition"
               >
                 Send
@@ -291,7 +371,7 @@ export default function Asset() {
                   {/* Right: Balance and Actions */}
                   <div className="text-right ml-4">
                     <div className="text-base font-bold text-gray-900 dark:text-white mb-3">
-                      {formatMasked(asset.balance)}
+                      0.00
                     </div>
                     <div className="flex space-x-2">
                       <button className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded transition">

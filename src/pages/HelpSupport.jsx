@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../utils/axios'
 import toast from 'react-hot-toast'
+import { useSiteSettings } from '../context/SiteSettingsContext'
 
 export default function HelpSupport() {
   const navigate = useNavigate()
+  const { settings: siteSettings } = useSiteSettings()
   const [activeTab, setActiveTab] = useState('faq')
   const [contactForm, setContactForm] = useState({
     subject: '',
@@ -116,13 +118,13 @@ export default function HelpSupport() {
         {/* FAQ Tab */}
         {activeTab === 'faq' && (
           <div className="space-y-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-2xl font-bold mb-4">Frequently Asked Questions</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+              <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Frequently Asked Questions</h2>
               <div className="space-y-4">
                 {faqs.map((faq, index) => (
                   <div key={index} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0">
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{faq.question}</h3>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm">{faq.answer}</p>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{faq.answer}</p>
                   </div>
                 ))}
               </div>
@@ -132,15 +134,15 @@ export default function HelpSupport() {
 
         {/* Contact Tab */}
         {activeTab === 'contact' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-2xl font-bold mb-4">Contact Support</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Contact Support</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Have a question or need assistance? You can chat directly with our support team or fill out the form below.
             </p>
             <div className="mb-6">
               <button
                 onClick={() => navigate('/customer-service')}
-                className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold mb-4"
+                className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white rounded-lg font-semibold mb-4 transition shadow-sm hover:shadow-md"
               >
                 Open Live Chat
               </button>
@@ -151,24 +153,24 @@ export default function HelpSupport() {
 
             <form onSubmit={handleContactSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Subject *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Subject *</label>
                 <input
                   type="text"
                   value={contactForm.subject}
                   onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                   placeholder="What can we help you with?"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Email</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Email</label>
                 <input
                   type="email"
                   value={contactForm.email}
                   onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                   placeholder="your@email.com (optional)"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -177,12 +179,12 @@ export default function HelpSupport() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Message *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Message *</label>
                 <textarea
                   value={contactForm.message}
                   onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
                   rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 resize-none"
                   placeholder="Please describe your issue or question in detail..."
                   required
                 />
@@ -191,18 +193,18 @@ export default function HelpSupport() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold disabled:opacity-50"
+                className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white rounded-lg font-semibold disabled:opacity-50 transition shadow-sm hover:shadow-md"
               >
                 {submitting ? 'Sending...' : 'Send Message'}
               </button>
             </form>
 
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <h3 className="font-semibold mb-3">Other Ways to Reach Us</h3>
+              <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Other Ways to Reach Us</h3>
               <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                <p><strong>Email:</strong> support@onchainbittles.online</p>
-                <p><strong>Response Time:</strong> Usually within 24 hours</p>
-                <p><strong>Business Hours:</strong> Monday - Friday, 9 AM - 6 PM (UTC)</p>
+                <p><strong className="text-gray-900 dark:text-white">Email:</strong> {siteSettings.site.contact?.email || 'support@onchainbittles.online'}</p>
+                <p><strong className="text-gray-900 dark:text-white">Response Time:</strong> Usually within 24 hours</p>
+                <p><strong className="text-gray-900 dark:text-white">Business Hours:</strong> Monday - Friday, 9 AM - 6 PM (UTC)</p>
               </div>
             </div>
           </div>

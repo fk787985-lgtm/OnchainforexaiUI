@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import api from '../utils/axios'
 import { useTheme } from '../context/ThemeContext'
+import { API_URL } from '../utils/apiUrl.js'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 import ThemeToggle from '../components/ThemeToggle'
 import PhoneInput, { isValidPhoneNumber } from '../components/PhoneInput'
@@ -56,20 +57,8 @@ export default function SignUp() {
     if (!password) {
       return 'Password is required'
     }
-    if (password.length < 8) {
-      return 'Password must be at least 8 characters long'
-    }
-    if (!/[A-Z]/.test(password)) {
-      return 'Password must contain at least one uppercase letter'
-    }
-    if (!/[a-z]/.test(password)) {
-      return 'Password must contain at least one lowercase letter'
-    }
-    if (!/[0-9]/.test(password)) {
-      return 'Password must contain at least one number'
-    }
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-      return 'Password must contain at least one special character (!@#$%^&*)'
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long'
     }
     return ''
   }
@@ -413,7 +402,7 @@ export default function SignUp() {
           <Link to="/" className="inline-flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
             {siteSettings.site.logo ? (
               <img
-                src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${siteSettings.site.logo}`}
+                src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${API_URL}${siteSettings.site.logo}`}
                 alt={siteSettings.site.name}
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain"
               />
@@ -617,20 +606,8 @@ export default function SignUp() {
                     <div className="mt-1.5 space-y-1">
                       <p className="text-xs text-gray-600 dark:text-gray-400">Password requirements:</p>
                       <ul className="text-xs text-gray-500 dark:text-gray-500 space-y-0.5 ml-3">
-                        <li className={formData.password.length >= 8 ? 'text-green-600 dark:text-green-400' : ''}>
-                          {formData.password.length >= 8 ? '✓' : '○'} At least 8 characters
-                        </li>
-                        <li className={/[A-Z]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}>
-                          {/[A-Z]/.test(formData.password) ? '✓' : '○'} One uppercase letter
-                        </li>
-                        <li className={/[a-z]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}>
-                          {/[a-z]/.test(formData.password) ? '✓' : '○'} One lowercase letter
-                        </li>
-                        <li className={/[0-9]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}>
-                          {/[0-9]/.test(formData.password) ? '✓' : '○'} One number
-                        </li>
-                        <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}>
-                          {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? '✓' : '○'} One special character
+                        <li className={formData.password.length >= 6 ? 'text-green-600 dark:text-green-400' : ''}>
+                          {formData.password.length >= 6 ? '✓' : '○'} At least 6 characters
                         </li>
                       </ul>
                     </div>

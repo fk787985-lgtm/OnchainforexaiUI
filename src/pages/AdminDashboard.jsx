@@ -16,6 +16,7 @@ import ChatManagement from '../components/admin/ChatManagement'
 import SiteSettings from '../components/admin/SiteSettings'
 import NotifyUsers from '../components/admin/NotifyUsers'
 import SubAdminManagement from '../components/admin/SubAdminManagement'
+import ChangePasswordModal from '../components/admin/ChangePasswordModal'
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -23,6 +24,7 @@ export default function AdminDashboard() {
   const [recentLogins, setRecentLogins] = useState([])
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
   const { theme } = useTheme()
   const navigate = useNavigate()
 
@@ -116,6 +118,7 @@ export default function AdminDashboard() {
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         onLogout={handleLogout}
+        onChangePassword={() => setShowChangePassword(true)}
       />
 
       {/* Main Content */}
@@ -150,6 +153,12 @@ export default function AdminDashboard() {
           {activeTab === 'site-settings' && <SiteSettings />}
         </main>
       </div>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+      />
     </div>
   )
 }

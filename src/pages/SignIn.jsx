@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import api from '../utils/axios'
 import { useTheme } from '../context/ThemeContext'
+import { API_URL } from '../utils/apiUrl.js'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 import ThemeToggle from '../components/ThemeToggle'
 import PasswordInput from '../components/PasswordInput'
@@ -178,7 +179,7 @@ export default function SignIn() {
           <Link to="/" className="inline-flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
             {siteSettings.site.logo ? (
               <img
-                src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${siteSettings.site.logo}`}
+                src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${API_URL}${siteSettings.site.logo}`}
                 alt={siteSettings.site.name}
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain"
               />
@@ -360,14 +361,14 @@ export default function SignIn() {
             </button>
           </form>
 
-          <div className="mt-4 text-center">
+          {/* <div className="mt-4 text-center">
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               Admin?{' '}
               <Link to="/admin/signin" className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
                 Admin Sign In
               </Link>
             </p>
-          </div>
+          </div> */}
 
           <p className="mt-5 sm:mt-6 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             Don't have an account?{' '}

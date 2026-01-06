@@ -15,11 +15,49 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
   const [fee, setFee] = useState(0)
   const [totalAmount, setTotalAmount] = useState(0)
 
+  const checkWithdrawalEligibility = async () => {
+    try {
+      // Fetch latest user data and KYC status
+      const [userResponse, kycResponse] = await Promise.all([
+        api.get('/api/auth/me'),
+        api.get('/api/kyc/status')
+      ])
+
+      if (userResponse.data.success && kycResponse.data.success) {
+        const user = userResponse.data.user
+        const kyc = kycResponse.data
+
+        // Check if user is allowed to withdraw
+        if (!user.allowWithdraw) {
+          toast.error('Withdrawals are not allowed for your account. Please contact support.')
+          onClose()
+          return
+        }
+
+        // Check if user account is verified
+        if (!kyc.isVerified || kyc.kyc?.status !== 'approved') {
+          toast.error('Your account must be verified before you can withdraw. Please complete KYC verification.', {
+            duration: 5000
+          })
+          onClose()
+          navigate('/kyc/verify')
+          return
+        }
+      }
+    } catch (error) {
+      console.error('Error checking withdrawal eligibility:', error)
+      toast.error('Unable to verify withdrawal eligibility. Please try again.')
+      onClose()
+    }
+  }
+
   useEffect(() => {
     if (isOpen) {
+      checkWithdrawalEligibility()
       fetchCoins()
       fetchSettings()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
   useEffect(() => {

@@ -8,6 +8,8 @@ import { getForexRates, updateForexRates } from '../services/forexApi'
 import { getGoldPrice } from '../services/metalsApi'
 import api from '../utils/axios'
 import AddFundsModal from '../components/AddFundsModal'
+import TransferModal from '../components/TransferModal'
+import { API_URL } from '../utils/apiUrl.js'
 
 // User Info Card Component
 function UserInfoCard() {
@@ -107,6 +109,7 @@ export default function Dashboard() {
   const [cryptoLoading, setCryptoLoading] = useState(false)
   const [userBalance, setUserBalance] = useState(0)
   const [showAddFundsModal, setShowAddFundsModal] = useState(false)
+  const [showTransferModal, setShowTransferModal] = useState(false)
   const [showLanguageModal, setShowLanguageModal] = useState(false)
   const [userLanguage, setUserLanguage] = useState('en')
   const { theme, toggleTheme } = useTheme()
@@ -473,7 +476,7 @@ export default function Dashboard() {
             <div className="flex items-center space-x-2">
               {siteSettings.site.logo ? (
                 <img
-                  src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${siteSettings.site.logo}`}
+                  src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${API_URL}${siteSettings.site.logo}`}
                   alt={siteSettings.site.name}
                   className="w-8 h-8 rounded-lg object-contain"
                 />
@@ -678,64 +681,76 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 navigate('/profile')
                 setSidebarOpen(false)
               }}
-              className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base"
+              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-gray-600 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              <span>Personal Info</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">Personal Info</span>
             </button>
             <button 
               onClick={() => {
                 navigate('/profile/deposits')
                 setSidebarOpen(false)
               }}
-              className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base"
+              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-green-50 dark:hover:bg-green-900/20 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span>Deposits</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-green-700 dark:group-hover:text-green-300">Deposits</span>
             </button>
             <button 
               onClick={() => {
                 navigate('/profile/withdrawals')
                 setSidebarOpen(false)
               }}
-              className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base"
+              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
               </svg>
-              <span>Withdrawals</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-red-700 dark:group-hover:text-red-300">Withdrawals</span>
             </button>
             <button 
               onClick={() => {
                 navigate('/profile/transfers')
                 setSidebarOpen(false)
               }}
-              className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base"
+              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
-              <span>Transfers</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-purple-700 dark:group-hover:text-purple-300">Transfers</span>
+            </button>
+            <button 
+              onClick={() => {
+                setShowTransferModal(true)
+                setSidebarOpen(false)
+              }}
+              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-900/40 dark:hover:to-purple-900/40 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group border-2 border-indigo-200 dark:border-indigo-800 shadow-sm hover:shadow-md"
+            >
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span className="font-semibold text-indigo-700 dark:text-indigo-300">Internal Transfer</span>
             </button>
             {/* Settings with Submenu */}
             <div>
               <button 
                 onClick={() => setSettingsOpen(!settingsOpen)}
-                className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center justify-between text-sm sm:text-base"
+                className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center justify-between text-sm sm:text-base group"
               >
                 <div className="flex items-center space-x-2 sm:space-x-3">
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-gray-600 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span>Settings</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">Settings</span>
                 </div>
                 <svg 
-                  className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform ${settingsOpen ? 'rotate-180' : ''}`} 
+                  className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''} text-gray-500 dark:text-gray-400`} 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -746,70 +761,78 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
               
               {/* Settings Submenu */}
               {settingsOpen && (
-                <div className="ml-3 sm:ml-4 mt-1 space-y-0.5 sm:space-y-1 border-l-2 border-gray-200 dark:border-gray-700 pl-3 sm:pl-4">
+                <div className="ml-3 sm:ml-4 mt-1.5 space-y-1 border-l-2 border-indigo-200 dark:border-indigo-800 pl-3 sm:pl-4 animate-in slide-in-from-top-2 duration-200">
                   <button 
                     onClick={() => {
                       navigate('/settings/change-password')
                       setSidebarOpen(false)
                     }}
-                    className="w-full text-left px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm"
+                    className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm group"
                   >
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                     </svg>
-                    <span>Change Password</span>
+                    <span className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">Change Password</span>
                   </button>
                   <button 
                     onClick={() => {
                       navigate('/settings/2fa')
                       setSidebarOpen(false)
                     }}
-                    className="w-full text-left px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm"
+                    className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm group"
                   >
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
-                    <span>Enable 2FA</span>
+                    <span className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">Enable 2FA</span>
                   </button>
                   <button 
                     onClick={() => {
                       navigate('/privacy-policy')
                       setSidebarOpen(false)
                     }}
-                    className="w-full text-left px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm"
+                    className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm group"
                   >
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
-                    <span>Privacy Policy</span>
+                    <span className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">Privacy Policy</span>
                   </button>
                   <button 
                     onClick={() => {
                       navigate('/help-support')
                       setSidebarOpen(false)
                     }}
-                    className="w-full text-left px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm"
+                    className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm group"
                   >
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
-                    <span>Help & Support</span>
+                    <span className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">Help & Support</span>
                   </button>
                 </div>
               )}
             </div>
-            <button className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base">
+
+            <button 
+              onClick={() => {
+                navigate('/trade')
+                setSidebarOpen(false)
+              }}
+              className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
+            >
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span className="font-medium">Futures</span>
+            </button>
+
+            {/* <button className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base">
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>Spot Trading</span>
-            </button>
-            <button className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <span>Futures</span>
-            </button>
+            </button>           
             <button className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base">
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -821,43 +844,43 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>Earn</span>
-            </button>
+            </button> */}
           </nav>
 
           {/* Sidebar Footer */}
-          <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 space-y-1 sm:space-y-2">
+          <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 space-y-1.5 sm:space-y-2 bg-gray-50 dark:bg-gray-900/50">
             <button 
               onClick={() => setShowLanguageModal(true)}
-              className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base"
+              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-gray-600 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
               </svg>
-              <span>Language</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">Language</span>
             </button>
             <button 
               onClick={() => {
                 navigate('/customer-service')
                 setSidebarOpen(false)
               }}
-              className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base"
+              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
-              <span>Customer Service</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-700 dark:group-hover:text-blue-300">Customer Service</span>
             </button>
             <button 
               onClick={async () => {
                 setSidebarOpen(false)
                 await handleLogout()
               }}
-              className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base text-red-600 dark:text-red-400"
+              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group border border-red-200 dark:border-red-800"
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              <span>Logout</span>
+              <span className="font-semibold text-red-600 dark:text-red-400">Logout</span>
             </button>
           </div>
         </div>
@@ -1122,7 +1145,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                       <div className="text-xs text-gray-500 dark:text-gray-400">{gold.symbol} • {gold.unit}</div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-sm">${formatPrice(gold.price)}</div>
+                      <div className="font-semibold text-sm">${formatPrice(gold?.price)}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-xs">{formatChange(gold.change24h)}</div>
@@ -1254,6 +1277,25 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       <AddFundsModal
         isOpen={showAddFundsModal}
         onClose={() => setShowAddFundsModal(false)}
+        onSuccess={() => {
+          const fetchUserBalance = async () => {
+            try {
+              const response = await api.get('/api/auth/me')
+              if (response.data.success) {
+                setUserBalance(response.data.user.balance || 0)
+              }
+            } catch (error) {
+              console.error('Error fetching user balance:', error)
+            }
+          }
+          fetchUserBalance()
+        }}
+      />
+
+      {/* Transfer Modal */}
+      <TransferModal
+        isOpen={showTransferModal}
+        onClose={() => setShowTransferModal(false)}
         onSuccess={() => {
           const fetchUserBalance = async () => {
             try {

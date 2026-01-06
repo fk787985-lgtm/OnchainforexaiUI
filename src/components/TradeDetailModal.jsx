@@ -130,8 +130,8 @@ export default function TradeDetailModal({ trade, onClose }) {
 
             <div className="grid grid-cols-3 gap-2">
               <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5 text-center">
-                <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Amount</div>
-                <div className="text-xs font-semibold text-gray-900 dark:text-white">{trade.amount}</div>
+                <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Trade Amount</div>
+                <div className="text-xs font-semibold text-gray-900 dark:text-white">${formatPrice(trade.marginUsed || trade.amount)}</div>
                 <div className="text-[9px] text-gray-400 dark:text-gray-500 mt-0.5">USDT</div>
               </div>
               <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5 text-center">

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../../utils/axios'
+import { API_URL } from '../../utils/apiUrl.js'
 
 export default function CoinsList() {
   const [coins, setCoins] = useState([])
@@ -84,7 +85,7 @@ export default function CoinsList() {
       conversionRate: coin.conversionRate || ''
     })
     setImageFile(null)
-    setImagePreview(coin.image ? (coin.image.startsWith('http') ? coin.image : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${coin.image}`) : null)
+    setImagePreview(coin.image ? (coin.image.startsWith('http') ? coin.image : `${API_URL}${coin.image}`) : null)
     setShowCreateModal(true)
   }
 
@@ -210,7 +211,7 @@ export default function CoinsList() {
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       {coin.image ? (
                         <img
-                          src={coin.image.startsWith('http') ? coin.image : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${coin.image}`}
+                          src={coin.image.startsWith('http') ? coin.image : `${API_URL}${coin.image}`}
                           alt={coin.symbol}
                           className="w-10 h-10 rounded-full"
                           onError={(e) => {

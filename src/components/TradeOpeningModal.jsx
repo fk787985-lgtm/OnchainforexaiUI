@@ -51,7 +51,9 @@ export default function TradeOpeningModal({ trade, onClose }) {
         {/* Header */}
         <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <h3 className="text-teal-600 dark:text-teal-400 font-semibold text-base">BTCUSDT Contract</h3>
+            <h3 className="text-teal-600 dark:text-teal-400 font-semibold text-base">
+              {trade.symbol ? `${trade.symbol} Contract` : 'Trade Contract'}
+            </h3>
           </div>
           <button
             onClick={onClose}

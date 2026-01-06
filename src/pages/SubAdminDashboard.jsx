@@ -5,11 +5,13 @@ import ThemeToggle from '../components/ThemeToggle'
 import api from '../utils/axios'
 import SubAdminSidebar from '../components/admin/SubAdminSidebar'
 import UsersList from '../components/admin/UsersList'
+import ChangePasswordModal from '../components/admin/ChangePasswordModal'
 
 export default function SubAdminDashboard() {
   const [activeTab, setActiveTab] = useState('users')
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
   const { theme } = useTheme()
   const navigate = useNavigate()
 
@@ -84,6 +86,7 @@ export default function SubAdminDashboard() {
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         onLogout={handleLogout}
+        onChangePassword={() => setShowChangePassword(true)}
       />
 
       {/* Main Content */}
@@ -105,6 +108,12 @@ export default function SubAdminDashboard() {
           {activeTab === 'users' && <UsersList />}
         </main>
       </div>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+      />
     </div>
   )
 }

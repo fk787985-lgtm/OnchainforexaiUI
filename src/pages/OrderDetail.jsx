@@ -12,25 +12,72 @@ export default function OrderDetail() {
   
   const [trade, setTrade] = useState(tradeFromState || null)
   const [loading, setLoading] = useState(!tradeFromState)
-
-  useEffect(() => {
-    if (tradeId && !tradeFromState) {
-      fetchTradeDetail()
-    }
-  }, [tradeId])
+  
+  // Poll for trade completion if trade is still pending
+  const pollForTradeCompletion = () => {
+    if (!tradeId) return
+    
+    const maxPolls = 10 // Poll up to 10 times (10 seconds)
+    let pollCount = 0
+    
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await api.get(`/api/trades/${tradeId}`)
+        if (response.data.success) {
+          const fetchedTrade = response.data.trade
+          
+          // Update trade if status changed to closed with result
+          if (fetchedTrade.status === 'closed' && (fetchedTrade.result === 'win' || fetchedTrade.result === 'loss')) {
+            setTrade(fetchedTrade)
+            clearInterval(pollInterval)
+            return
+          }
+          
+          pollCount++
+          if (pollCount >= maxPolls) {
+            clearInterval(pollInterval)
+          }
+        }
+      } catch (error) {
+        console.error('Error polling trade status:', error)
+        clearInterval(pollInterval)
+      }
+    }, 1000) // Poll every 1 second
+    
+    return pollInterval // Return interval for cleanup if needed
+  }
 
   const fetchTradeDetail = async () => {
+    if (!tradeId) return
+    
     try {
+      setLoading(true)
       const response = await api.get(`/api/trades/${tradeId}`)
       if (response.data.success) {
-        setTrade(response.data.trade)
+        const fetchedTrade = response.data.trade
+        setTrade(fetchedTrade)
+        setLoading(false)
+        
+        // If trade is still pending/open, poll for updates until it's completed
+        if (fetchedTrade.status === 'open' || fetchedTrade.result === 'pending') {
+          pollForTradeCompletion()
+        }
+      } else {
+        setLoading(false)
       }
     } catch (error) {
       console.error('Error fetching trade detail:', error)
-    } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (tradeId) {
+      // Always fetch latest trade data to ensure it's up to date (even if passed from state)
+      fetchTradeDetail()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tradeId])
 
   if (loading) {
     return (
@@ -138,8 +185,8 @@ export default function OrderDetail() {
           </div>
 
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600 dark:text-gray-400">Filled / Amount</span>
-            <span className="text-gray-900 dark:text-white font-semibold">{trade.amount} USDT</span>
+            <span className="text-gray-600 dark:text-gray-400">Trade Amount</span>
+            <span className="text-gray-900 dark:text-white font-semibold">${formatPrice(trade.marginUsed || trade.amount)} USDT</span>
           </div>
 
           <div className="flex items-center justify-between text-sm">
@@ -188,8 +235,8 @@ export default function OrderDetail() {
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Amount</span>
-              <span className="text-gray-900 dark:text-white font-semibold">{trade.amount}</span>
+              <span className="text-gray-600 dark:text-gray-400">Trade Amount</span>
+              <span className="text-gray-900 dark:text-white font-semibold">${formatPrice(trade.marginUsed || trade.amount)} USDT</span>
             </div>
 
             {/* Result - Highlighted with Red Glow */}

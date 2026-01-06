@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../../utils/axios'
 import toast from 'react-hot-toast'
+import { API_URL } from '../../utils/apiUrl.js'
 
 export default function KYCLogList() {
   const [kycs, setKycs] = useState([])
@@ -64,7 +65,7 @@ export default function KYCLogList() {
     return <div className="text-center py-10">Loading...</div>
   }
 
-  const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'
+  const apiBaseUrl = API_URL
 
   return (
     <div className="space-y-4">

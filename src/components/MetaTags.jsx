@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useSiteSettings } from '../context/SiteSettingsContext'
+import { API_URL } from '../utils/apiUrl.js'
 
 export default function MetaTags() {
   const { settings } = useSiteSettings()
@@ -47,7 +48,7 @@ export default function MetaTags() {
         faviconLink.setAttribute('rel', 'icon')
         document.head.appendChild(faviconLink)
       }
-      faviconLink.setAttribute('href', favicon.startsWith('http') ? favicon : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${favicon}`)
+      faviconLink.setAttribute('href', favicon.startsWith('http') ? favicon : `${API_URL}${favicon}`)
     }
 
     // Update meta description
@@ -61,9 +62,9 @@ export default function MetaTags() {
     updateOGTag('og:description', seo.ogDescription || seo.metaDescription || `Trade cryptocurrencies and forex on ${siteName}`)
     updateOGTag('og:type', 'website')
     if (seo.ogImage) {
-      updateOGTag('og:image', seo.ogImage.startsWith('http') ? seo.ogImage : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${seo.ogImage}`)
+      updateOGTag('og:image', seo.ogImage.startsWith('http') ? seo.ogImage : `${API_URL}${seo.ogImage}`)
     } else if (settings.site?.logo) {
-      updateOGTag('og:image', settings.site.logo?.startsWith('http') ? settings.site.logo : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${settings.site.logo}`)
+      updateOGTag('og:image', settings.site.logo?.startsWith('http') ? settings.site.logo : `${API_URL}${settings.site.logo}`)
     }
     updateOGTag('og:site_name', siteName)
 
@@ -72,9 +73,9 @@ export default function MetaTags() {
     updateMetaTag('twitter:title', seo.ogTitle || metaTitle)
     updateMetaTag('twitter:description', seo.ogDescription || seo.metaDescription || `Trade cryptocurrencies and forex on ${siteName}`)
     if (seo.ogImage) {
-      updateMetaTag('twitter:image', seo.ogImage.startsWith('http') ? seo.ogImage : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${seo.ogImage}`)
+      updateMetaTag('twitter:image', seo.ogImage.startsWith('http') ? seo.ogImage : `${API_URL}${seo.ogImage}`)
     } else if (settings.site?.logo) {
-      updateMetaTag('twitter:image', settings.site.logo?.startsWith('http') ? settings.site.logo : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${settings.site.logo}`)
+      updateMetaTag('twitter:image', settings.site.logo?.startsWith('http') ? settings.site.logo : `${API_URL}${settings.site.logo}`)
     }
   }, [settings])
 

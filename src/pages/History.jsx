@@ -279,7 +279,7 @@ export default function History() {
               <div className="col-span-1">Side</div>
               <div className="col-span-1">Entry</div>
               <div className="col-span-1">Exit</div>
-              <div className="col-span-1">Amount</div>
+              <div className="col-span-1">Trade Amount</div>
               <div className="col-span-1">Leverage</div>
               <div className="col-span-1">P/L %</div>
               <div className="col-span-1">P/L</div>
@@ -385,8 +385,9 @@ export default function History() {
                       </div>
                       <div className="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
                       <div className="flex-1 text-center">
-                        <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Amount</div>
-                        <div className="font-semibold text-gray-900 dark:text-white text-sm">{trade.amount}</div>
+                        <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Trade Amount</div>
+                        <div className="font-semibold text-gray-900 dark:text-white text-sm">${formatPrice(trade.marginUsed || trade.amount)}</div>
+                        <div className="text-[9px] text-gray-400 dark:text-gray-500 mt-0.5">USDT</div>
                       </div>
                     </div>
 
@@ -490,8 +491,9 @@ export default function History() {
                       </div>
                       <div className="w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
                       <div className="flex-1 text-center">
-                        <div className="text-[9px] text-gray-500 dark:text-gray-400 mb-0.5">Amount</div>
-                        <div className="font-semibold text-gray-900 dark:text-white text-xs">{trade.amount}</div>
+                        <div className="text-[9px] text-gray-500 dark:text-gray-400 mb-0.5">Trade Amount</div>
+                        <div className="font-semibold text-gray-900 dark:text-white text-xs">${formatPrice(trade.marginUsed || trade.amount)}</div>
+                        <div className="text-[8px] text-gray-400 dark:text-gray-500 mt-0.5">USDT</div>
                       </div>
                     </div>
 

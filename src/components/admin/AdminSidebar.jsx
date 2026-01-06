@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import ThemeToggle from '../ThemeToggle'
 import { useSiteSettings } from '../../context/SiteSettingsContext'
 import api from '../../utils/axios'
+import { API_URL } from '../../utils/apiUrl.js'
 
-export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, onLogout }) {
+export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, onLogout, onChangePassword }) {
   const { settings: siteSettings } = useSiteSettings()
   const [currentUser, setCurrentUser] = useState(null)
   const isSubAdmin = currentUser?.role === 'subadmin'
@@ -158,7 +159,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             <div className="flex items-center space-x-3">
               {siteSettings.site.logo ? (
                 <img
-                  src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${import.meta.env.VITE_API_URL || 'https://api.onchainforexai.com'}${siteSettings.site.logo}`}
+                  src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${API_URL}${siteSettings.site.logo}`}
                   alt={siteSettings.site.name}
                   className="w-10 h-10 rounded-xl object-contain"
                 />
@@ -203,8 +204,19 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             </button>
           </nav>
 
-          {/* Logout */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          {/* Change Password & Logout */}
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+            {onChangePassword && (
+              <button
+                onClick={onChangePassword}
+                className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition flex items-center justify-center space-x-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                <span>Change Password</span>
+              </button>
+            )}
             <button
               onClick={onLogout}
               className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition"

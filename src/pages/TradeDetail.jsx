@@ -154,36 +154,71 @@ export default function TradeDetail() {
       if (tradeOpeningModal) {
         const remaining = Math.max(0, Math.floor((new Date(tradeOpeningModal.endTime) - now) / 1000))
         if (remaining <= 0) {
-          // Timer ended - close modal and refresh trades
+          // Timer ended - get trade ID and navigate to order detail
+          const completedTradeId = tradeOpeningModal.tradeId
           setTradeOpeningModal(null)
           setTradeEndTime(null)
           setCountdown(null)
           
-          // Refresh trades to get result
-          setTimeout(async () => {
+          // Wait longer for backend to process trade completion, then navigate to order detail
+          // Try multiple times to ensure trade is completed before navigating
+          const maxRetries = 5
+          let retryCount = 0
+          
+          const checkAndNavigate = async () => {
             try {
-              const [positionsRes, historyRes] = await Promise.all([
-                api.get('/api/trades/positions'),
-                api.get('/api/trades/history')
-              ])
-              if (positionsRes.data.success) {
-                setOpenOrders(positionsRes.data.positions || [])
-              }
+              const historyRes = await api.get('/api/trades/history')
               if (historyRes.data.success) {
                 const trades = historyRes.data.trades || []
-                setTradeHistory(trades)
-                // Show notification for the most recent closed trade
-                if (trades.length > 0) {
-                  const latestTrade = trades[0]
-                  if (latestTrade.status === 'closed') {
-                    // Notification will be shown by the monitoring useEffect
+                
+                // Find the completed trade
+                let completedTrade = null
+                if (completedTradeId) {
+                  completedTrade = trades.find(t => (t._id === completedTradeId || t.id === completedTradeId))
+                }
+                if (!completedTrade && trades.length > 0) {
+                  completedTrade = trades.find(t => t.status === 'closed') || trades[0]
+                }
+                
+                // Check if trade is actually completed (not just found)
+                if (completedTrade && completedTrade.status === 'closed') {
+                  // Trade is completed, navigate to order detail
+                  const tradeIdToNavigate = completedTrade._id || completedTrade.id || completedTradeId
+                  if (tradeIdToNavigate) {
+                    navigate(`/order/${tradeIdToNavigate}`, { state: { trade: completedTrade } })
+                    return true // Successfully navigated
                   }
+                } else if (retryCount < maxRetries) {
+                  // Trade not completed yet, retry after delay
+                  retryCount++
+                  setTimeout(checkAndNavigate, 1000) // Wait 1 second and try again
+                  return false
                 }
               }
+              
+              // If we get here and haven't navigated yet, navigate anyway (will auto-refresh on OrderDetail page)
+              if (completedTradeId) {
+                navigate(`/order/${completedTradeId}`)
+                return true
+              } else {
+                navigate('/history')
+                return true
+              }
             } catch (error) {
-              console.error('Error refreshing trades:', error)
+              console.error('Error checking trade completion:', error)
+              // Navigate to order detail with stored tradeId if available (will auto-refresh)
+              if (completedTradeId) {
+                navigate(`/order/${completedTradeId}`)
+                return true
+              } else {
+                navigate('/history')
+                return true
+              }
             }
-          }, 500)
+          }
+          
+          // Start checking after initial delay
+          setTimeout(checkAndNavigate, 1500) // Wait 1.5 seconds initially
         }
       }
       
@@ -254,14 +289,24 @@ export default function TradeDetail() {
                   border: trade.result === 'win' ? '1px solid #10b981' : '1px solid #ef4444',
                 },
                 onClick: () => {
-                  navigate('/history')
+                  const tradeIdToNavigate = trade._id || trade.id
+                  if (tradeIdToNavigate) {
+                    navigate(`/order/${tradeIdToNavigate}`, { state: { trade } })
+                  } else {
+                    navigate('/history')
+                  }
                 },
               }
             )
             
-            // Navigate to history page after a short delay
+            // Navigate to order detail page after a short delay
+            const tradeIdToNavigate = trade._id || trade.id
             setTimeout(() => {
-              navigate('/history')
+              if (tradeIdToNavigate) {
+                navigate(`/order/${tradeIdToNavigate}`, { state: { trade } })
+              } else {
+                navigate('/history')
+              }
             }, 2000)
           })
         }
@@ -434,13 +479,17 @@ export default function TradeDetail() {
     return () => clearInterval(interval)
   }, [])
 
-  const handleOrder = async () => {
+  const handleOrder = async (tradeSide = null) => {
     if (!amount || parseFloat(amount) <= 0) {
       toast.error('Please enter a valid USDT amount')
       return
     }
 
-    // Convert USDT amount to asset amount
+    // Use the side passed as parameter, or fall back to current state
+    // This ensures the correct side is used even if setState hasn't completed
+    const orderSide = tradeSide !== null && tradeSide !== undefined ? tradeSide : side
+
+    // User enters amount in USDT - send it directly
     let usdtAmount = parseFloat(amount)
     
     // Get trade price - ensure it's a valid number
@@ -469,10 +518,9 @@ export default function TradeDetail() {
     
     // Ensure we don't exceed balance due to rounding - cap at available balance
     usdtAmount = Math.min(usdtAmount, userBalance)
-    const assetAmount = usdtAmount / tradePrice
 
-    if (isNaN(assetAmount) || assetAmount <= 0) {
-      toast.error('Invalid amount calculation')
+    if (usdtAmount <= 0 || isNaN(usdtAmount)) {
+      toast.error('Invalid amount')
       return
     }
 
@@ -481,33 +529,37 @@ export default function TradeDetail() {
       const response = await api.post('/api/trades/place', {
         symbol: displaySymbol,
         type: type || 'crypto',
-        side,
+        side: orderSide, // Use the side passed or current state
         orderType,
         price: tradePrice,
-        amount: assetAmount, // Convert USDT to asset amount
+        amount: usdtAmount, // Send USDT amount directly - backend will use this as margin
         leverage,
         marginMode,
         timer: tradeTimer
       })
 
       if (response.data.success) {
-        const { timer, status, entryPrice, symbol: tradeSymbol, side: tradeSide, amount: tradeAmount, leverage: tradeLeverage } = response.data.trade
+        const { timer, status, entryPrice, symbol: tradeSymbol, side: tradeSide, amount: tradeAmount, marginUsed, leverage: tradeLeverage } = response.data.trade
         
         // Trade is now open, will close when timer ends
+        // amount and marginUsed are the same (USDT amount user traded with)
+        const tradeMarginAmount = marginUsed || tradeAmount
+        
         if (status === 'open') {
           const endTime = new Date(Date.now() + timer * 1000)
           setTradeEndTime(endTime)
           setCountdown(timer)
           
           // Show modern trade opening modal
+          // Use tradeSide from response (most accurate), fallback to orderSide
           setTradeOpeningModal({
             tradeId: response.data.trade.id,
             symbol: tradeSymbol || displaySymbol,
-            side: tradeSide || side,
+            side: tradeSide || orderSide || side,
             timer,
             endTime,
             entryPrice,
-            amount: tradeAmount,
+            amount: tradeMarginAmount, // USDT amount (margin)
             leverage: tradeLeverage
           })
           
@@ -922,9 +974,7 @@ export default function TradeDetail() {
               <button
                 onClick={() => {
                   setSide('buy')
-                  const endTime = new Date(Date.now() + tradeTimer * 1000)
-                  setTradeEndTime(endTime)
-                  handleOrder()
+                  handleOrder('buy') // Pass 'buy' directly to handleOrder
                 }}
                 className="w-full py-2.5 sm:py-3 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded font-semibold text-sm transition active:scale-[0.98]"
               >
@@ -933,9 +983,7 @@ export default function TradeDetail() {
               <button
                 onClick={() => {
                   setSide('sell')
-                  const endTime = new Date(Date.now() + tradeTimer * 1000)
-                  setTradeEndTime(endTime)
-                  handleOrder()
+                  handleOrder('sell') // Pass 'sell' directly to handleOrder
                 }}
                 className="w-full py-2.5 sm:py-3 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded font-semibold text-sm transition active:scale-[0.98]"
               >
@@ -1155,8 +1203,8 @@ export default function TradeDetail() {
                               <div className="font-semibold text-gray-900 dark:text-white text-sm">${formatPrice(order.entryPrice)}</div>
                             </div>
                             <div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Amount</div>
-                              <div className="font-semibold text-gray-900 dark:text-white text-sm">{order.amount} USDT</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Trade Amount</div>
+                              <div className="font-semibold text-gray-900 dark:text-white text-sm">${formatPrice(order.marginUsed || order.amount)} USDT</div>
                             </div>
                             <div>
                               <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Order ID</div>

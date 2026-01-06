@@ -1,7 +1,13 @@
-// API Base URL - Use empty string for local development (to use Vite proxy)
-// Or set VITE_API_URL to your backend URL (e.g., http://localhost:5000)
-// For production, set VITE_API_URL to https://api.onchainforexai.com
-export const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '' : 'https://api.onchainforexai.com')
+/**
+ * API URL Configuration
+ * Uses centralized config from config/appConfig.js
+ * 
+ * To change URLs, update config/appConfig.js or set environment variables
+ */
+import { API_URL as CONFIG_API_URL } from '../config/appConfig.js'
+
+// Export API_URL for backward compatibility
+export const API_URL = CONFIG_API_URL
 
 // Helper function to get full URL for assets/images
 export const getAssetUrl = (path) => {
@@ -11,6 +17,16 @@ export const getAssetUrl = (path) => {
     return path
   }
   // Otherwise, prepend API URL
+  return `${API_URL}${path}`
+}
+
+// Helper function to get image URL (for use in img src attributes)
+// This is a convenience function that can be used directly in JSX
+export const getImageUrl = (path) => {
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path
+  }
   return `${API_URL}${path}`
 }
 
