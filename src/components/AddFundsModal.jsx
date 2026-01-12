@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import api from '../utils/axios'
 import { useTheme } from '../context/ThemeContext'
 import { QRCodeSVG } from 'qrcode.react'
-import { API_URL } from '../utils/apiUrl.js'
+import { getImageUrl } from '../utils/imageUrl.js'
 import toast from 'react-hot-toast'
 
 // Module-level cache for coins (persists across component unmounts)
@@ -414,7 +414,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                         <div className="flex flex-col items-center space-y-1 sm:space-y-2">
                           {coin.image ? (
                             <img
-                              src={coin.image.startsWith('http') ? coin.image : `${API_URL}${coin.image}`}
+                              src={getImageUrl(coin.image)}
                               alt={coin.symbol}
                               className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
                             />
@@ -450,7 +450,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                         <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                           {coin.image ? (
                             <img
-                              src={coin.image.startsWith('http') ? coin.image : `${API_URL}${coin.image}`}
+                              src={getImageUrl(coin.image)}
                               alt={coin.symbol}
                               className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex-shrink-0"
                             />
@@ -487,7 +487,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                     <div className="flex items-center space-x-3">
                       {selectedPaymentCoin.image ? (
                         <img
-                          src={selectedPaymentCoin.image.startsWith('http') ? selectedPaymentCoin.image : `${API_URL}${selectedPaymentCoin.image}`}
+                          src={getImageUrl(selectedPaymentCoin.image)}
                           alt={selectedPaymentCoin.symbol}
                           className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex-shrink-0"
                         />
@@ -702,7 +702,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                   <div className="flex items-center space-x-3 mb-2">
                     {selectedPaymentCoin.image ? (
                       <img
-                        src={selectedPaymentCoin.image.startsWith('http') ? selectedPaymentCoin.image : `${API_URL}${selectedPaymentCoin.image}`}
+                        src={getImageUrl(selectedPaymentCoin.image)}
                         alt={selectedPaymentCoin.symbol}
                         className="w-12 h-12 rounded-full"
                       />

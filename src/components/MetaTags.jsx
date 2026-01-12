@@ -48,7 +48,7 @@ export default function MetaTags() {
         faviconLink.setAttribute('rel', 'icon')
         document.head.appendChild(faviconLink)
       }
-      faviconLink.setAttribute('href', favicon.startsWith('http') ? favicon : `${API_URL}${favicon}`)
+      faviconLink.setAttribute('href', getImageUrl(favicon))
     }
 
     // Update meta description

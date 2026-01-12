@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../../utils/axios'
+import { getImageUrl } from '../../utils/imageUrl.js'
 
 export default function DepositLogList() {
   const [deposits, setDeposits] = useState([])
@@ -268,7 +269,7 @@ export default function DepositLogList() {
                 <div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Screenshot</div>
                   <img
-                    src={selectedDeposit.screenshot.startsWith('http') ? selectedDeposit.screenshot : `${API_URL}${selectedDeposit.screenshot}`}
+                    src={getImageUrl(selectedDeposit.screenshot)}
                     alt="Deposit screenshot"
                     className="w-full max-w-md rounded-lg border border-gray-200 dark:border-gray-700"
                   />

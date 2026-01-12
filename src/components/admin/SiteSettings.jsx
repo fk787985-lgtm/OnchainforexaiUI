@@ -495,7 +495,7 @@ export default function SiteSettings() {
           {settings.site.favicon && (
             <div className="flex-shrink-0">
               <img
-                src={settings.site.favicon.startsWith('http') ? settings.site.favicon : `${API_URL}${settings.site.favicon}`}
+                src={getImageUrl(settings.site.favicon)}
                 alt="Site Favicon"
                 className="w-16 h-16 object-contain border border-gray-200 dark:border-gray-700 rounded-lg p-2"
               />
