@@ -4,15 +4,11 @@ import { useTheme } from '../context/ThemeContext'
 import ThemeToggle from '../components/ThemeToggle'
 import api from '../utils/axios'
 import SubAdminSidebar from '../components/admin/SubAdminSidebar'
-import SubAdminDashboardContent from '../components/admin/SubAdminDashboardContent'
 import UsersList from '../components/admin/UsersList'
-import SubAdminNotifyUsers from '../components/admin/SubAdminNotifyUsers'
 import ChangePasswordModal from '../components/admin/ChangePasswordModal'
 
 export default function SubAdminDashboard() {
-  const [activeTab, setActiveTab] = useState('dashboard')
-  const [stats, setStats] = useState(null)
-  const [recentLogins, setRecentLogins] = useState([])
+  const [activeTab, setActiveTab] = useState('users')
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
@@ -36,7 +32,7 @@ export default function SubAdminDashboard() {
             navigate('/admin/signin')
             return
           }
-          fetchDashboardData()
+          setLoading(false)
         } else {
           // Not a sub-admin, redirect to appropriate dashboard
           if (response.data.success && response.data.user.role === 'admin') {
@@ -53,23 +49,6 @@ export default function SubAdminDashboard() {
     checkUser()
   }, [navigate])
 
-  const fetchDashboardData = async () => {
-    try {
-      const response = await api.get('/api/admin/subadmin/dashboard')
-      if (response.data.success) {
-        setStats(response.data.stats)
-        setRecentLogins(response.data.recentLogins)
-      }
-    } catch (error) {
-      console.error('Error fetching dashboard:', error)
-      if (error.response?.status === 403 || error.response?.status === 401) {
-        navigate('/admin/signin')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleLogout = async () => {
     try {
       await api.post('/api/auth/logout')
@@ -83,9 +62,7 @@ export default function SubAdminDashboard() {
 
   const getTabTitle = () => {
     const titles = {
-      'dashboard': 'Dashboard',
-      'users': 'Assigned Users',
-      'notify': 'Notify Users'
+      'users': 'Assigned Users'
     }
     return titles[activeTab] || 'Sub-Admin'
   }
@@ -128,11 +105,7 @@ export default function SubAdminDashboard() {
 
         {/* Content */}
         <main className="p-4 sm:p-6">
-          {activeTab === 'dashboard' && (
-            <SubAdminDashboardContent stats={stats} recentLogins={recentLogins} />
-          )}
           {activeTab === 'users' && <UsersList />}
-          {activeTab === 'notify' && <SubAdminNotifyUsers />}
         </main>
       </div>
 

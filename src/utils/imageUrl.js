@@ -16,11 +16,8 @@ export const getImageUrl = (path) => {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path
   }
-  // Ensure path starts with /
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  // If API_URL is empty (development with proxy), use path directly
-  // Otherwise, prepend API_URL
-  return API_URL ? `${API_URL}${normalizedPath}` : normalizedPath
+  // Otherwise, prepend API URL
+  return `${API_URL}${path}`
 }
 
 export default getImageUrl

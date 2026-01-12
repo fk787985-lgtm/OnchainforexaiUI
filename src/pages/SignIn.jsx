@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import api from '../utils/axios'
 import { useTheme } from '../context/ThemeContext'
-import { getImageUrl } from '../utils/imageUrl.js'
+import { API_URL } from '../utils/apiUrl.js'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 import ThemeToggle from '../components/ThemeToggle'
 import PasswordInput from '../components/PasswordInput'
@@ -179,7 +179,7 @@ export default function SignIn() {
           <Link to="/" className="inline-flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
             {siteSettings.site.logo ? (
               <img
-                src={getImageUrl(siteSettings.site.logo)}
+                src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${API_URL}${siteSettings.site.logo}`}
                 alt={siteSettings.site.name}
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain"
               />

@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import AddFundsModal from '../components/AddFundsModal'
 import WithdrawalModal from '../components/WithdrawalModal'
 import TransferModal from '../components/TransferModal'
-import { getImageUrl } from '../utils/imageUrl.js'
+import { API_URL } from '../utils/apiUrl.js'
 
 export default function Asset() {
   const navigate = useNavigate()
@@ -100,7 +100,7 @@ export default function Asset() {
           low24h: coin.low24h || 0,
           volume: coin.volume || 0,
           marketCap: coin.marketCap || 0,
-          image: coin.image ? getImageUrl(coin.image) : null,
+          image: coin.image ? (coin.image.startsWith('http') ? coin.image : `${API_URL}${coin.image}`) : null,
           rank: coin.rank || index + 1
         }))
         setCryptoAssets(sortedData)

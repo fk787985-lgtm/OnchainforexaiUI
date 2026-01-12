@@ -6,19 +6,13 @@ if (import.meta.env.DEV) {
   console.log('🔧 API Configuration:', {
     baseURL: API_URL || '(empty - using Vite proxy)',
     mode: import.meta.env.MODE,
-    viteApiUrl: import.meta.env.VITE_API_URL || '(not set)',
-    isDev: import.meta.env.DEV,
-    isProd: import.meta.env.PROD
+    viteApiUrl: import.meta.env.VITE_API_URL || '(not set)'
   })
 }
 
 const api = axios.create({
-  baseURL: API_URL || '', // Empty string uses relative URLs (Vite proxy in dev)
-  withCredentials: true, // Include cookies
-  timeout: 30000, // 30 second timeout
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  baseURL: API_URL,
+  withCredentials: true // Include cookies
 })
 
 // Add token to requests

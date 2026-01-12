@@ -7,9 +7,9 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'https://api.onchainforexai.com',
+        target: process.env.VITE_API_URL || 'http://localhost:5000',
         changeOrigin: true,
-        secure: true, // Set to true for production HTTPS
+        secure: false, // Set to false for development HTTP
         rewrite: (path) => path, // Don't rewrite the path
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {

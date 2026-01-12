@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { useSiteSettings } from '../context/SiteSettingsContext'
-import { getImageUrl } from '../utils/imageUrl.js'
+import { API_URL } from '../utils/apiUrl.js'
 import ThemeToggle from '../components/ThemeToggle'
 
 export default function LandingPage() {
@@ -193,7 +193,7 @@ export default function LandingPage() {
             <div className="flex items-center space-x-2 sm:space-x-3">
               {siteSettings.site.logo ? (
                 <img
-                  src={getImageUrl(siteSettings.site.logo)}
+                  src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${API_URL}${siteSettings.site.logo}`}
                   alt={siteSettings.site.name}
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-contain"
                 />
@@ -512,7 +512,7 @@ export default function LandingPage() {
               <div className="flex items-center space-x-3 mb-4">
                 {siteSettings.site.logo ? (
                   <img
-                    src={getImageUrl(siteSettings.site.logo)}
+                    src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${API_URL}${siteSettings.site.logo}`}
                     alt={siteSettings.site.name}
                     className="w-10 h-10 rounded-xl object-contain"
                   />

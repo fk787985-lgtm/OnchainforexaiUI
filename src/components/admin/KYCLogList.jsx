@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../../utils/axios'
 import toast from 'react-hot-toast'
-import { getImageUrl } from '../../utils/imageUrl.js'
+import { API_URL } from '../../utils/apiUrl.js'
 
 export default function KYCLogList() {
   const [kycs, setKycs] = useState([])
@@ -65,10 +65,7 @@ export default function KYCLogList() {
     return <div className="text-center py-10">Loading...</div>
   }
 
-  const getDocumentUrl = (path) => {
-    if (!path) return ''
-    return getImageUrl(path)
-  }
+  const apiBaseUrl = API_URL
 
   return (
     <div className="space-y-4">
@@ -201,32 +198,32 @@ export default function KYCLogList() {
                 <h4 className="font-semibold mb-2">Documents</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   {selectedKYC.documents?.taskDocument && (
-                    <a href={getDocumentUrl(selectedKYC.documents.taskDocument)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
+                    <a href={`${apiBaseUrl}${selectedKYC.documents.taskDocument}`} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
                       Task Document
                     </a>
                   )}
                   {selectedKYC.documents?.driverLicense && (
-                    <a href={getDocumentUrl(selectedKYC.documents.driverLicense)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
+                    <a href={`${apiBaseUrl}${selectedKYC.documents.driverLicense}`} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
                       Driver License
                     </a>
                   )}
                   {selectedKYC.documents?.liveSelfie && (
-                    <a href={getDocumentUrl(selectedKYC.documents.liveSelfie)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
+                    <a href={`${apiBaseUrl}${selectedKYC.documents.liveSelfie}`} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
                       Live Selfie
                     </a>
                   )}
                   {selectedKYC.documents?.passport && (
-                    <a href={getDocumentUrl(selectedKYC.documents.passport)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
+                    <a href={`${apiBaseUrl}${selectedKYC.documents.passport}`} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
                       Passport
                     </a>
                   )}
                   {selectedKYC.documents?.nationalId && (
-                    <a href={getDocumentUrl(selectedKYC.documents.nationalId)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
+                    <a href={`${apiBaseUrl}${selectedKYC.documents.nationalId}`} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
                       National ID
                     </a>
                   )}
                   {selectedKYC.documents?.proofOfAddress && (
-                    <a href={getDocumentUrl(selectedKYC.documents.proofOfAddress)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
+                    <a href={`${apiBaseUrl}${selectedKYC.documents.proofOfAddress}`} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
                       Proof of Address
                     </a>
                   )}
