@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import api from '../../utils/axios'
 import toast from 'react-hot-toast'
-import { API_URL } from '../../utils/apiUrl.js'
+import { getImageUrl } from '../../utils/imageUrl.js'
 
 export default function ChatManagement() {
   const [tickets, setTickets] = useState([])
@@ -568,7 +568,7 @@ export default function ChatManagement() {
                               {message.attachments.map((attachment, idx) => (
                                 <a
                                   key={idx}
-                                  href={`${API_URL}${attachment.path}`}
+                                  href={getImageUrl(attachment.path)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className={`block text-sm flex items-center space-x-2 p-2 rounded-lg transition ${

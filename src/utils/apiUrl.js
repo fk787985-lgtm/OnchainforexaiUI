@@ -16,17 +16,27 @@ export const getAssetUrl = (path) => {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path
   }
-  // Otherwise, prepend API URL
-  return `${API_URL}${path}`
+  // If path starts with /, use it directly (works with Vite proxy)
+  if (path.startsWith('/')) {
+    return API_URL ? `${API_URL}${path}` : path
+  }
+  // Otherwise, prepend API URL (or use path directly if API_URL is empty for proxy)
+  return API_URL ? `${API_URL}/${path}` : `/${path}`
 }
 
 // Helper function to get image URL (for use in img src attributes)
 // This is a convenience function that can be used directly in JSX
 export const getImageUrl = (path) => {
   if (!path) return ''
+  // If already a full URL, return as is
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path
   }
-  return `${API_URL}${path}`
+  // If path starts with /, use it directly (works with Vite proxy)
+  if (path.startsWith('/')) {
+    return API_URL ? `${API_URL}${path}` : path
+  }
+  // Otherwise, prepend API URL (or use path directly if API_URL is empty for proxy)
+  return API_URL ? `${API_URL}/${path}` : `/${path}`
 }
 

@@ -213,15 +213,29 @@ export default function UsersList() {
       // CRITICAL: Deep clone winTradeSettings to avoid reference issues
       const settingsToSave = JSON.parse(JSON.stringify(winTradeSettings))
       console.log('💾 Frontend: Saving winTradeSettings:', JSON.stringify(settingsToSave, null, 2))
-      const response = await api.put(`/api/admin/users/${userDetails._id}/settings`, {
-        isActive: userDetails.isActive,
-        allowTrade: userDetails.allowTrade,
-        allowWithdraw: userDetails.allowWithdraw,
-        winTrade: userDetails.winTrade,
-        tradeTimer: userDetails.tradeTimer,
-        appNotice: appNotice,
-        winTradeSettings: settingsToSave
-      })
+      
+      // Prepare request body based on user role
+      let requestBody = {}
+      
+      if (isSubAdmin) {
+        // Sub-admins can only update winTradeSettings
+        requestBody = {
+          winTradeSettings: settingsToSave
+        }
+      } else {
+        // Admins can update all settings
+        requestBody = {
+          isActive: userDetails.isActive,
+          allowTrade: userDetails.allowTrade,
+          allowWithdraw: userDetails.allowWithdraw,
+          winTrade: userDetails.winTrade,
+          tradeTimer: userDetails.tradeTimer,
+          appNotice: appNotice,
+          winTradeSettings: settingsToSave
+        }
+      }
+      
+      const response = await api.put(`/api/admin/users/${userDetails._id}/settings`, requestBody)
       if (response.data.success) {
         console.log('✅ Frontend: Settings saved successfully')
         console.log('✅ Frontend: Server returned:', JSON.stringify(response.data.user.winTradeSettings, null, 2))
@@ -505,8 +519,10 @@ export default function UsersList() {
             </div>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px]">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+          <div className="inline-block min-w-full align-middle">
+            <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+              <table className="w-full min-w-[1000px] divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Unique ID</th>
@@ -543,31 +559,35 @@ export default function UsersList() {
                       </span>
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2 flex-wrap gap-1">
+                      <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-1">
                         <button
                           onClick={() => handleViewUser(user._id)}
-                          className="px-2 py-1.5 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                          className="px-2 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition whitespace-nowrap"
                         >
                           View
                         </button>
                         <button
                           onClick={() => handleEdit(user)}
-                          className="px-2 py-1.5 text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
+                          className="px-2 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition whitespace-nowrap"
                         >
                           Edit
                         </button>
-                        <button
-                          onClick={() => handleShowLogs(user._id)}
-                          className="px-2 py-1.5 text-xs sm:text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
-                        >
-                          Logs
-                        </button>
-                        <button
-                          onClick={() => handleLoginAsUser(user._id)}
-                          className="px-2 py-1.5 text-xs sm:text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
-                        >
-                          Login As
-                        </button>
+                        {!isSubAdmin && (
+                          <>
+                            <button
+                              onClick={() => handleShowLogs(user._id)}
+                              className="px-2 py-1.5 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition whitespace-nowrap"
+                            >
+                              Logs
+                            </button>
+                            <button
+                              onClick={() => handleLoginAsUser(user._id)}
+                              className="px-2 py-1.5 text-xs bg-green-600 hover:bg-green-700 text-white rounded-lg transition whitespace-nowrap"
+                            >
+                              Login As
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -581,6 +601,8 @@ export default function UsersList() {
               )}
             </tbody>
           </table>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -643,9 +665,9 @@ export default function UsersList() {
       {/* User Details Full Page - This is a very large component, continuing in next part due to size */}
       {selectedUser && userDetails && (
         <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 overflow-y-auto">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5 sticky top-0 z-10 shadow-lg">
-            <div className="flex justify-between items-center">
-              <div>
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 sm:px-6 py-4 sm:py-5 sticky top-0 z-10 shadow-lg">
+            <div className="flex justify-between items-start sm:items-center">
+              <div className="flex-1 min-w-0">
                 <button
                   onClick={() => {
                     setSelectedUser(null)
@@ -656,17 +678,17 @@ export default function UsersList() {
                   }}
                   className="text-white hover:bg-white/20 p-2 rounded-lg transition mb-2"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <h3 className="text-2xl font-bold text-white">User Management</h3>
-                <p className="text-indigo-100 text-sm mt-1">{userDetails.email}</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-white truncate">User Management</h3>
+                <p className="text-indigo-100 text-xs sm:text-sm mt-1 truncate">{userDetails.email}</p>
               </div>
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto p-6">
+          <div className="max-w-7xl mx-auto p-4 sm:p-6">
             {/* Two Column Layout - Single column for Sub-admin */}
             <div className={`grid grid-cols-1 ${!isSubAdmin ? 'lg:grid-cols-2' : ''} gap-6`}>
               {/* Left Column - Hidden for Sub-Admins */}
@@ -691,7 +713,10 @@ export default function UsersList() {
                         type="text"
                         value={userDetails.fullName || ''}
                         onChange={(e) => setUserDetails({ ...userDetails, fullName: e.target.value })}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                        disabled={isSubAdmin}
+                        className={`w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${
+                          isSubAdmin ? 'opacity-60 cursor-not-allowed' : ''
+                        }`}
                       />
                     </div>
                     <div>
@@ -700,7 +725,7 @@ export default function UsersList() {
                         type="text"
                         value={userDetails.uniqueId || userDetails.payid || ''}
                         onChange={(e) => setUserDetails({ ...userDetails, uniqueId: e.target.value, payid: e.target.value })}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition font-mono"
+                        className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition font-mono opacity-60 cursor-not-allowed"
                         disabled
                         title="Unique ID cannot be changed"
                       />
@@ -712,7 +737,10 @@ export default function UsersList() {
                         type="text"
                         value={userDetails.phone || ''}
                         onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                        disabled={isSubAdmin}
+                        className={`w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${
+                          isSubAdmin ? 'opacity-60 cursor-not-allowed' : ''
+                        }`}
                       />
                     </div>
                     <div>
@@ -727,28 +755,30 @@ export default function UsersList() {
                       />
                     </div>
                   </div>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const response = await api.put(`/api/admin/users/${userDetails._id}`, {
-                          uniqueId: userDetails.uniqueId || userDetails.payid,
-                          fullName: userDetails.fullName,
-                          phone: userDetails.phone,
-                          isEmailVerified: userDetails.isEmailVerified
-                        })
-                        if (response.data.success) {
-                          alert('User info updated successfully')
-                          await fetchUsers()
+                  {!isSubAdmin && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const response = await api.put(`/api/admin/users/${userDetails._id}`, {
+                            uniqueId: userDetails.uniqueId || userDetails.payid,
+                            fullName: userDetails.fullName,
+                            phone: userDetails.phone,
+                            isEmailVerified: userDetails.isEmailVerified
+                          })
+                          if (response.data.success) {
+                            alert('User info updated successfully')
+                            await fetchUsers()
+                          }
+                        } catch (error) {
+                          console.error('Error updating user:', error)
+                          alert('Failed to update user info')
                         }
-                      } catch (error) {
-                        console.error('Error updating user:', error)
-                        alert('Failed to update user info')
-                      }
-                    }}
-                    className="mt-4 w-full px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
-                  >
-                    Save User Info
-                  </button>
+                      }}
+                      className="mt-4 w-full px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
+                    >
+                      Save User Info
+                    </button>
+                  )}
                 </div>
 
                 {/* Settings Card */}
@@ -944,12 +974,14 @@ export default function UsersList() {
                         placeholder="Enter notice message for user"
                       />
                     </div>
-                    <button
-                      onClick={handleUpdateSettings}
-                      className="w-full px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
-                    >
-                      Save Notice
-                    </button>
+                    {!isSubAdmin && (
+                      <button
+                        onClick={handleUpdateSettings}
+                        className="w-full px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
+                      >
+                        Save Notice
+                      </button>
+                    )}
                   </div>
                 </div>
                 )}
@@ -957,6 +989,19 @@ export default function UsersList() {
             </div>
 
             {/* Win Trade Settings Card - Full Width (Visible for both Admin and Sub-admin) */}
+            {isSubAdmin && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">Sub-Admin Access</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">As a sub-admin, you can only edit Win Trade Settings for your assigned users.</p>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 rounded-xl p-6 border border-gray-200 dark:border-gray-700 mt-6">
               <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
                 <svg className="w-5 h-5 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

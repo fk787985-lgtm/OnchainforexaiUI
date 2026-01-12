@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../utils/axios'
 import toast from 'react-hot-toast'
+import { useSiteSettings } from '../context/SiteSettingsContext'
 
 export default function Settings() {
   const navigate = useNavigate()
+  const { settings: siteSettings } = useSiteSettings()
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -118,7 +120,7 @@ export default function Settings() {
           <h2 className="text-lg font-bold mb-4">Support & Information</h2>
           <div className="space-y-3">
             <a
-              href="mailto:support@onchaindextrade.com"
+              href={`mailto:${siteSettings.site.contact?.email || 'support@onchainbittles.online'}`}
               className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition"
             >
               <div className="flex items-center space-x-3">
