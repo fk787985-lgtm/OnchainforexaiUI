@@ -105,7 +105,9 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
   }
 
   const menuItems = [
-    { id: 'users', label: 'Assigned Users', icon: '👥' }
+    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    { id: 'users', label: 'Assigned Users', icon: '👥' },
+    { id: 'notify', label: 'Notify Users', icon: '🔔' }
   ]
 
   const handleTabClick = (tabId) => {
