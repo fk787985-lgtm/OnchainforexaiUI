@@ -9,7 +9,7 @@ import { getGoldPrice } from '../services/metalsApi'
 import api from '../utils/axios'
 import AddFundsModal from '../components/AddFundsModal'
 import TransferModal from '../components/TransferModal'
-import { API_URL } from '../utils/apiUrl.js'
+import { getImageUrl } from '../utils/imageUrl.js'
 
 // User Info Card Component
 function UserInfoCard() {
@@ -476,7 +476,7 @@ export default function Dashboard() {
             <div className="flex items-center space-x-2">
               {siteSettings.site.logo ? (
                 <img
-                  src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${API_URL}${siteSettings.site.logo}`}
+                  src={getImageUrl(siteSettings.site.logo)}
                   alt={siteSettings.site.name}
                   className="w-8 h-8 rounded-lg object-contain"
                 />

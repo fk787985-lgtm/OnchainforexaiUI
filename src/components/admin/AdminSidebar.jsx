@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import ThemeToggle from '../ThemeToggle'
 import { useSiteSettings } from '../../context/SiteSettingsContext'
 import api from '../../utils/axios'
-import { API_URL } from '../../utils/apiUrl.js'
+import { getImageUrl } from '../../utils/imageUrl.js'
 
 export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, onLogout, onChangePassword }) {
   const { settings: siteSettings } = useSiteSettings()
@@ -159,7 +159,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             <div className="flex items-center space-x-3">
               {siteSettings.site.logo ? (
                 <img
-                  src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${API_URL}${siteSettings.site.logo}`}
+                  src={getImageUrl(siteSettings.site.logo)}
                   alt={siteSettings.site.name}
                   className="w-10 h-10 rounded-xl object-contain"
                 />

@@ -213,15 +213,29 @@ export default function UsersList() {
       // CRITICAL: Deep clone winTradeSettings to avoid reference issues
       const settingsToSave = JSON.parse(JSON.stringify(winTradeSettings))
       console.log('💾 Frontend: Saving winTradeSettings:', JSON.stringify(settingsToSave, null, 2))
-      const response = await api.put(`/api/admin/users/${userDetails._id}/settings`, {
-        isActive: userDetails.isActive,
-        allowTrade: userDetails.allowTrade,
-        allowWithdraw: userDetails.allowWithdraw,
-        winTrade: userDetails.winTrade,
-        tradeTimer: userDetails.tradeTimer,
-        appNotice: appNotice,
-        winTradeSettings: settingsToSave
-      })
+      
+      // Prepare request body based on user role
+      let requestBody = {}
+      
+      if (isSubAdmin) {
+        // Sub-admins can only update winTradeSettings
+        requestBody = {
+          winTradeSettings: settingsToSave
+        }
+      } else {
+        // Admins can update all settings
+        requestBody = {
+          isActive: userDetails.isActive,
+          allowTrade: userDetails.allowTrade,
+          allowWithdraw: userDetails.allowWithdraw,
+          winTrade: userDetails.winTrade,
+          tradeTimer: userDetails.tradeTimer,
+          appNotice: appNotice,
+          winTradeSettings: settingsToSave
+        }
+      }
+      
+      const response = await api.put(`/api/admin/users/${userDetails._id}/settings`, requestBody)
       if (response.data.success) {
         console.log('✅ Frontend: Settings saved successfully')
         console.log('✅ Frontend: Server returned:', JSON.stringify(response.data.user.winTradeSettings, null, 2))
@@ -960,12 +974,14 @@ export default function UsersList() {
                         placeholder="Enter notice message for user"
                       />
                     </div>
-                    <button
-                      onClick={handleUpdateSettings}
-                      className="w-full px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
-                    >
-                      Save Notice
-                    </button>
+                    {!isSubAdmin && (
+                      <button
+                        onClick={handleUpdateSettings}
+                        className="w-full px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
+                      >
+                        Save Notice
+                      </button>
+                    )}
                   </div>
                 </div>
                 )}

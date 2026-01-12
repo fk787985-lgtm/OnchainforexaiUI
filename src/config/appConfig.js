@@ -16,9 +16,12 @@
  *    VITE_FRONTEND_URL=https://onchainforexai.com
  */
 
-// Default to production unless explicitly set to development
-// Check both VITE_APP_ENV and MODE, default to production unless explicitly development
-const isProduction = import.meta.env.VITE_APP_ENV !== 'development' && import.meta.env.VITE_APP_ENV !== 'dev' && import.meta.env.MODE !== 'development'
+// Check environment - default to development unless explicitly production
+// Check both VITE_APP_ENV and MODE/DEV flags
+const isDevMode = import.meta.env.DEV === true || import.meta.env.MODE === 'development'
+const isProdEnv = import.meta.env.PROD === true || import.meta.env.VITE_APP_ENV === 'production'
+// Only use production if explicitly set AND not in dev mode
+const isProduction = isProdEnv && !isDevMode
 const isDevelopment = !isProduction
 
 // Production URLs
@@ -30,7 +33,7 @@ const LOCAL_API_URL = '' // Empty string uses Vite proxy in development
 const LOCAL_FRONTEND_URL = 'http://localhost:3000'
 
 // Get API URL
-// Priority: VITE_API_URL env var > production URL (default) > empty string (uses proxy in dev)
+// Priority: VITE_API_URL env var > production URL (if production) > empty string (uses proxy in dev)
 export const API_URL = import.meta.env.VITE_API_URL !== undefined
   ? import.meta.env.VITE_API_URL
   : (isProduction ? PROD_API_URL : LOCAL_API_URL)

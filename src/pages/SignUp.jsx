@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import api from '../utils/axios'
 import { useTheme } from '../context/ThemeContext'
-import { API_URL } from '../utils/apiUrl.js'
+import { getImageUrl } from '../utils/imageUrl.js'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 import ThemeToggle from '../components/ThemeToggle'
 import PhoneInput, { isValidPhoneNumber } from '../components/PhoneInput'
@@ -402,7 +402,7 @@ export default function SignUp() {
           <Link to="/" className="inline-flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
             {siteSettings.site.logo ? (
               <img
-                src={siteSettings.site.logo?.startsWith('http') ? siteSettings.site.logo : `${API_URL}${siteSettings.site.logo}`}
+                src={getImageUrl(siteSettings.site.logo)}
                 alt={siteSettings.site.name}
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain"
               />
