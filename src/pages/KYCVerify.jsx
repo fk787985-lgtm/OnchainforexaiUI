@@ -265,19 +265,19 @@ export default function KYCVerify() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 pb-20">
+    <div className="min-h-screen bg-white dark:bg-gray-900 pb-20 text-gray-900 dark:text-white">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="px-4 py-4 flex items-center space-x-4">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-xl font-bold">KYC Verification</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">KYC Verification</h1>
         </div>
       </header>
 
@@ -357,7 +357,7 @@ export default function KYCVerify() {
                     s
                   )}
                 </div>
-                <div className="mt-2 text-xs text-center">
+                <div className="mt-2 text-xs text-center text-gray-600 dark:text-gray-300">
                   {s === 1 && 'Personal Info'}
                   {s === 2 && 'Address'}
                   {s === 3 && 'Documents'}
@@ -376,52 +376,52 @@ export default function KYCVerify() {
         {step === 1 && (!existingKYC || existingKYC.status !== 'approved') && (
           <form onSubmit={handleStep1} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">First Name *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">First Name *</label>
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Last Name *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Last Name *</label>
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Date of Birth *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Date of Birth *</label>
               <input
                 type="date"
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Nationality *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Nationality *</label>
               <input
                 type="text"
                 value={nationality}
                 onChange={(e) => setNationality(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Phone Number</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Phone Number</label>
               <input
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
             <button
@@ -438,50 +438,50 @@ export default function KYCVerify() {
         {step === 2 && (!existingKYC || existingKYC.status !== 'approved') && (
           <form onSubmit={handleStep2} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Street Address *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Street Address *</label>
               <input
                 type="text"
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">City *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">City *</label>
               <input
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">State/Province</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">State/Province</label>
               <input
                 type="text"
                 value={state}
                 onChange={(e) => setState(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">ZIP/Postal Code</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">ZIP/Postal Code</label>
               <input
                 type="text"
                 value={zipCode}
                 onChange={(e) => setZipCode(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Country *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Country *</label>
               <input
                 type="text"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 required
               />
             </div>
@@ -528,7 +528,7 @@ export default function KYCVerify() {
             {/* Dynamic Documents */}
             {kycSettings.documents && kycSettings.documents.map((doc, index) => (
               <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">
                   {doc.name} {doc.required && '*'}
                 </label>
                 <div className="space-y-2">
@@ -539,7 +539,7 @@ export default function KYCVerify() {
                         type="file"
                         accept="image/*,application/pdf"
                         onChange={(e) => handleDocumentUpload(doc.name, e.target.files[0])}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         disabled={existingKYC && (existingKYC.status === 'pending' || existingKYC.status === 'under_review')}
                         required={doc.required && !doc.usePhoto}
                       />
@@ -586,7 +586,7 @@ export default function KYCVerify() {
             {/* Selfie */}
             {kycSettings.requireSelfie && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <label className="block text-sm font-medium mb-2">Selfie *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Selfie *</label>
                 <button
                   type="button"
                   onClick={() => {
@@ -609,7 +609,7 @@ export default function KYCVerify() {
             {/* Video Verification */}
             {kycSettings.requireVideoVerification && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <label className="block text-sm font-medium mb-2">Video Verification *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Video Verification *</label>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   Record a video following on-screen instructions (head movements, mouth, blink)
                 </p>
@@ -758,7 +758,7 @@ export default function KYCVerify() {
                   </div>
                 )}
                 <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
-                  <h3 className="font-semibold mb-3">What to do next:</h3>
+                  <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">What to do next:</h3>
                   <ul className="text-left space-y-2 text-gray-700 dark:text-gray-300">
                     <li className="flex items-start">
                       <svg className="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

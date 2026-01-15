@@ -70,6 +70,60 @@ export default function KYCLogList() {
     return getImageUrl(path)
   }
 
+  const formatDocumentLabel = (key) => {
+    if (!key) return 'Document'
+    return key
+      .replace(/[_-]+/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+  }
+
+  const getFileType = (path) => {
+    if (!path) return 'file'
+    const extension = path.split('.').pop()?.toLowerCase() || ''
+    if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(extension)) return 'image'
+    if (['mp4', 'webm', 'mov'].includes(extension)) return 'video'
+    if (extension === 'pdf') return 'pdf'
+    return 'file'
+  }
+
+  const getDocumentItems = (kyc) => {
+    if (!kyc) return []
+    const items = []
+    const seen = new Set()
+
+    const addItem = (label, path) => {
+      if (!path) return
+      const url = getDocumentUrl(path)
+      if (!url || seen.has(url)) return
+      seen.add(url)
+      items.push({
+        label,
+        url,
+        type: getFileType(path)
+      })
+    }
+
+    if (kyc.documents && typeof kyc.documents === 'object') {
+      Object.entries(kyc.documents).forEach(([key, value]) => {
+        addItem(formatDocumentLabel(key), value)
+      })
+    }
+
+    if (kyc.legacyDocuments && typeof kyc.legacyDocuments === 'object') {
+      Object.entries(kyc.legacyDocuments).forEach(([key, value]) => {
+        addItem(formatDocumentLabel(key), value)
+      })
+    }
+
+    addItem('Selfie', kyc.selfie)
+    addItem('Verification Video', kyc.verificationVideo)
+
+    return items
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex space-x-2">
@@ -165,7 +219,7 @@ export default function KYCLogList() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold">KYC Details</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">KYC Details</h3>
                 <button
                   onClick={() => setSelectedKYC(null)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
@@ -178,8 +232,8 @@ export default function KYCLogList() {
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <h4 className="font-semibold mb-2">User Information</h4>
-                <div className="space-y-2 text-sm">
+                <h4 className="font-semibold mb-2 text-gray-900 dark:text-white">User Information</h4>
+                <div className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
                   <p><strong>Name:</strong> {selectedKYC.firstName} {selectedKYC.lastName}</p>
                   <p><strong>Email:</strong> {selectedKYC.userId?.email || 'N/A'}</p>
                   <p><strong>DOB:</strong> {selectedKYC.dateOfBirth ? new Date(selectedKYC.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
@@ -189,8 +243,8 @@ export default function KYCLogList() {
               </div>
               {selectedKYC.address && (
                 <div>
-                  <h4 className="font-semibold mb-2">Address</h4>
-                  <div className="text-sm">
+                  <h4 className="font-semibold mb-2 text-gray-900 dark:text-white">Address</h4>
+                  <div className="text-sm text-gray-700 dark:text-gray-200">
                     <p>{selectedKYC.address.street}</p>
                     <p>{selectedKYC.address.city}, {selectedKYC.address.state} {selectedKYC.address.zipCode}</p>
                     <p>{selectedKYC.address.country}</p>
@@ -198,39 +252,47 @@ export default function KYCLogList() {
                 </div>
               )}
               <div>
-                <h4 className="font-semibold mb-2">Documents</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  {selectedKYC.documents?.taskDocument && (
-                    <a href={getDocumentUrl(selectedKYC.documents.taskDocument)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
-                      Task Document
-                    </a>
-                  )}
-                  {selectedKYC.documents?.driverLicense && (
-                    <a href={getDocumentUrl(selectedKYC.documents.driverLicense)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
-                      Driver License
-                    </a>
-                  )}
-                  {selectedKYC.documents?.liveSelfie && (
-                    <a href={getDocumentUrl(selectedKYC.documents.liveSelfie)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
-                      Live Selfie
-                    </a>
-                  )}
-                  {selectedKYC.documents?.passport && (
-                    <a href={getDocumentUrl(selectedKYC.documents.passport)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
-                      Passport
-                    </a>
-                  )}
-                  {selectedKYC.documents?.nationalId && (
-                    <a href={getDocumentUrl(selectedKYC.documents.nationalId)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
-                      National ID
-                    </a>
-                  )}
-                  {selectedKYC.documents?.proofOfAddress && (
-                    <a href={getDocumentUrl(selectedKYC.documents.proofOfAddress)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
-                      Proof of Address
-                    </a>
-                  )}
-                </div>
+                <h4 className="font-semibold mb-2 text-gray-900 dark:text-white">Documents</h4>
+                {getDocumentItems(selectedKYC).length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    {getDocumentItems(selectedKYC).map((doc) => (
+                      <div key={doc.url} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                        <p className="font-medium text-gray-900 dark:text-white mb-2">{doc.label}</p>
+                        {doc.type === 'image' && (
+                          <a href={doc.url} target="_blank" rel="noopener noreferrer" className="block">
+                            <img
+                              src={doc.url}
+                              alt={doc.label}
+                              className="w-full h-36 object-cover rounded-md border border-gray-200 dark:border-gray-700"
+                            />
+                          </a>
+                        )}
+                        {doc.type === 'video' && (
+                          <video
+                            src={doc.url}
+                            controls
+                            className="w-full h-36 object-cover rounded-md border border-gray-200 dark:border-gray-700"
+                          />
+                        )}
+                        {(doc.type === 'pdf' || doc.type === 'file') && (
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                          >
+                            <span className="truncate">View file</span>
+                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No documents uploaded.</p>
+                )}
               </div>
               {selectedKYC.rejectionReason && (
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
