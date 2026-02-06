@@ -14,6 +14,7 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
   const [settings, setSettings] = useState(null)
   const [fee, setFee] = useState(0)
   const [totalAmount, setTotalAmount] = useState(0)
+  const [amountError, setAmountError] = useState('')
 
   const checkWithdrawalEligibility = async () => {
     try {
@@ -63,8 +64,40 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     if (amount && selectedCoin && settings) {
       calculateFee()
+      validateAmount()
+    } else {
+      setAmountError('')
     }
   }, [amount, selectedCoin, settings])
+
+  const validateAmount = () => {
+    if (!amount || !selectedCoin) {
+      setAmountError('')
+      return
+    }
+
+    const withdrawalAmount = parseFloat(amount)
+    if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) {
+      setAmountError('Amount must be greater than 0')
+      return
+    }
+
+    // Use coin-specific limits if available, otherwise fall back to platform settings
+    const minAmount = selectedCoin.minWithdraw || settings?.withdrawal?.minAmount || 0
+    const maxAmount = selectedCoin.maxWithdraw || settings?.withdrawal?.maxAmount || 10000
+
+    if (withdrawalAmount < minAmount) {
+      setAmountError(`Minimum withdrawal amount is ${minAmount} USDT`)
+      return
+    }
+
+    if (withdrawalAmount > maxAmount) {
+      setAmountError(`Maximum withdrawal amount is ${maxAmount} USDT`)
+      return
+    }
+
+    setAmountError('')
+  }
 
   const fetchCoins = async () => {
     try {
@@ -129,15 +162,17 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
       return
     }
 
-    const withdrawalSettings = settings.withdrawal
+    // Use coin-specific limits if available, otherwise fall back to platform settings
+    const minAmount = selectedCoin.minWithdraw || settings.withdrawal.minAmount || 0
+    const maxAmount = selectedCoin.maxWithdraw || settings.withdrawal.maxAmount || 10000
 
-    if (withdrawalAmount < withdrawalSettings.minAmount) {
-      toast.error(`Minimum withdrawal amount is ${withdrawalSettings.minAmount} USDT`)
+    if (withdrawalAmount < minAmount) {
+      toast.error(`Minimum withdrawal amount is ${minAmount} USDT`)
       return
     }
 
-    if (withdrawalAmount > withdrawalSettings.maxAmount) {
-      toast.error(`Maximum withdrawal amount is ${withdrawalSettings.maxAmount} USDT`)
+    if (withdrawalAmount > maxAmount) {
+      toast.error(`Maximum withdrawal amount is ${maxAmount} USDT`)
       return
     }
 
@@ -173,6 +208,7 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
     setNetwork('onchain')
     setFee(0)
     setTotalAmount(0)
+    setAmountError('')
     onClose()
   }
 
@@ -230,15 +266,29 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
             <input
               type="number"
               step="0.01"
-              min={settings?.withdrawal?.minAmount || 0}
-              max={settings?.withdrawal?.maxAmount || 10000}
+              min={selectedCoin?.minWithdraw || settings?.withdrawal?.minAmount || 0}
+              max={selectedCoin?.maxWithdraw || settings?.withdrawal?.maxAmount || 10000}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition text-gray-900 dark:text-white text-lg font-semibold"
+              className={`w-full px-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 transition text-gray-900 dark:text-white text-lg font-semibold ${
+                amountError
+                  ? 'border-red-500 dark:border-red-500 focus:ring-red-500 focus:border-red-500'
+                  : 'border-gray-200 dark:border-gray-600 focus:ring-red-500 focus:border-red-500'
+              }`}
               placeholder="0.00"
               required
             />
-            {settings && (
+            {amountError && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-2 font-medium">
+                {amountError}
+              </p>
+            )}
+            {!amountError && selectedCoin && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Min: {selectedCoin.minWithdraw || settings?.withdrawal?.minAmount || 0} USDT | Max: {selectedCoin.maxWithdraw || settings?.withdrawal?.maxAmount || 10000} USDT
+              </p>
+            )}
+            {!amountError && !selectedCoin && settings && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 Min: {settings.withdrawal.minAmount} USDT | Max: {settings.withdrawal.maxAmount} USDT
               </p>

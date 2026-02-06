@@ -265,7 +265,41 @@ export default function KYCVerify() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 pb-20 text-gray-900 dark:text-white">
+    <>
+      <style>{`
+        /* Date input styling for dark mode */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+          filter: invert(1);
+        }
+        input[type="date"]::-webkit-datetime-edit-text,
+        input[type="date"]::-webkit-datetime-edit-month-field,
+        input[type="date"]::-webkit-datetime-edit-day-field,
+        input[type="date"]::-webkit-datetime-edit-year-field {
+          color: white;
+        }
+        input[type="date"]::-webkit-datetime-edit-text:focus,
+        input[type="date"]::-webkit-datetime-edit-month-field:focus,
+        input[type="date"]::-webkit-datetime-edit-day-field:focus,
+        input[type="date"]::-webkit-datetime-edit-year-field:focus {
+          background-color: rgba(255, 255, 255, 0.1);
+          color: white;
+        }
+        @media (prefers-color-scheme: dark) {
+          input[type="date"]::-webkit-datetime-edit-text,
+          input[type="date"]::-webkit-datetime-edit-month-field,
+          input[type="date"]::-webkit-datetime-edit-day-field,
+          input[type="date"]::-webkit-datetime-edit-year-field {
+            color: white;
+          }
+        }
+        .dark input[type="date"]::-webkit-datetime-edit-text,
+        .dark input[type="date"]::-webkit-datetime-edit-month-field,
+        .dark input[type="date"]::-webkit-datetime-edit-day-field,
+        .dark input[type="date"]::-webkit-datetime-edit-year-field {
+          color: white;
+        }
+      `}</style>
+      <div className="min-h-screen bg-white dark:bg-gray-900 pb-20 text-gray-900 dark:text-white">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="px-4 py-4 flex items-center space-x-4">
@@ -376,27 +410,27 @@ export default function KYCVerify() {
         {step === 1 && (!existingKYC || existingKYC.status !== 'approved') && (
           <form onSubmit={handleStep1} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">First Name *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">First Name *</label>
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Last Name *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">Last Name *</label>
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Date of Birth *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">Date of Birth *</label>
               <input
                 type="date"
                 value={dateOfBirth}
@@ -406,22 +440,22 @@ export default function KYCVerify() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Nationality *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">Nationality *</label>
               <input
                 type="text"
                 value={nationality}
                 onChange={(e) => setNationality(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Phone Number</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">Phone Number</label>
               <input
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
               />
             </div>
             <button
@@ -438,50 +472,50 @@ export default function KYCVerify() {
         {step === 2 && (!existingKYC || existingKYC.status !== 'approved') && (
           <form onSubmit={handleStep2} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Street Address *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">Street Address *</label>
               <input
                 type="text"
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">City *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">City *</label>
               <input
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">State/Province</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">State/Province</label>
               <input
                 type="text"
                 value={state}
                 onChange={(e) => setState(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">ZIP/Postal Code</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">ZIP/Postal Code</label>
               <input
                 type="text"
                 value={zipCode}
                 onChange={(e) => setZipCode(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Country *</label>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">Country *</label>
               <input
                 type="text"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300"
                 required
               />
             </div>
@@ -528,7 +562,7 @@ export default function KYCVerify() {
             {/* Dynamic Documents */}
             {kycSettings.documents && kycSettings.documents.map((doc, index) => (
               <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">
                   {doc.name} {doc.required && '*'}
                 </label>
                 <div className="space-y-2">
@@ -555,7 +589,7 @@ export default function KYCVerify() {
                   {doc.usePhoto && (
                     <div>
                       {doc.allowUpload && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">OR</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-300 mb-2">OR</div>
                       )}
                       <button
                         type="button"
@@ -575,7 +609,7 @@ export default function KYCVerify() {
                   
                   {/* If neither option is enabled, show message */}
                   {!doc.allowUpload && !doc.usePhoto && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                    <p className="text-xs text-gray-500 dark:text-gray-300 italic">
                       No upload method configured for this document
                     </p>
                   )}
@@ -586,7 +620,7 @@ export default function KYCVerify() {
             {/* Selfie */}
             {kycSettings.requireSelfie && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Selfie *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">Selfie *</label>
                 <button
                   type="button"
                   onClick={() => {
@@ -609,8 +643,8 @@ export default function KYCVerify() {
             {/* Video Verification */}
             {kycSettings.requireVideoVerification && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Video Verification *</label>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-white">Video Verification *</label>
+                <p className="text-xs text-gray-500 dark:text-gray-300 mb-2">
                   Record a video following on-screen instructions (head movements, mouth, blink)
                 </p>
                 <button
@@ -814,5 +848,6 @@ export default function KYCVerify() {
         />
       )}
     </div>
+    </>
   )
 }

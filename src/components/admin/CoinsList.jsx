@@ -21,7 +21,9 @@ export default function CoinsList() {
     address: '',
     minDeposit: '',
     maxDeposit: '',
-    conversionRate: ''
+    conversionRate: '',
+    minWithdraw: '',
+    maxWithdraw: ''
   })
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
@@ -59,7 +61,9 @@ export default function CoinsList() {
       address: '',
       minDeposit: '',
       maxDeposit: '',
-      conversionRate: ''
+      conversionRate: '',
+      minWithdraw: '',
+      maxWithdraw: ''
     })
     setImageFile(null)
     setImagePreview(null)
@@ -82,7 +86,9 @@ export default function CoinsList() {
       address: coin.address || '',
       minDeposit: coin.minDeposit || '',
       maxDeposit: coin.maxDeposit || '',
-      conversionRate: coin.conversionRate || ''
+      conversionRate: coin.conversionRate || '',
+      minWithdraw: coin.minWithdraw || '',
+      maxWithdraw: coin.maxWithdraw || ''
     })
     setImageFile(null)
     setImagePreview(coin.image ? getImageUrl(coin.image) : null)
@@ -484,6 +490,45 @@ export default function CoinsList() {
                         1 {formData.symbol || 'COIN'} = X USDT
                       </p>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Withdrawal Settings Section */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                <h4 className="text-lg font-semibold mb-4">Withdrawal Settings</h4>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Min Withdrawal (USDT)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.minWithdraw}
+                      onChange={(e) => setFormData({ ...formData, minWithdraw: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                      placeholder="0"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Minimum withdrawal amount for this coin
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Max Withdrawal (USDT)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.maxWithdraw}
+                      onChange={(e) => setFormData({ ...formData, maxWithdraw: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                      placeholder="100000"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Maximum withdrawal amount for this coin
+                    </p>
                   </div>
                 </div>
               </div>

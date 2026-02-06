@@ -40,9 +40,9 @@ export default function DepositLogList() {
       })
       if (response.data.success) {
         alert('Deposit approved successfully')
+        fetchDeposits()
         setSelectedDeposit(null)
         setAdminNotes('')
-        fetchDeposits()
       }
     } catch (error) {
       console.error('Error approving deposit:', error)
@@ -65,9 +65,9 @@ export default function DepositLogList() {
       })
       if (response.data.success) {
         alert('Deposit rejected successfully')
+        fetchDeposits()
         setSelectedDeposit(null)
         setAdminNotes('')
-        fetchDeposits()
       }
     } catch (error) {
       console.error('Error rejecting deposit:', error)
@@ -346,20 +346,20 @@ export default function DepositLogList() {
                     />
                   </div>
                   <div className="flex space-x-3">
-                    <button
-                      onClick={() => handleApprove(selectedDeposit)}
-                      disabled={processing}
-                      className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold disabled:opacity-50"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleReject(selectedDeposit)}
-                      disabled={processing}
-                      className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold disabled:opacity-50"
-                    >
-                      Reject
-                    </button>
+                <button
+                  onClick={() => handleApprove(selectedDeposit)}
+                  disabled={processing || selectedDeposit.status !== 'pending'}
+                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold disabled:opacity-50"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleReject(selectedDeposit)}
+                  disabled={processing || selectedDeposit.status !== 'pending'}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold disabled:opacity-50"
+                >
+                  Reject
+                </button>
                   </div>
                 </>
               )}
