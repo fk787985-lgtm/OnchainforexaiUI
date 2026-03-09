@@ -166,18 +166,30 @@ export default function LandingPage() {
   }, [theme])
 
   const formatPrice = (price) => {
-    if (price < 0.01) return price.toFixed(6)
-    if (price < 1) return price.toFixed(4)
-    return price.toFixed(2)
+    const numericPrice = Number(price)
+    if (!Number.isFinite(numericPrice)) return '0.00'
+    if (numericPrice < 0.01) return numericPrice.toFixed(6)
+    if (numericPrice < 1) return numericPrice.toFixed(4)
+    return numericPrice.toFixed(2)
   }
 
   const formatChange = (change) => {
-    const isPositive = change >= 0
+    const numericChange = Number(change)
+    if (!Number.isFinite(numericChange)) {
+      return <span className="text-gray-500 dark:text-gray-400">--</span>
+    }
+    const isPositive = numericChange >= 0
     return (
       <span className={isPositive ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}>
-        {isPositive ? '+' : ''}{change.toFixed(2)}%
+        {isPositive ? '+' : ''}{numericChange.toFixed(2)}%
       </span>
     )
+  }
+
+  const formatMarketCap = (marketCap) => {
+    const numericMarketCap = Number(marketCap)
+    if (!Number.isFinite(numericMarketCap)) return '--'
+    return `$${(numericMarketCap / 1e9).toFixed(2)}B`
   }
 
   return (
@@ -400,7 +412,7 @@ export default function LandingPage() {
                         {formatChange(coin.price_change_percentage_24h)}
                       </td>
                       <td className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400 hidden md:table-cell">
-                        ${(coin.market_cap / 1e9).toFixed(2)}B
+                        {formatMarketCap(coin.market_cap)}
                       </td>
                     </tr>
                   ))
