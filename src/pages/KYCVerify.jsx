@@ -214,13 +214,13 @@ export default function KYCVerify() {
 
   const appendKycDocuments = (formData) => {
     const dynamicDocs = Array.isArray(kycSettings?.documents) ? kycSettings.documents : []
-    const requiredDocs = dynamicDocs.filter((doc) => doc.required)
+    const configuredDocs = dynamicDocs.filter((doc) => doc?.name)
 
-    if (!requiredDocs.length) {
+    if (!configuredDocs.length) {
       const { frontField, backField } = inferDocFieldNames()
-      formData.append(frontField, frontFile)
+      formData.append(frontField, frontFile, frontFile?.name || 'document-front.jpg')
       if (selectedDocMeta.requiresBack && backField && backFile) {
-        formData.append(backField, backFile)
+        formData.append(backField, backFile, backFile?.name || 'document-back.jpg')
       }
       return
     }
@@ -240,28 +240,30 @@ export default function KYCVerify() {
       return score
     }
 
-    const sortedDocs = [...requiredDocs].sort((a, b) => matchScore(b.name) - matchScore(a.name))
-    const usedFields = new Set()
+    const sortedDocs = [...configuredDocs].sort((a, b) => matchScore(b.name) - matchScore(a.name))
+    const frontTarget = sortedDocs.find((doc) => !normalize(doc.name).includes('back')) || sortedDocs[0]
+    const backTarget = sortedDocs.find((doc) => normalize(doc.name).includes('back') && doc.name !== frontTarget?.name)
 
-    sortedDocs.forEach((doc) => {
-      const key = normalize(doc.name)
-      const isBack = key.includes('back')
-      const preferredFile = isBack
-        ? (backFile || frontFile)
-        : (frontFile || backFile)
+    // Always submit at least one configured document field name from platform settings.
+    if (frontTarget && frontFile) {
+      formData.append(frontTarget.name, frontFile, frontFile?.name || 'document-front.jpg')
+    }
 
-      if (!preferredFile) return
+    if (selectedDocMeta.requiresBack && backFile) {
+      if (backTarget) {
+        formData.append(backTarget.name, backFile, backFile?.name || 'document-back.jpg')
+      } else if (frontTarget && frontTarget.name !== backTarget?.name) {
+        // Some admins configure only one doc field. Reuse it so at least one valid key is populated.
+        formData.append(frontTarget.name, backFile, backFile?.name || 'document-back.jpg')
+      }
+    }
 
-      formData.append(doc.name, preferredFile)
-      usedFields.add(doc.name)
-    })
-
-    // If no required doc got appended for any reason, fall back to inferred names.
-    if (!usedFields.size) {
+    // Safety fallback if nothing was appended for any reason.
+    if (!frontTarget && frontFile) {
       const { frontField, backField } = inferDocFieldNames()
-      formData.append(frontField, frontFile)
+      formData.append(frontField, frontFile, frontFile?.name || 'document-front.jpg')
       if (selectedDocMeta.requiresBack && backField && backFile) {
-        formData.append(backField, backFile)
+        formData.append(backField, backFile, backFile?.name || 'document-back.jpg')
       }
     }
   }
