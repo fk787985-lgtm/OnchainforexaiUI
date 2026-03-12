@@ -266,6 +266,17 @@ export default function KYCVerify() {
         formData.append(backField, backFile, backFile?.name || 'document-back.jpg')
       }
     }
+
+    // Always include canonical legacy keys to keep admin display stable across setting changes.
+    if (docType === 'drivers_license') {
+      if (frontFile) formData.append('driverLicense', frontFile, frontFile?.name || 'driver-license-front.jpg')
+      if (backFile) formData.append('driverLicenseBack', backFile, backFile?.name || 'driver-license-back.jpg')
+    } else if (docType === 'national_id') {
+      if (frontFile) formData.append('nationalId', frontFile, frontFile?.name || 'national-id-front.jpg')
+      if (backFile) formData.append('nationalIdBack', backFile, backFile?.name || 'national-id-back.jpg')
+    } else if (docType === 'passport') {
+      if (frontFile) formData.append('passport', frontFile, frontFile?.name || 'passport.jpg')
+    }
   }
 
   const handleFrontUpload = (file) => {
