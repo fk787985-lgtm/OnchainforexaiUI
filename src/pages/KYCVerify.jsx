@@ -25,12 +25,27 @@ const DOC_OPTIONS = [
 
 const normalize = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '')
 const FILE_TYPE_ERROR = 'Only images (JPEG, PNG), PDF, and video files are allowed'
-const ALLOWED_DOCUMENT_TYPES = new Set([
+const ALLOWED_DOCUMENT_MIME_TYPES = new Set([
   'image/jpeg',
   'image/jpg',
+  'image/pjpeg',
   'image/png',
+  'image/x-png',
   'application/pdf'
 ])
+const ALLOWED_DOCUMENT_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'pdf', 'jfif'])
+
+const getFileExtension = (fileName) => {
+  const parts = String(fileName || '').toLowerCase().split('.')
+  return parts.length > 1 ? parts.pop() : ''
+}
+
+const isAllowedDocumentFile = (file) => {
+  if (!file) return false
+  const mime = String(file.type || '').toLowerCase()
+  const extension = getFileExtension(file.name)
+  return ALLOWED_DOCUMENT_MIME_TYPES.has(mime) || ALLOWED_DOCUMENT_EXTENSIONS.has(extension)
+}
 
 export default function KYCVerify() {
   const navigate = useNavigate()
@@ -197,9 +212,63 @@ export default function KYCVerify() {
     return { frontField: frontMatch, backField: selectedDocMeta.requiresBack ? backMatch : null }
   }
 
+  const appendKycDocuments = (formData) => {
+    const dynamicDocs = Array.isArray(kycSettings?.documents) ? kycSettings.documents : []
+    const requiredDocs = dynamicDocs.filter((doc) => doc.required)
+
+    if (!requiredDocs.length) {
+      const { frontField, backField } = inferDocFieldNames()
+      formData.append(frontField, frontFile)
+      if (selectedDocMeta.requiresBack && backField && backFile) {
+        formData.append(backField, backFile)
+      }
+      return
+    }
+
+    const desired = normalize(docType)
+    const matchScore = (docName) => {
+      const key = normalize(docName)
+      let score = 0
+
+      if (desired === 'passport' && key.includes('passport')) score += 5
+      if (desired === 'nationalid' && (key.includes('national') || (key.includes('id') && !key.includes('driver')))) score += 5
+      if (desired === 'driverslicense' && (key.includes('driver') || key.includes('license'))) score += 5
+
+      if (key.includes('front')) score += 2
+      if (key.includes('back')) score -= 1
+
+      return score
+    }
+
+    const sortedDocs = [...requiredDocs].sort((a, b) => matchScore(b.name) - matchScore(a.name))
+    const usedFields = new Set()
+
+    sortedDocs.forEach((doc) => {
+      const key = normalize(doc.name)
+      const isBack = key.includes('back')
+      const preferredFile = isBack
+        ? (backFile || frontFile)
+        : (frontFile || backFile)
+
+      if (!preferredFile) return
+
+      formData.append(doc.name, preferredFile)
+      usedFields.add(doc.name)
+    })
+
+    // If no required doc got appended for any reason, fall back to inferred names.
+    if (!usedFields.size) {
+      const { frontField, backField } = inferDocFieldNames()
+      formData.append(frontField, frontFile)
+      if (selectedDocMeta.requiresBack && backField && backFile) {
+        formData.append(backField, backFile)
+      }
+    }
+  }
+
   const handleFrontUpload = (file) => {
     if (!file) return
-    if (!ALLOWED_DOCUMENT_TYPES.has((file.type || '').toLowerCase())) {
+    if (!isAllowedDocumentFile(file)) {
       toast.error(FILE_TYPE_ERROR)
       return
     }
@@ -210,7 +279,7 @@ export default function KYCVerify() {
 
   const handleBackUpload = (file) => {
     if (!file) return
-    if (!ALLOWED_DOCUMENT_TYPES.has((file.type || '').toLowerCase())) {
+    if (!isAllowedDocumentFile(file)) {
       toast.error(FILE_TYPE_ERROR)
       return
     }
@@ -305,14 +374,10 @@ export default function KYCVerify() {
       const step2 = await submitKycStep2(address)
       if (!step2.success) throw new Error(step2.message || 'Step 2 failed')
 
-      const { frontField, backField } = inferDocFieldNames()
       const formData = new FormData()
-      formData.append(frontField, frontFile)
-      if (selectedDocMeta.requiresBack && backField && backFile) {
-        formData.append(backField, backFile)
-      }
-      formData.append('selfie', selfieFile)
-      formData.append('verificationVideo', videoFile)
+      appendKycDocuments(formData)
+      formData.append('selfie', selfieFile, 'selfie.jpg')
+      formData.append('verificationVideo', videoFile, 'verification-video.webm')
 
       const step3 = await submitKycStep3(formData)
       if (!step3.success) throw new Error(step3.message || 'Step 3 failed')
