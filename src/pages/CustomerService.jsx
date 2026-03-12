@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import api from '../utils/axios'
 import toast from 'react-hot-toast'
 import { getImageUrl } from '../utils/imageUrl.js'
+import useChatAutoScroll from '../hooks/useChatAutoScroll'
+import { formatRelativeDate, formatMessageTime, shouldShowDateSeparator } from '../utils/chatTime'
 
 export default function CustomerService() {
   const navigate = useNavigate()
@@ -16,14 +18,11 @@ export default function CustomerService() {
   const [sending, setSending] = useState(false)
   const [attachments, setAttachments] = useState([])
   const fileInputRef = useRef(null)
-  const messagesEndRef = useRef(null)
-  const [pollingInterval, setPollingInterval] = useState(null)
+  const messagesContainerRef = useRef(null)
+  const { handleScroll, scrollToBottom, isNearBottom } = useChatAutoScroll(messages, messagesContainerRef)
 
   useEffect(() => {
     fetchTickets()
-    return () => {
-      if (pollingInterval) clearInterval(pollingInterval)
-    }
   }, [])
 
   useEffect(() => {
@@ -33,18 +32,9 @@ export default function CustomerService() {
       const interval = setInterval(() => {
         fetchMessages(selectedTicket._id, true)
       }, 5000)
-      setPollingInterval(interval)
       return () => clearInterval(interval)
     }
   }, [selectedTicket])
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
 
   const fetchTickets = async () => {
     try {
@@ -63,7 +53,15 @@ export default function CustomerService() {
     try {
       const response = await api.get(`/api/chat/tickets/${ticketId}/messages`)
       if (response.data.success) {
-        setMessages(response.data.messages)
+        setMessages((prevMessages) => {
+          const nextMessages = response.data.messages || []
+          if (prevMessages.length === nextMessages.length) {
+            const prevLastId = prevMessages[prevMessages.length - 1]?._id
+            const nextLastId = nextMessages[nextMessages.length - 1]?._id
+            if (prevLastId === nextLastId) return prevMessages
+          }
+          return nextMessages
+        })
         // Update ticket unread count
         if (!silent) {
           fetchTickets()
@@ -134,7 +132,7 @@ export default function CustomerService() {
       )
 
       if (response.data.success) {
-        setMessages([...messages, response.data.message])
+        setMessages((prev) => [...prev, response.data.message])
         setNewMessage('')
         setAttachments([])
         if (fileInputRef.current) {
@@ -186,49 +184,6 @@ export default function CustomerService() {
 
   const removeAttachment = (index) => {
     setAttachments(attachments.filter((_, i) => i !== index))
-  }
-
-  const formatDate = (date) => {
-    const d = new Date(date)
-    const now = new Date()
-    const diff = now - d
-    const minutes = Math.floor(diff / 60000)
-    const hours = Math.floor(diff / 3600000)
-    const days = Math.floor(diff / 86400000)
-
-    if (minutes < 1) return 'Just now'
-    if (minutes < 60) return `${minutes}m ago`
-    if (hours < 24) return `${hours}h ago`
-    if (days < 7) return `${days}d ago`
-    return d.toLocaleDateString()
-  }
-
-  const formatMessageTime = (date) => {
-    const d = new Date(date)
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const messageDate = new Date(d.getFullYear(), d.getMonth(), d.getDate())
-    
-    const timeStr = d.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit',
-      hour12: true 
-    })
-    
-    if (messageDate.getTime() === today.getTime()) {
-      return `Today at ${timeStr}`
-    } else if (messageDate.getTime() === today.getTime() - 86400000) {
-      return `Yesterday at ${timeStr}`
-    } else {
-      return `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at ${timeStr}`
-    }
-  }
-
-  const shouldShowDateSeparator = (currentMsg, prevMsg) => {
-    if (!prevMsg) return true
-    const currentDate = new Date(currentMsg.createdAt).toDateString()
-    const prevDate = new Date(prevMsg.createdAt).toDateString()
-    return currentDate !== prevDate
   }
 
   const getStatusColor = (status) => {
@@ -303,7 +258,7 @@ export default function CustomerService() {
                     <span className={`px-2 py-0.5 rounded ${getStatusColor(ticket.status)}`}>
                       {ticket.status.replace('_', ' ')}
                     </span>
-                    <span>{formatDate(ticket.lastMessageAt)}</span>
+                    <span>{formatRelativeDate(ticket.lastMessageAt)}</span>
                   </div>
                 </button>
               ))
@@ -326,7 +281,11 @@ export default function CustomerService() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-1 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+              <div
+                ref={messagesContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 min-h-0 overflow-y-auto p-4 space-y-1 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800"
+              >
                 {messages.map((message, index) => {
                   const showDateSeparator = shouldShowDateSeparator(message, messages[index - 1])
                   return (
@@ -397,11 +356,10 @@ export default function CustomerService() {
                     </div>
                   )
                 })}
-                <div ref={messagesEndRef} />
               </div>
 
               {/* Message Input */}
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <div className="sticky bottom-0 z-10 p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 {attachments.length > 0 && (
                   <div className="mb-3 flex flex-wrap gap-2">
                     {attachments.map((file, index) => (
@@ -455,7 +413,7 @@ export default function CustomerService() {
                       }}
                       placeholder="Type your message..."
                       rows={1}
-                      className="w-full px-4 py-3 pr-12 border-2 border-gray-200 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-700 dark:text-white text-gray-900 resize-none focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 transition text-sm placeholder-gray-500 dark:placeholder-gray-400"
+                      className="w-full px-4 py-3 pr-12 border-2 border-gray-200 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-700 dark:text-white text-gray-900 resize-none focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 transition text-base placeholder-gray-500 dark:placeholder-gray-400"
                       style={{ minHeight: '48px', maxHeight: '120px' }}
                     />
                   </div>
@@ -477,6 +435,17 @@ export default function CustomerService() {
                     )}
                   </button>
                 </div>
+                {!isNearBottom() && (
+                  <div className="mt-3 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => scrollToBottom('smooth')}
+                      className="px-3 py-1.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                    >
+                      Jump to latest
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           ) : tickets.length === 0 ? (

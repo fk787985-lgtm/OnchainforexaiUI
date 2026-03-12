@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
 import api from '../../utils/axios'
+import PageHeader from '../ui/PageHeader'
+import EmptyState from '../ui/EmptyState'
+import SkeletonBlock from '../common/SkeletonBlock'
+import AdminStatusBadge from './AdminStatusBadge'
 
 export default function TransferLogList() {
   const [transfers, setTransfers] = useState([])
@@ -23,13 +27,22 @@ export default function TransferLogList() {
   }
 
   if (loading) {
-    return <div className="p-6 text-center">Loading...</div>
+    return (
+      <div className="p-4 sm:p-6 space-y-4">
+        <SkeletonBlock className="h-8 w-48" />
+        <SkeletonBlock className="h-64 w-full rounded-xl" />
+      </div>
+    )
   }
 
   return (
-    <div className="p-4 sm:p-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+    <div className="p-4 sm:p-6 space-y-4">
+      <PageHeader title="Transfer History" description="Review internal transfer activity and settlement status." />
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
         <div className="overflow-x-auto">
+          {transfers.length === 0 ? (
+            <EmptyState title="No transfer logs yet" description="Transfers will appear here after users send funds internally." icon="transfer" />
+          ) : (
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
@@ -55,13 +68,7 @@ export default function TransferLogList() {
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold">{transfer.amount} USDT</td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">{transfer.fee} USDT</td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      transfer.status === 'completed' 
-                        ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
-                    }`}>
-                      {transfer.status}
-                    </span>
+                    <AdminStatusBadge status={transfer.status} />
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                     {new Date(transfer.createdAt).toLocaleDateString()}
@@ -70,6 +77,7 @@ export default function TransferLogList() {
               ))}
             </tbody>
           </table>
+          )}
         </div>
       </div>
     </div>

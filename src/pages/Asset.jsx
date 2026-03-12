@@ -6,6 +6,11 @@ import AddFundsModal from '../components/AddFundsModal'
 import WithdrawalModal from '../components/WithdrawalModal'
 import TransferModal from '../components/TransferModal'
 import { getImageUrl } from '../utils/imageUrl.js'
+import PageHeader from '../components/ui/PageHeader'
+import Button from '../components/ui/Button'
+import EmptyState from '../components/ui/EmptyState'
+import Badge from '../components/ui/Badge'
+import SkeletonBlock from '../components/common/SkeletonBlock'
 
 export default function Asset() {
   const navigate = useNavigate()
@@ -170,12 +175,13 @@ export default function Asset() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 pb-20">
+    <div className="fx-page pb-20">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="px-4 py-4">
           {/* Est. Total Value Section */}
           <div className="mb-4">
+            <PageHeader title="Assets" description="Monitor holdings, PNL, and funding actions." />
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Est. Total Value</span>
@@ -228,13 +234,14 @@ export default function Asset() {
 
             {/* Action Buttons */}
             <div className="flex space-x-2">
-              <button
+              <Button
                 onClick={() => setShowAddFundsModal(true)}
-                className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition"
+                variant="primary"
+                className="flex-1"
               >
                 Add Funds
-              </button>
-              <button 
+              </Button>
+              <Button 
                 onClick={async () => {
                   // Check if user is verified and allowed to withdraw
                   try {
@@ -269,16 +276,18 @@ export default function Asset() {
                     toast.error('Unable to verify withdrawal eligibility. Please try again.')
                   }
                 }}
-                className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-2.5 px-4 rounded-lg text-sm transition"
+                variant="secondary"
+                className="flex-1"
               >
                 Send
-              </button>
-              <button 
+              </Button>
+              <Button 
                 //onClick={() => setShowTransferModal(true)}
-                className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-2.5 px-4 rounded-lg text-sm transition"
+                variant="secondary"
+                className="flex-1"
               >
                 Transfer
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -313,8 +322,10 @@ export default function Asset() {
       {/* Assets List */}
       <main className="px-4 py-4">
         {initialLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+          <div className="space-y-3 py-6">
+            <SkeletonBlock className="h-20 w-full rounded-xl" />
+            <SkeletonBlock className="h-20 w-full rounded-xl" />
+            <SkeletonBlock className="h-20 w-full rounded-xl" />
           </div>
         ) : activeTab === 'crypto' ? (
           <div className="space-y-0">
@@ -355,10 +366,12 @@ export default function Asset() {
                       <div className="text-sm text-gray-600 dark:text-gray-400">{asset.name}</div>
                       {asset.symbol !== 'USDT' && (
                         <div className="mt-1 space-y-0.5">
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Today's PNL: <span className={`font-semibold ${asset.todayPNL >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                              {formatMasked(asset.todayPNL)}
-                            </span>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                            <span>Today's PNL:</span>
+                            <Badge
+                              label={formatMasked(asset.todayPNL)}
+                              status={asset.todayPNL >= 0 ? 'completed' : 'failed'}
+                            />
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             Average Price: <span className="font-semibold text-gray-900 dark:text-white">{formatMasked(asset.avgPrice)}</span>
@@ -374,15 +387,16 @@ export default function Asset() {
                       0.00
                     </div>
                     <div className="flex space-x-2">
-                      <button className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded transition">
+                      <Button variant="secondary" size="sm">
                         Earn
-                      </button>
-                      <button 
+                      </Button>
+                      <Button 
                         onClick={() => handleAssetClick(asset)}
-                        className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded transition"
+                        variant="secondary"
+                        size="sm"
                       >
                         Trade
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -390,15 +404,11 @@ export default function Asset() {
             ))}
             
             {filteredAssets.length === 0 && !initialLoading && (
-              <div className="text-center py-20">
-                <p className="text-gray-500 dark:text-gray-400">No assets found</p>
-              </div>
+              <EmptyState title="No assets found" description="Try a different search term or refresh market data." icon="market" />
             )}
           </div>
         ) : (
-          <div className="py-20 text-center">
-            <p className="text-gray-500 dark:text-gray-400">Account tab coming soon</p>
-          </div>
+          <EmptyState title="Account tab coming soon" description="Advanced account analytics will appear in a future release." icon="dashboard" />
         )}
       </main>
 

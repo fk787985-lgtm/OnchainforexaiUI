@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import api from '../utils/axios'
 import toast from 'react-hot-toast'
 import VideoVerification from '../components/VideoVerification'
 import SelfieCapture from '../components/SelfieCapture'
+import KycStepProgress from '../modules/kyc/components/KycStepProgress'
+import { getKycSettings, getMyKyc, submitKycStep1, submitKycStep2, submitKycStep3 } from '../api/modules/kycApi'
 
 export default function KYCVerify() {
   const navigate = useNavigate()
@@ -33,6 +34,9 @@ export default function KYCVerify() {
   const [documents, setDocuments] = useState({})
   const [selfie, setSelfie] = useState(null)
   const [verificationVideo, setVerificationVideo] = useState(null)
+  const [documentPreviewUrls, setDocumentPreviewUrls] = useState({})
+  const [selfiePreviewUrl, setSelfiePreviewUrl] = useState('')
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState('')
 
   useEffect(() => {
     fetchKYCSettings()
@@ -41,13 +45,13 @@ export default function KYCVerify() {
 
   const fetchKYCSettings = async () => {
     try {
-      const response = await api.get('/api/kyc/settings')
-      if (response.data.success) {
-        setKycSettings(response.data.settings)
+      const data = await getKycSettings()
+      if (data.success) {
+        setKycSettings(data.settings)
         // Initialize documents state
-        if (response.data.settings.documents) {
+        if (data.settings.documents) {
           const docs = {}
-          response.data.settings.documents.forEach(doc => {
+          data.settings.documents.forEach(doc => {
             docs[doc.name] = null
           })
           setDocuments(docs)
@@ -60,9 +64,9 @@ export default function KYCVerify() {
 
   const fetchExistingKYC = async () => {
     try {
-      const response = await api.get('/api/kyc')
-      if (response.data.success && response.data.kyc) {
-        const kyc = response.data.kyc
+      const data = await getMyKyc()
+      if (data.success && data.kyc) {
+        const kyc = data.kyc
         setExistingKYC(kyc)
         
         // Set step based on status
@@ -105,14 +109,14 @@ export default function KYCVerify() {
 
     setLoading(true)
     try {
-      const response = await api.post('/api/kyc/step1', {
+      const data = await submitKycStep1({
         firstName,
         lastName,
         dateOfBirth,
         nationality,
         phoneNumber
       })
-      if (response.data.success) {
+      if (data.success) {
         toast.success('Personal information saved')
         setStep(2)
       }
@@ -133,14 +137,14 @@ export default function KYCVerify() {
 
     setLoading(true)
     try {
-      const response = await api.post('/api/kyc/step2', {
+      const data = await submitKycStep2({
         street,
         city,
         state,
         zipCode,
         country
       })
-      if (response.data.success) {
+      if (data.success) {
         toast.success('Address information saved')
         setStep(3)
       }
@@ -153,6 +157,12 @@ export default function KYCVerify() {
   }
 
   const handleDocumentUpload = (docName, file) => {
+    if (!file) return
+    const previewUrl = URL.createObjectURL(file)
+    setDocumentPreviewUrls((prev) => {
+      if (prev[docName]) URL.revokeObjectURL(prev[docName])
+      return { ...prev, [docName]: previewUrl }
+    })
     setDocuments({ ...documents, [docName]: file })
   }
 
@@ -165,6 +175,8 @@ export default function KYCVerify() {
     if (currentDocumentIndex) {
       handleDocumentUpload(currentDocumentIndex, imageBlob)
     } else {
+      if (selfiePreviewUrl) URL.revokeObjectURL(selfiePreviewUrl)
+      setSelfiePreviewUrl(URL.createObjectURL(imageBlob))
       setSelfie(imageBlob)
     }
     setShowSelfieCapture(false)
@@ -172,6 +184,8 @@ export default function KYCVerify() {
   }
 
   const handleVideoVerificationComplete = (videoBlob) => {
+    if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl)
+    setVideoPreviewUrl(URL.createObjectURL(videoBlob))
     setVerificationVideo(videoBlob)
     setShowVideoVerification(false)
   }
@@ -180,7 +194,7 @@ export default function KYCVerify() {
     e.preventDefault()
     
     // Allow resubmission only if rejected
-    if (existingKYC && existingKYC.status === 'pending' || existingKYC.status === 'under_review') {
+    if (existingKYC && (existingKYC.status === 'pending' || existingKYC.status === 'under_review')) {
       toast.error('Your KYC verification is already pending review. Please wait for verification to complete before submitting again.')
       return
     }
@@ -240,15 +254,14 @@ export default function KYCVerify() {
         formData.append('verificationVideo', verificationVideo)
       }
 
-      const response = await api.post('/api/kyc/step3', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
-      if (response.data.success) {
+      const data = await submitKycStep3(formData)
+      if (data.success) {
         toast.success('KYC submission completed! Your documents are under review.')
         // Update existing KYC status
-        setExistingKYC({ ...existingKYC, status: 'pending' })
+        setExistingKYC((prev) => ({
+          ...(prev || {}),
+          status: 'pending'
+        }))
         // Stay on the page to show under review message
         setStep(4) // New step for "under review"
       }
@@ -374,37 +387,7 @@ export default function KYCVerify() {
 
       {/* Progress Steps */}
       <div className="px-4 py-6">
-        <div className="flex items-center justify-between mb-8">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center flex-1">
-              <div className="flex flex-col items-center flex-1">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                  step >= s 
-                    ? 'bg-yellow-500 text-white' 
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                }`}>
-                  {step > s ? (
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  ) : (
-                    s
-                  )}
-                </div>
-                <div className="mt-2 text-xs text-center text-gray-600 dark:text-gray-300">
-                  {s === 1 && 'Personal Info'}
-                  {s === 2 && 'Address'}
-                  {s === 3 && 'Documents'}
-                </div>
-              </div>
-              {s < 3 && (
-                <div className={`flex-1 h-1 mx-2 ${
-                  step > s ? 'bg-yellow-500' : 'bg-gray-200 dark:bg-gray-700'
-                }`} />
-              )}
-            </div>
-          ))}
-        </div>
+        <KycStepProgress step={step} />
 
         {/* Step 1: Personal Information - Only show if not approved */}
         {step === 1 && (!existingKYC || existingKYC.status !== 'approved') && (
@@ -580,6 +563,13 @@ export default function KYCVerify() {
                       {documents[doc.name] && typeof documents[doc.name] === 'object' && documents[doc.name].name && (
                         <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
                           <p className="text-sm text-green-700 dark:text-green-300">✓ {documents[doc.name].name} uploaded</p>
+                          {documentPreviewUrls[doc.name] && (
+                            <img
+                              src={documentPreviewUrls[doc.name]}
+                              alt={`${doc.name} preview`}
+                              className="mt-2 w-full h-36 object-cover rounded border border-green-200 dark:border-green-800"
+                            />
+                          )}
                         </div>
                       )}
                     </div>
@@ -602,6 +592,13 @@ export default function KYCVerify() {
                       {documents[doc.name] && typeof documents[doc.name] !== 'object' && (
                         <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
                           <p className="text-sm text-green-700 dark:text-green-300">✓ Photo captured</p>
+                          {documentPreviewUrls[doc.name] && (
+                            <img
+                              src={documentPreviewUrls[doc.name]}
+                              alt={`${doc.name} captured`}
+                              className="mt-2 w-full h-36 object-cover rounded border border-green-200 dark:border-green-800"
+                            />
+                          )}
                         </div>
                       )}
                     </div>
@@ -635,6 +632,13 @@ export default function KYCVerify() {
                 {selfie && (
                   <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
                     <p className="text-sm text-green-700 dark:text-green-300">✓ Selfie captured</p>
+                    {selfiePreviewUrl && (
+                      <img
+                        src={selfiePreviewUrl}
+                        alt="Selfie preview"
+                        className="mt-2 w-full h-36 object-cover rounded border border-green-200 dark:border-green-800"
+                      />
+                    )}
                   </div>
                 )}
               </div>
@@ -658,6 +662,13 @@ export default function KYCVerify() {
                 {verificationVideo && (
                   <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
                     <p className="text-sm text-green-700 dark:text-green-300">✓ Video verification completed</p>
+                    {videoPreviewUrl && (
+                      <video
+                        src={videoPreviewUrl}
+                        controls
+                        className="mt-2 w-full rounded border border-green-200 dark:border-green-800"
+                      />
+                    )}
                   </div>
                 )}
               </div>

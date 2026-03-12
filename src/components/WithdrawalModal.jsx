@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../utils/axios'
 import toast from 'react-hot-toast'
+import ModalShell from './common/ModalShell'
+import { createWithdrawal, getWithdrawalSettings } from '../api/modules/withdrawalsApi'
+import ConfirmDialog from './ui/ConfirmDialog'
 
 export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
   const navigate = useNavigate()
@@ -15,8 +18,11 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
   const [fee, setFee] = useState(0)
   const [totalAmount, setTotalAmount] = useState(0)
   const [amountError, setAmountError] = useState('')
+  const [eligibilityChecking, setEligibilityChecking] = useState(false)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
   const checkWithdrawalEligibility = async () => {
+    setEligibilityChecking(true)
     try {
       // Fetch latest user data and KYC status
       const [userResponse, kycResponse] = await Promise.all([
@@ -49,6 +55,8 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
       console.error('Error checking withdrawal eligibility:', error)
       toast.error('Unable to verify withdrawal eligibility. Please try again.')
       onClose()
+    } finally {
+      setEligibilityChecking(false)
     }
   }
 
@@ -113,9 +121,9 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
 
   const fetchSettings = async () => {
     try {
-      const response = await api.get('/api/withdrawals/settings')
-      if (response.data.success) {
-        setSettings({ withdrawal: response.data.settings.withdrawal })
+      const data = await getWithdrawalSettings()
+      if (data.success) {
+        setSettings({ withdrawal: data.settings.withdrawal })
       }
     } catch (error) {
       console.error('Error fetching settings:', error)
@@ -143,42 +151,46 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
     setTotalAmount(withdrawalAmount + calculatedFee)
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
+  const validateWithdrawalForm = () => {
     if (!selectedCoin || !amount || !walletAddress) {
       toast.error('Please fill in all fields')
-      return
+      return false
     }
-
+    if (amountError) {
+      toast.error(amountError)
+      return false
+    }
     const withdrawalAmount = parseFloat(amount)
     if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) {
       toast.error('Please enter a valid amount')
-      return
+      return false
     }
-
     if (!settings) {
       toast.error('Settings not loaded. Please try again.')
-      return
+      return false
     }
-
-    // Use coin-specific limits if available, otherwise fall back to platform settings
+    if (walletAddress.trim().length < 10) {
+      toast.error('Please enter a valid wallet address')
+      return false
+    }
     const minAmount = selectedCoin.minWithdraw || settings.withdrawal.minAmount || 0
     const maxAmount = selectedCoin.maxWithdraw || settings.withdrawal.maxAmount || 10000
-
     if (withdrawalAmount < minAmount) {
       toast.error(`Minimum withdrawal amount is ${minAmount} USDT`)
-      return
+      return false
     }
-
     if (withdrawalAmount > maxAmount) {
       toast.error(`Maximum withdrawal amount is ${maxAmount} USDT`)
-      return
+      return false
     }
+    return true
+  }
 
+  const processWithdrawal = async () => {
+    const withdrawalAmount = parseFloat(amount)
     setLoading(true)
     try {
-      const response = await api.post('/api/withdrawals/create', {
+      const data = await createWithdrawal({
         coinId: selectedCoin._id,
         coinSymbol: selectedCoin.symbol,
         amount: withdrawalAmount,
@@ -186,22 +198,31 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
         network
       })
 
-      if (response.data.success) {
+      if (data.success) {
         toast.success('Withdrawal request submitted successfully!')
         onSuccess?.()
         handleClose()
         // Navigate to withdrawal detail page
-        navigate(`/withdrawal/${response.data.withdrawal._id}`)
+        navigate(`/withdrawal/${data.withdrawal._id}`)
       }
     } catch (error) {
       console.error('Error creating withdrawal:', error)
       toast.error(error.response?.data?.message || 'Failed to create withdrawal request')
     } finally {
       setLoading(false)
+      setShowConfirmDialog(false)
     }
   }
 
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (loading) return
+    if (!validateWithdrawalForm()) return
+    setShowConfirmDialog(true)
+  }
+
   const handleClose = () => {
+    if (loading) return
     setSelectedCoin(null)
     setAmount('')
     setWalletAddress('')
@@ -209,36 +230,31 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
     setFee(0)
     setTotalAmount(0)
     setAmountError('')
+    setShowConfirmDialog(false)
     onClose()
   }
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-red-500 to-red-600 rounded-t-xl">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-white">Withdraw Funds</h3>
-            </div>
-            <button
-              onClick={handleClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition text-white"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
+    <>
+    <ModalShell
+      title="Withdraw Funds"
+      onClose={handleClose}
+      headerClassName="from-red-500 to-red-600"
+      overlayClassName="bg-black/60 dark:bg-black/80 backdrop-blur-sm"
+      icon={(
+        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+        </svg>
+      )}
+    >
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {eligibilityChecking && (
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl text-sm text-blue-700 dark:text-blue-300">
+              Checking withdrawal eligibility...
+            </div>
+          )}
           {/* Coin Selection */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Select Coin</label>
@@ -317,6 +333,7 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
               value={walletAddress}
               onChange={(e) => setWalletAddress(e.target.value)}
               className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition font-mono text-sm text-gray-900 dark:text-white"
+              minLength={10}
               placeholder="Enter your wallet address"
               required
             />
@@ -346,15 +363,25 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || eligibilityChecking || !!amountError}
               className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl font-semibold transition shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
             >
               {loading ? 'Submitting...' : 'Submit Withdrawal'}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalShell>
+    <ConfirmDialog
+      isOpen={showConfirmDialog}
+      title="Confirm Withdrawal Request"
+      description={`You are requesting ${amount || '0'} ${selectedCoin?.symbol || ''} withdrawal to wallet ${walletAddress || '-'} with a total deduction of ${totalAmount.toFixed(2)} USDT.`}
+      confirmText={loading ? 'Submitting...' : 'Submit Withdrawal'}
+      cancelText="Review Again"
+      variant="warning"
+      onCancel={() => setShowConfirmDialog(false)}
+      onConfirm={processWithdrawal}
+    />
+    </>
   )
 }
 

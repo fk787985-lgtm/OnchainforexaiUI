@@ -7,9 +7,15 @@ import { getPopularStocks } from '../services/stocksApi'
 import { getForexRates, updateForexRates } from '../services/forexApi'
 import { getGoldPrice } from '../services/metalsApi'
 import api from '../utils/axios'
+import toast from 'react-hot-toast'
 import AddFundsModal from '../components/AddFundsModal'
 import TransferModal from '../components/TransferModal'
 import { getImageUrl } from '../utils/imageUrl.js'
+import { formatMarketPrice, getChangeMeta } from '../utils/formatters/marketFormatters'
+import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../api/modules/notificationsApi'
+import PageHeader from '../components/ui/PageHeader'
+import Badge from '../components/ui/Badge'
+import EmptyState from '../components/ui/EmptyState'
 
 // User Info Card Component
 function UserInfoCard() {
@@ -61,12 +67,7 @@ function UserInfoCard() {
             {user.fullName || user.uniqueId || 'User'}
           </div>
           {kycStatus?.isVerified ? (
-            <span className="px-1.5 sm:px-2 py-0.5 bg-green-500/90 backdrop-blur-sm text-white text-[10px] sm:text-xs font-medium rounded-full flex items-center space-x-0.5 sm:space-x-1">
-              <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="hidden sm:inline">Verified</span>
-            </span>
+            <Badge label="Verified" status="verified" className="bg-green-500/90 text-white dark:text-white" />
           ) : (
             <button
               onClick={() => {
@@ -305,9 +306,9 @@ export default function Dashboard() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await api.get('/api/auth/notifications')
-      if (response.data.success) {
-        const newNotifications = response.data.notifications || []
+      const data = await getNotifications()
+      if (data.success) {
+        const newNotifications = data.notifications || []
         const previousUnreadCount = unreadCount
         setNotifications(newNotifications)
         const newUnreadCount = newNotifications.filter(n => !n.read).length
@@ -364,10 +365,10 @@ export default function Dashboard() {
       
       // Make API call - ALWAYS call API to ensure server sync
       try {
-        const response = await api.put(`/api/auth/notifications/${encodeURIComponent(notificationIdStr)}/read`)
-        console.log('🔔 [Frontend] API response:', response.data)
+        const data = await markNotificationRead(notificationIdStr)
+        console.log('🔔 [Frontend] API response:', data)
         
-        if (response.data.success) {
+        if (data.success) {
           console.log('✅ [Frontend] Notification marked as read successfully')
           // Refresh notifications to get updated unread count from server
           await fetchNotifications()
@@ -398,10 +399,10 @@ export default function Dashboard() {
       setUnreadCount(0)
       console.log('🔔 [Frontend] Optimistically marked all as read. Previous unread count:', currentUnreadCount)
       
-      const response = await api.put('/api/auth/notifications/read-all')
-      console.log('🔔 [Frontend] Mark all as read API response:', response.data)
+      const data = await markAllNotificationsRead()
+      console.log('🔔 [Frontend] Mark all as read API response:', data)
       
-      if (response.data.success) {
+      if (data.success) {
         console.log('✅ [Frontend] All notifications marked as read successfully')
         // Immediately refresh notifications to ensure sync with server
         await fetchNotifications()
@@ -415,7 +416,7 @@ export default function Dashboard() {
       console.error('❌ [Frontend] Error details:', error.response?.data)
       // Revert optimistic update on error
       await fetchNotifications()
-      alert('Failed to mark all notifications as read. Please try again.')
+      toast.error('Failed to mark all notifications as read. Please try again.')
     }
   }
 
@@ -432,27 +433,15 @@ export default function Dashboard() {
   }
 
   const formatPrice = (price) => {
-    if (price === 0 || !price) return '0.00'
-    if (price < 0.01) {
-      return price.toFixed(6)
-    }
-    if (price < 1) {
-      return price.toFixed(4)
-    }
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(price)
+    return formatMarketPrice(price)
   }
 
   const formatChange = (change) => {
-    if (change === null || change === undefined || change === '') return <span className="text-gray-500">--</span>
-    const numChange = typeof change === 'string' ? parseFloat(change) : change
-    if (isNaN(numChange)) return <span className="text-gray-500">--</span>
-    const isPositive = numChange >= 0
+    const changeMeta = getChangeMeta(change)
+    if (!changeMeta) return <span className="text-gray-500">--</span>
     return (
-      <span className={isPositive ? 'text-green-500' : 'text-red-500'}>
-        {isPositive ? '+' : ''}{numChange.toFixed(2)}%
+      <span className={changeMeta.isPositive ? 'text-green-500' : 'text-red-500'}>
+        {changeMeta.label}
       </span>
     )
   }
@@ -460,7 +449,7 @@ export default function Dashboard() {
   const currentCryptoData = cryptoData[activeCryptoTab] || []
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors pb-20">
+    <div className="fx-page transition-colors pb-20">
       {/* Header with Hamburger */}
       <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="px-4 py-3 flex items-center justify-between">
@@ -533,9 +522,12 @@ export default function Dashboard() {
               
               {/* Notifications Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-[80vh] overflow-hidden flex flex-col">
+                <div className="absolute right-0 mt-2 w-[calc(100vw-1rem)] max-w-sm sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-[80vh] overflow-hidden flex flex-col">
                   <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-                    <h3 className="font-bold text-gray-900 dark:text-white">Notifications ({notifications.length})</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-gray-900 dark:text-white">Notifications ({notifications.length})</h3>
+                      {unreadCount > 0 ? <Badge label={`${unreadCount} unread`} status="pending" /> : null}
+                    </div>
                     {unreadCount > 0 && (
                       <button
                         onClick={async (e) => {
@@ -621,12 +613,7 @@ export default function Dashboard() {
                         })}
                       </div>
                     ) : (
-                      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                        <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        <p>No notifications</p>
-                      </div>
+                      <EmptyState title="No notifications" description="You'll see trading, transfer, and security updates here." icon="bell" />
                     )}
                   </div>
                 </div>
@@ -896,6 +883,11 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
 
       {/* Main Content */}
       <main className="px-4 py-4 space-y-4 max-w-7xl mx-auto">
+        <PageHeader
+          title="Dashboard"
+          description="Track balances, market movers, and exchange updates in one place."
+          actions={<Badge label="Secure Session" status="verified" />}
+        />
         {/* Estimated Total Value */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="flex items-center justify-between mb-3">
@@ -985,9 +977,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 </button>
               </>
             ) : (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
-                No data available
-              </div>
+              <EmptyState title="No market data available" description="Please try again in a moment." icon="market" />
             )}
           </div>
         </div>
@@ -1015,9 +1005,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 </div>
               ))
             ) : (
-              <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-                No news available
-              </div>
+              <EmptyState title="No news available" description="Fresh market headlines will appear once fetched." icon="search" />
             )}
           </div>
         </div>
@@ -1064,9 +1052,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 </button>
               </>
             ) : (
-              <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-                No stock data available
-              </div>
+              <EmptyState title="No stock data available" description="Stock updates are temporarily unavailable." icon="market" />
             )}
           </div>
         </div>
@@ -1112,9 +1098,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 </button>
               </>
             ) : (
-              <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-                No forex data available
-              </div>
+              <EmptyState title="No forex data available" description="Forex updates are temporarily unavailable." icon="market" />
             )}
           </div>
         </div>

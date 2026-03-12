@@ -1,21 +1,26 @@
 import { useState, useEffect } from 'react'
-import api from '../utils/axios'
 import toast from 'react-hot-toast'
 import { useSiteSettings } from '../context/SiteSettingsContext'
+import ModalShell from './common/ModalShell'
+import { createTransfer, getRecentTransferRecipients, searchTransferUsers } from '../api/modules/transfersApi'
+import ConfirmDialog from './ui/ConfirmDialog'
 
 export default function TransferModal({ isOpen, onClose, onSuccess }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [users, setUsers] = useState([])
+  const [recentRecipients, setRecentRecipients] = useState([])
   const [selectedUser, setSelectedUser] = useState(null)
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [twoFactorCode, setTwoFactorCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [searching, setSearching] = useState(false)
+  const [recentLoading, setRecentLoading] = useState(false)
   const [fee, setFee] = useState(0)
   const [totalAmount, setTotalAmount] = useState(0)
   const [step, setStep] = useState('search') // 'search' or 'confirm'
   const [requires2FA, setRequires2FA] = useState(false)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const { settings: siteSettings } = useSiteSettings()
 
   useEffect(() => {
@@ -23,6 +28,11 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
       calculateFee()
     }
   }, [amount, siteSettings])
+
+  useEffect(() => {
+    if (!isOpen) return
+    fetchRecentRecipients()
+  }, [isOpen])
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -41,15 +51,30 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
 
     setSearching(true)
     try {
-      const response = await api.get(`/api/transfers/search?query=${encodeURIComponent(searchQuery)}`)
-      if (response.data.success) {
-        setUsers(response.data.users)
+      const data = await searchTransferUsers(searchQuery)
+      if (data.success) {
+        setUsers(data.users)
       }
     } catch (error) {
       console.error('Error searching users:', error)
       toast.error('Failed to search users')
     } finally {
       setSearching(false)
+    }
+  }
+
+  const fetchRecentRecipients = async () => {
+    setRecentLoading(true)
+    try {
+      const data = await getRecentTransferRecipients()
+      if (data.success) {
+        setRecentRecipients(data.recipients || [])
+      }
+    } catch (error) {
+      console.error('Error fetching recent recipients:', error)
+      setRecentRecipients([])
+    } finally {
+      setRecentLoading(false)
     }
   }
 
@@ -77,6 +102,44 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
   const handleUserSelect = (user) => {
     setSelectedUser(user)
     setStep('confirm')
+  }
+
+  const processTransfer = async () => {
+    const transferAmount = parseFloat(amount)
+    setLoading(true)
+    try {
+      const data = await createTransfer({
+        toUserId: selectedUser._id,
+        amount: transferAmount,
+        description: description.trim(),
+        twoFactorCode: twoFactorCode || undefined
+      })
+
+      if (data.requires2FA) {
+        setRequires2FA(true)
+        setLoading(false)
+        toast.error('2FA code is required to complete this transfer')
+        return
+      }
+
+      if (data.success) {
+        toast.success('Transfer completed successfully!')
+        onSuccess?.()
+        handleClose()
+      }
+    } catch (error) {
+      console.error('Error creating transfer:', error)
+      if (error.response?.data?.requires2FA) {
+        setRequires2FA(true)
+        setLoading(false)
+        toast.error('2FA code is required to complete this transfer')
+        return
+      }
+      toast.error(error.response?.data?.message || 'Failed to process transfer')
+    } finally {
+      setLoading(false)
+      setShowConfirmDialog(false)
+    }
   }
 
   const handleConfirm = async (e) => {
@@ -111,48 +174,13 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
       return
     }
 
-    setLoading(true)
-    try {
-      const response = await api.post('/api/transfers/create', {
-        toUserId: selectedUser._id,
-        amount: transferAmount,
-        description: description.trim(),
-        twoFactorCode: twoFactorCode || undefined
-      })
-
-      // Check if 2FA is required
-      if (response.data.requires2FA) {
-        setRequires2FA(true)
-        setLoading(false)
-        toast.error('2FA code is required to complete this transfer')
-        return
-      }
-
-      if (response.data.success) {
-        toast.success('Transfer completed successfully!')
-        onSuccess?.()
-        handleClose()
-      }
-    } catch (error) {
-      console.error('Error creating transfer:', error)
-      
-      // Check if 2FA is required
-      if (error.response?.data?.requires2FA) {
-        setRequires2FA(true)
-        setLoading(false)
-        toast.error('2FA code is required to complete this transfer')
-        return
-      }
-      
-      toast.error(error.response?.data?.message || 'Failed to process transfer')
-    } finally {
-      setLoading(false)
-    }
+    setShowConfirmDialog(true)
   }
 
   const handleClose = () => {
     setSearchQuery('')
     setUsers([])
+    setRecentRecipients([])
     setSelectedUser(null)
     setAmount('')
     setDescription('')
@@ -161,35 +189,24 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
     setTotalAmount(0)
     setStep('search')
     setRequires2FA(false)
+    setShowConfirmDialog(false)
     onClose()
   }
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-lg z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-2xl w-full max-w-md min-h-[500px] sm:min-h-[600px] max-h-[90vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-t-2xl flex-shrink-0">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-white">Internal Transfer</h3>
-            </div>
-            <button
-              onClick={handleClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition text-white"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
+    <>
+    <ModalShell
+      title="Internal Transfer"
+      onClose={handleClose}
+      minHeightClassName="min-h-[500px] sm:min-h-[600px]"
+      icon={(
+        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      )}
+    >
         {step === 'search' ? (
           <div className="p-6 space-y-5 flex-1 overflow-y-auto flex flex-col min-h-[400px]">
             {/* Search */}
@@ -198,14 +215,14 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
                 <svg className="w-4 h-4 mr-2 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                Search User
+                Find Recipient
               </label>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 transition text-base"
-                placeholder="Search by username, email, or ID..."
+                placeholder="Search by username, email, or unique ID..."
               />
               {searching && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center">
@@ -220,7 +237,7 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
 
             {/* User List */}
             <div className="flex-1 min-h-[300px] max-h-[400px] overflow-y-auto space-y-3 pr-1">
-              {users.length > 0 ? (
+              {searchQuery.length >= 2 && users.length > 0 ? (
                 users.map((user) => (
                   <button
                     key={user._id}
@@ -243,14 +260,41 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
                     <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">Try a different search term</p>
                   </div>
                 </div>
+              ) : searchQuery.length < 2 && recentRecipients.length > 0 ? (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
+                    Recent Recipients
+                  </p>
+                  <div className="space-y-3">
+                    {recentRecipients.map((user) => (
+                      <button
+                        key={user._id}
+                        onClick={() => handleUserSelect(user)}
+                        className="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-500 dark:hover:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition bg-white dark:bg-gray-800 shadow-sm hover:shadow-md"
+                      >
+                        <div className="font-semibold text-gray-900 dark:text-white">{user.fullName || user.username}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {user.email} {user.uniqueId && `• ID: ${user.uniqueId}`}
+                        </div>
+                        {user.lastTransferAt && (
+                          <div className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                            Last sent: {new Date(user.lastTransferAt).toLocaleString()}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ) : searchQuery.length < 2 ? (
                 <div className="flex items-center justify-center h-full min-h-[250px]">
                   <div className="text-center py-8">
                     <svg className="w-16 h-16 mx-auto mb-4 text-indigo-400 dark:text-indigo-500 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                     </svg>
-                    <p className="text-gray-600 dark:text-gray-400 font-medium">Start searching for users</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">Enter at least 2 characters to search</p>
+                    <p className="text-gray-600 dark:text-gray-400 font-medium">
+                      {recentLoading ? 'Loading recent recipients...' : 'No recent recipients yet'}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">Search to send to another user</p>
                   </div>
                 </div>
               ) : null}
@@ -390,8 +434,18 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
             </div>
           </form>
         )}
-      </div>
-    </div>
+    </ModalShell>
+    <ConfirmDialog
+      isOpen={showConfirmDialog}
+      title="Confirm Internal Transfer"
+      description={`You are sending ${totalAmount.toFixed(2)} ${siteSettings?.site?.currency || 'USDT'} (including fee) to ${selectedUser?.fullName || selectedUser?.email}. Please confirm this secure transfer.`}
+      confirmText={loading ? 'Processing...' : 'Confirm Transfer'}
+      cancelText="Review Again"
+      variant="warning"
+      onCancel={() => setShowConfirmDialog(false)}
+      onConfirm={processTransfer}
+    />
+    </>
   )
 }
 

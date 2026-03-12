@@ -1,0 +1,15 @@
+const STATUS_STYLES = {
+  pending: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+  completed: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  approved: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  verified: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  failed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  rejected: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  cancelled: 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200',
+  default: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+}
+
+export default function Badge({ label, status = 'default', className = '' }) {
+  const style = STATUS_STYLES[status] || STATUS_STYLES.default
+  return <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${style} ${className}`}>{label}</span>
+}

@@ -6,6 +6,10 @@ import { getImageUrl } from '../utils/imageUrl.js'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 import ThemeToggle from '../components/ThemeToggle'
 import PasswordInput from '../components/PasswordInput'
+import Button from '../components/ui/Button'
+import Alert from '../components/ui/Alert'
+import Icon from '../components/ui/Icon'
+import PageHeader from '../components/ui/PageHeader'
 
 export default function SignIn() {
   const location = useLocation()
@@ -168,7 +172,7 @@ export default function SignIn() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center px-3 sm:px-4 py-8 sm:py-12">
+    <div className="fx-page flex items-center justify-center px-3 sm:px-4 py-8 sm:py-12 bg-gradient-to-br from-gray-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
       <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10">
         <ThemeToggle />
       </div>
@@ -197,21 +201,22 @@ export default function SignIn() {
         </div>
 
         {/* Sign In Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl p-5 sm:p-8 border border-gray-200 dark:border-gray-700">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">Welcome Back</h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">Sign in to your account</p>
+        <div className="fx-card p-5 sm:p-8">
+          <PageHeader title="Welcome Back" description="Sign in to your account securely" />
 
           {error && (
-            <div className="mb-4 p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-xs sm:text-sm animate-fade-in">
-              {error}
+            <div className="mb-4 animate-fade-in">
+              <Alert variant="error" message={error} />
             </div>
           )}
 
           {/* Social Auth Buttons */}
           <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-            <button
+            <Button
               onClick={() => handleSocialAuth('Google')}
-              className="w-full flex items-center justify-center space-x-2 sm:space-x-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base hover:bg-gray-50 dark:hover:bg-gray-600 transition shadow-sm transform hover:scale-[1.02] active:scale-[0.98]"
+              variant="ghost"
+              fullWidth
+              className="flex items-center justify-center space-x-2 sm:space-x-3"
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -220,16 +225,17 @@ export default function SignIn() {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
               <span>Continue with Google</span>
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => handleSocialAuth('Apple')}
-              className="w-full flex items-center justify-center space-x-2 sm:space-x-3 bg-black dark:bg-gray-900 text-white py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base hover:bg-gray-800 dark:hover:bg-gray-800 transition shadow-sm transform hover:scale-[1.02] active:scale-[0.98]"
+              fullWidth
+              className="flex items-center justify-center space-x-2 sm:space-x-3 bg-black hover:bg-gray-900 dark:bg-black dark:hover:bg-gray-900"
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
               </svg>
               <span>Continue with Apple</span>
-            </button>
+            </Button>
           </div>
 
           <div className="relative mb-4 sm:mb-6">
@@ -244,10 +250,8 @@ export default function SignIn() {
           {/* Sign In Form */}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-200 mb-2 sm:mb-3 flex items-center space-x-2">
-                <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                </svg>
+              <label htmlFor="email" className="fx-label flex items-center space-x-2">
+                <Icon name="users" size="sm" className="text-slate-500 dark:text-slate-400" />
                 <span>Email Address</span>
               </label>
               <div className="relative">
@@ -264,7 +268,7 @@ export default function SignIn() {
                   onChange={handleChange}
                   onBlur={() => handleBlur('email')}
                   required
-                  className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-700/50 border rounded-lg text-sm sm:text-base font-medium text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all duration-200 shadow-sm ${
+                  className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-700/50 border rounded-xl text-base font-medium text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-all duration-200 shadow-sm ${
                     errors.email && fieldTouched.email 
                       ? 'border-red-500 dark:border-red-500 focus:ring-red-500/30' 
                       : 'border-gray-300 dark:border-gray-600 focus:bg-white dark:focus:bg-gray-700'
@@ -284,10 +288,8 @@ export default function SignIn() {
 
             <div>
               <div className="flex justify-between items-center mb-2 sm:mb-3">
-                <label htmlFor="password" className="block text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-200 flex items-center space-x-2">
-                  <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
+                <label htmlFor="password" className="fx-label flex items-center space-x-2 mb-0">
+                  <Icon name="shield" size="sm" className="text-slate-500 dark:text-slate-400" />
                   <span>Password</span>
                 </label>
                 <Link
@@ -344,10 +346,11 @@ export default function SignIn() {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-indigo-700 hover:to-purple-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+              fullWidth
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -358,7 +361,7 @@ export default function SignIn() {
                   Signing In...
                 </span>
               ) : 'Sign In'}
-            </button>
+            </Button>
           </form>
 
           {/* <div className="mt-4 text-center">

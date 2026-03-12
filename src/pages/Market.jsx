@@ -4,6 +4,7 @@ import { getCryptoPrices, getFavourites } from '../services/cryptoApi'
 import { getPopularStocks } from '../services/stocksApi'
 import { getForexRates } from '../services/forexApi'
 import { getAllMetals } from '../services/metalsApi'
+import { formatMarketPrice, getChangeMeta } from '../utils/formatters/marketFormatters'
 
 export default function Market() {
   const navigate = useNavigate()
@@ -88,23 +89,15 @@ export default function Market() {
   }
 
   const formatPrice = (price) => {
-    if (price === 0 || !price) return '0.00'
-    if (price < 0.01) return price.toFixed(6)
-    if (price < 1) return price.toFixed(4)
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(price)
+    return formatMarketPrice(price)
   }
 
   const formatChange = (change) => {
-    if (change === null || change === undefined || change === '') return <span className="text-gray-500">--</span>
-    const numChange = typeof change === 'string' ? parseFloat(change) : change
-    if (isNaN(numChange)) return <span className="text-gray-500">--</span>
-    const isPositive = numChange >= 0
+    const changeMeta = getChangeMeta(change)
+    if (!changeMeta) return <span className="text-gray-500">--</span>
     return (
-      <span className={isPositive ? 'text-green-500' : 'text-red-500'}>
-        {isPositive ? '+' : ''}{numChange.toFixed(2)}%
+      <span className={changeMeta.isPositive ? 'text-green-500' : 'text-red-500'}>
+        {changeMeta.label}
       </span>
     )
   }

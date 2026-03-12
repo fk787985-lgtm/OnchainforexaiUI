@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react'
 import api from '../../utils/axios'
+import toast from 'react-hot-toast'
+import PageHeader from '../ui/PageHeader'
+import EmptyState from '../ui/EmptyState'
+import SkeletonBlock from '../common/SkeletonBlock'
+import AdminStatusBadge from './AdminStatusBadge'
 
 export default function WithdrawalLogList() {
   const [withdrawals, setWithdrawals] = useState([])
@@ -40,7 +45,7 @@ export default function WithdrawalLogList() {
         adminNotes: adminNotes || undefined
       })
       if (response.data.success) {
-        alert('Withdrawal approved successfully')
+        toast.success('Withdrawal approved successfully')
         setSelectedWithdrawal(null)
         setTransactionHash('')
         setAdminNotes('')
@@ -48,7 +53,7 @@ export default function WithdrawalLogList() {
       }
     } catch (error) {
       console.error('Error approving withdrawal:', error)
-      alert(error.response?.data?.message || 'Failed to approve withdrawal')
+      toast.error(error.response?.data?.message || 'Failed to approve withdrawal')
     } finally {
       setProcessing(false)
     }
@@ -63,14 +68,14 @@ export default function WithdrawalLogList() {
         adminNotes: adminNotes || undefined
       })
       if (response.data.success) {
-        alert('Withdrawal rejected and user refunded')
+        toast.success('Withdrawal rejected and user refunded')
         setSelectedWithdrawal(null)
         setAdminNotes('')
         fetchWithdrawals()
       }
     } catch (error) {
       console.error('Error rejecting withdrawal:', error)
-      alert(error.response?.data?.message || 'Failed to reject withdrawal')
+      toast.error(error.response?.data?.message || 'Failed to reject withdrawal')
     } finally {
       setProcessing(false)
     }
@@ -85,36 +90,32 @@ export default function WithdrawalLogList() {
         transactionHash: transactionHash || undefined
       })
       if (response.data.success) {
-        alert('Withdrawal marked as completed')
+        toast.success('Withdrawal marked as completed')
         setSelectedWithdrawal(null)
         setTransactionHash('')
         fetchWithdrawals()
       }
     } catch (error) {
       console.error('Error completing withdrawal:', error)
-      alert(error.response?.data?.message || 'Failed to complete withdrawal')
+      toast.error(error.response?.data?.message || 'Failed to complete withdrawal')
     } finally {
       setProcessing(false)
     }
   }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
-      case 'approved': return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
-      case 'completed': return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
-      case 'rejected': return 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
-      case 'cancelled': return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
-      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
-    }
-  }
-
   if (loading) {
-    return <div className="p-6 text-center">Loading...</div>
+    return (
+      <div className="p-4 sm:p-6 space-y-4">
+        <SkeletonBlock className="h-8 w-52" />
+        <SkeletonBlock className="h-10 w-full rounded-xl" />
+        <SkeletonBlock className="h-64 w-full rounded-xl" />
+      </div>
+    )
   }
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 sm:p-6 space-y-4">
+      <PageHeader title="Withdrawal Log" description="Review and process pending, approved, and completed withdrawals." />
       <div className="mb-6 flex flex-wrap gap-2">
         {['all', 'pending', 'approved', 'completed', 'rejected'].map((status) => (
           <button
@@ -131,8 +132,11 @@ export default function WithdrawalLogList() {
         ))}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
         <div className="overflow-x-auto">
+          {withdrawals.length === 0 ? (
+            <EmptyState title="No withdrawals found" description="Pending and completed withdrawal requests will appear here." icon="withdraw" />
+          ) : (
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
@@ -168,9 +172,7 @@ export default function WithdrawalLogList() {
                     setAdminNotes('')
                   }}>{withdrawal.walletAddress?.substring(0, 20)}...</td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(withdrawal.status)}`}>
-                      {withdrawal.status}
-                    </span>
+                    <AdminStatusBadge status={withdrawal.status} />
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {new Date(withdrawal.createdAt).toLocaleDateString()}
@@ -204,6 +206,7 @@ export default function WithdrawalLogList() {
               ))}
             </tbody>
           </table>
+          )}
         </div>
       </div>
 
@@ -252,9 +255,7 @@ export default function WithdrawalLogList() {
               <div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Status</div>
                 <div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedWithdrawal.status)}`}>
-                    {selectedWithdrawal.status}
-                  </span>
+                  <AdminStatusBadge status={selectedWithdrawal.status} />
                 </div>
               </div>
               <div>

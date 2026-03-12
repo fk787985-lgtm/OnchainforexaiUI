@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import api from '../utils/axios'
 import toast from 'react-hot-toast'
+import PageHeader from '../components/ui/PageHeader'
+import Breadcrumbs from '../components/ui/Breadcrumbs'
+import Badge from '../components/ui/Badge'
 
 export default function Profile() {
   const navigate = useNavigate()
@@ -167,7 +170,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-20">
+    <div className="fx-page bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-20">
       {/* Fixed Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg">
         <div className="px-4 py-4 flex items-center space-x-3">
@@ -188,7 +191,9 @@ export default function Profile() {
       </header>
 
       {/* Content */}
-      <main className="px-4 py-6 pt-24">
+      <main className="px-4 py-6 pt-24 space-y-4">
+        <Breadcrumbs items={[{ label: 'Account' }, { label: getSectionTitle() }]} />
+        <PageHeader title={getSectionTitle()} description="Review profile, KYC status, and account transaction history." />
         {activeSection === 'personal' && (
           <div className="space-y-6">
             {/* User Info Card */}
@@ -229,20 +234,11 @@ export default function Profile() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">KYC Verification</h3>
                 {kycStatus?.isVerified ? (
-                  <span className="px-3 py-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-sm font-medium flex items-center space-x-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Verified</span>
-                  </span>
+                  <Badge label="Verified" status="verified" />
                 ) : kycStatus?.kyc?.status === 'pending' ? (
-                  <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 rounded-full text-sm font-medium">
-                    Under Review
-                  </span>
+                  <Badge label="Under Review" status="pending" />
                 ) : kycStatus?.kyc?.status === 'rejected' ? (
-                  <span className="px-3 py-1 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-full text-sm font-medium">
-                    Rejected
-                  </span>
+                  <Badge label="Rejected" status="rejected" />
                 ) : (
                   <button
                     onClick={() => navigate('/kyc/verify')}

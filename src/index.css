@@ -1,3 +1,4 @@
+@import './design/tokens.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -111,10 +112,69 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 * {
   box-sizing: border-box;
+}
+
+@layer components {
+  .fx-page {
+    @apply min-h-screen bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50;
+  }
+
+  .fx-page-container {
+    @apply px-4 sm:px-6 py-6 space-y-6;
+  }
+
+  .fx-card {
+    @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm;
+  }
+
+  .fx-section {
+    @apply p-4 sm:p-6;
+  }
+
+  .fx-input {
+    @apply w-full px-4 py-3 text-base bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-slate-50 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition;
+  }
+
+  .fx-select {
+    @apply w-full px-4 py-3 text-base bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition;
+  }
+
+  .fx-label {
+    @apply block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2;
+  }
+
+  .fx-help {
+    @apply text-xs text-slate-500 dark:text-slate-400 mt-2;
+  }
+
+  .fx-title {
+    @apply text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50;
+  }
+
+  .fx-subtitle {
+    @apply text-sm sm:text-base text-slate-600 dark:text-slate-400;
+  }
+}
+
+html, body, #root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Prevent iOS zoom on focused form controls on small screens */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea,
+  .PhoneInputInput,
+  .PhoneInputCountrySelect {
+    font-size: 16px !important;
+  }
 }
 
 @keyframes fade-in {

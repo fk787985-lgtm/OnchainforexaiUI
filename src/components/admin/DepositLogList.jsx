@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import api from '../../utils/axios'
 import { getImageUrl } from '../../utils/imageUrl.js'
+import PageHeader from '../ui/PageHeader'
+import EmptyState from '../ui/EmptyState'
+import SkeletonBlock from '../common/SkeletonBlock'
+import AdminStatusBadge from './AdminStatusBadge'
 
 export default function DepositLogList() {
   const [deposits, setDeposits] = useState([])
@@ -86,21 +90,18 @@ export default function DepositLogList() {
   }
 
   if (loading) {
-    return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Loading...</div>
-  }
-
-  const getStatusBadge = (status) => {
-    const badges = {
-      pending: 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400',
-      approved: 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400',
-      rejected: 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400',
-      completed: 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
-    }
-    return badges[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400'
+    return (
+      <div className="p-4 sm:p-6 space-y-4">
+        <SkeletonBlock className="h-8 w-44" />
+        <SkeletonBlock className="h-10 w-full rounded-xl" />
+        <SkeletonBlock className="h-64 w-full rounded-xl" />
+      </div>
+    )
   }
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 sm:p-6 space-y-4">
+      <PageHeader title="Deposit Log" description="Track user deposit requests, proof, and review actions." />
       <div className="mb-4">
         <div className="flex flex-wrap gap-2">
           <button
@@ -145,8 +146,11 @@ export default function DepositLogList() {
           </button>
         </div>
       </div>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
         <div className="overflow-x-auto">
+          {deposits.length === 0 ? (
+            <EmptyState title="No deposits found" description="Deposits will appear here once users submit funding requests." icon="transfer" />
+          ) : (
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
@@ -172,9 +176,7 @@ export default function DepositLogList() {
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-green-600 dark:text-green-400">+{deposit.amount} USDT</td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(deposit.status || 'completed')}`}>
-                      {deposit.status || 'completed'}
-                    </span>
+                    <AdminStatusBadge status={deposit.status || 'completed'} />
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className="px-2 py-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded text-xs">
@@ -200,6 +202,7 @@ export default function DepositLogList() {
               ))}
             </tbody>
           </table>
+          )}
         </div>
       </div>
 
@@ -260,9 +263,7 @@ export default function DepositLogList() {
               <div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Status</div>
                 <div>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(selectedDeposit.status || 'completed')}`}>
-                    {selectedDeposit.status || 'completed'}
-                  </span>
+                  <AdminStatusBadge status={selectedDeposit.status || 'completed'} />
                 </div>
               </div>
               {selectedDeposit.screenshot && (

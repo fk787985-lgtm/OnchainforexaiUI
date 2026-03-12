@@ -17,6 +17,9 @@ import SiteSettings from '../components/admin/SiteSettings'
 import NotifyUsers from '../components/admin/NotifyUsers'
 import SubAdminManagement from '../components/admin/SubAdminManagement'
 import ChangePasswordModal from '../components/admin/ChangePasswordModal'
+import PageHeader from '../components/ui/PageHeader'
+import Breadcrumbs from '../components/ui/Breadcrumbs'
+import Badge from '../components/ui/Badge'
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -111,7 +114,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors">
+    <div className="fx-page transition-colors">
       <AdminSidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -124,13 +127,15 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <div className="lg:ml-64 pt-16 lg:pt-0">
         {/* Header */}
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="px-4 sm:px-6 py-4 flex justify-between items-center">
-            <h1 className="text-xl sm:text-2xl font-bold">
-              {getTabTitle()}
-            </h1>
-            <div className="hidden lg:block">
-              <ThemeToggle />
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="px-4 sm:px-6 py-4 space-y-2">
+            <Breadcrumbs items={[{ label: 'Admin' }, { label: getTabTitle() }]} />
+            <div className="flex justify-between items-start gap-4">
+              <PageHeader title={getTabTitle()} description="Manage users, risk controls, operations, and platform settings." />
+              <div className="hidden lg:flex items-center gap-2">
+                <Badge label="Secure Admin Mode" status="verified" />
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </header>

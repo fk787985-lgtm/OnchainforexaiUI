@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 import { getImageUrl } from '../utils/imageUrl.js'
 import ThemeToggle from '../components/ThemeToggle'
+import { formatMarketPrice, getChangeMeta, formatMarketCapBillions } from '../utils/formatters/marketFormatters'
 
 export default function LandingPage() {
   const { settings: siteSettings } = useSiteSettings()
@@ -166,30 +167,23 @@ export default function LandingPage() {
   }, [theme])
 
   const formatPrice = (price) => {
-    const numericPrice = Number(price)
-    if (!Number.isFinite(numericPrice)) return '0.00'
-    if (numericPrice < 0.01) return numericPrice.toFixed(6)
-    if (numericPrice < 1) return numericPrice.toFixed(4)
-    return numericPrice.toFixed(2)
+    return formatMarketPrice(price)
   }
 
   const formatChange = (change) => {
-    const numericChange = Number(change)
-    if (!Number.isFinite(numericChange)) {
+    const changeMeta = getChangeMeta(change)
+    if (!changeMeta) {
       return <span className="text-gray-500 dark:text-gray-400">--</span>
     }
-    const isPositive = numericChange >= 0
     return (
-      <span className={isPositive ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}>
-        {isPositive ? '+' : ''}{numericChange.toFixed(2)}%
+      <span className={changeMeta.isPositive ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}>
+        {changeMeta.label}
       </span>
     )
   }
 
   const formatMarketCap = (marketCap) => {
-    const numericMarketCap = Number(marketCap)
-    if (!Number.isFinite(numericMarketCap)) return '--'
-    return `$${(numericMarketCap / 1e9).toFixed(2)}B`
+    return formatMarketCapBillions(marketCap)
   }
 
   return (
