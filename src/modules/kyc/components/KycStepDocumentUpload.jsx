@@ -32,6 +32,7 @@ export default function KycStepDocumentUpload({
       <div>
         <label className="fx-label">Front Side *</label>
         <input className="fx-input !py-2" type="file" accept="image/*,.pdf" onChange={(e) => onFrontUpload(e.target.files?.[0])} />
+        <p className="fx-help">Only images (JPEG, PNG), PDF, and video files are allowed.</p>
         {frontFile ? <p className="fx-help">Uploaded: {frontFile.name || 'Captured file'}</p> : null}
         {frontPreviewUrl ? <img src={frontPreviewUrl} alt="Front preview" className="mt-2 w-full max-h-48 object-cover rounded-xl border border-gray-200 dark:border-gray-700" /> : null}
       </div>
@@ -40,6 +41,7 @@ export default function KycStepDocumentUpload({
         <div>
           <label className="fx-label">Back Side *</label>
           <input className="fx-input !py-2" type="file" accept="image/*,.pdf" onChange={(e) => onBackUpload(e.target.files?.[0])} />
+          <p className="fx-help">Only images (JPEG, PNG), PDF, and video files are allowed.</p>
           {backFile ? <p className="fx-help">Uploaded: {backFile.name || 'Captured file'}</p> : null}
           {backPreviewUrl ? <img src={backPreviewUrl} alt="Back preview" className="mt-2 w-full max-h-48 object-cover rounded-xl border border-gray-200 dark:border-gray-700" /> : null}
         </div>

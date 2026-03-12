@@ -24,6 +24,13 @@ const DOC_OPTIONS = [
 ]
 
 const normalize = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+const FILE_TYPE_ERROR = 'Only images (JPEG, PNG), PDF, and video files are allowed'
+const ALLOWED_DOCUMENT_TYPES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'application/pdf'
+])
 
 export default function KYCVerify() {
   const navigate = useNavigate()
@@ -168,6 +175,10 @@ export default function KYCVerify() {
 
   const handleFrontUpload = (file) => {
     if (!file) return
+    if (!ALLOWED_DOCUMENT_TYPES.has((file.type || '').toLowerCase())) {
+      toast.error(FILE_TYPE_ERROR)
+      return
+    }
     if (frontPreviewUrl) URL.revokeObjectURL(frontPreviewUrl)
     setFrontFile(file)
     setFrontPreviewUrl(URL.createObjectURL(file))
@@ -175,6 +186,10 @@ export default function KYCVerify() {
 
   const handleBackUpload = (file) => {
     if (!file) return
+    if (!ALLOWED_DOCUMENT_TYPES.has((file.type || '').toLowerCase())) {
+      toast.error(FILE_TYPE_ERROR)
+      return
+    }
     if (backPreviewUrl) URL.revokeObjectURL(backPreviewUrl)
     setBackFile(file)
     setBackPreviewUrl(URL.createObjectURL(file))
