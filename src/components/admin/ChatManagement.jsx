@@ -4,6 +4,10 @@ import toast from 'react-hot-toast'
 import { getImageUrl } from '../../utils/imageUrl.js'
 import useChatAutoScroll from '../../hooks/useChatAutoScroll'
 import { formatRelativeDate, formatMessageTime, shouldShowDateSeparator } from '../../utils/chatTime'
+import PageHeader from '../ui/PageHeader'
+import EmptyState from '../ui/EmptyState'
+import SkeletonBlock from '../common/SkeletonBlock'
+import AdminStatusBadge from './AdminStatusBadge'
 
 export default function ChatManagement() {
   const [tickets, setTickets] = useState([])
@@ -13,6 +17,10 @@ export default function ChatManagement() {
   const [sending, setSending] = useState(false)
   const [attachments, setAttachments] = useState([])
   const [stats, setStats] = useState(null)
+  const [ticketsLoading, setTicketsLoading] = useState(true)
+  const [messagesLoading, setMessagesLoading] = useState(false)
+  const [ticketSearch, setTicketSearch] = useState('')
+  const [activeMobilePanel, setActiveMobilePanel] = useState('list')
   const [filters, setFilters] = useState({
     status: '',
     priority: '',
@@ -34,6 +42,7 @@ export default function ChatManagement() {
 
   useEffect(() => {
     if (selectedTicket) {
+      setActiveMobilePanel('chat')
       fetchMessages(selectedTicket._id)
       // Poll for new messages every 3 seconds
       const interval = setInterval(() => {
@@ -55,6 +64,7 @@ export default function ChatManagement() {
   }
 
   const fetchTickets = async () => {
+    setTicketsLoading(true)
     try {
       const params = new URLSearchParams()
       if (filters.status && filters.status !== '') {
@@ -89,10 +99,13 @@ export default function ChatManagement() {
     } catch (error) {
       console.error('Error fetching tickets:', error)
       toast.error('Failed to load tickets')
+    } finally {
+      setTicketsLoading(false)
     }
   }
 
   const fetchMessages = async (ticketId, silent = false) => {
+    if (!silent) setMessagesLoading(true)
     try {
       const response = await api.get(`/api/chat/admin/tickets/${ticketId}/messages`)
       if (response.data.success) {
@@ -116,6 +129,8 @@ export default function ChatManagement() {
         console.error('Error fetching messages:', error)
         toast.error('Failed to load messages')
       }
+    } finally {
+      if (!silent) setMessagesLoading(false)
     }
   }
 
@@ -224,6 +239,15 @@ export default function ChatManagement() {
     setAttachments(attachments.filter((_, i) => i !== index))
   }
 
+  const filteredTickets = tickets.filter((ticket) => {
+    if (!ticketSearch.trim()) return true
+    const q = ticketSearch.toLowerCase()
+    const subject = ticket.subject?.toLowerCase() || ''
+    const userName = ticket.user?.fullName?.toLowerCase() || ''
+    const userEmail = ticket.user?.email?.toLowerCase() || ''
+    return subject.includes(q) || userName.includes(q) || userEmail.includes(q)
+  })
+
   const archiveTicket = async () => {
     if (!selectedTicket) return
     await updateTicket({ status: 'archived' })
@@ -255,156 +279,142 @@ export default function ChatManagement() {
     }
   }
 
-  return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-4">Customer Service Chat</h2>
-        
-        {/* Stats */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-              <div className="text-sm text-gray-500 dark:text-gray-400">Total</div>
-              <div className="text-2xl font-bold">{stats.total}</div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-              <div className="text-sm text-gray-500 dark:text-gray-400">Open</div>
-              <div className="text-2xl font-bold text-yellow-600">{stats.open}</div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-              <div className="text-sm text-gray-500 dark:text-gray-400">In Progress</div>
-              <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-              <div className="text-sm text-gray-500 dark:text-gray-400">Resolved</div>
-              <div className="text-2xl font-bold text-green-600">{stats.resolved}</div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-              <div className="text-sm text-gray-500 dark:text-gray-400">Unread</div>
-              <div className="text-2xl font-bold text-red-600">{stats.unreadMessages}</div>
-            </div>
-          </div>
-        )}
+  const isTicketLocked = selectedTicket && ['closed', 'archived'].includes(selectedTicket.status)
 
-        {/* Filters */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Filters</h3>
-            {(filters.status || filters.priority || filters.assignedTo) && (
-              <button
-                onClick={() => {
-                  setFilters({ status: '', priority: '', assignedTo: '' })
-                  setSelectedTicket(null)
-                  setMessages([])
-                }}
-                className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
-              >
-                Clear Filters
-              </button>
-            )}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Status</label>
-              <select
-                value={filters.status}
-                onChange={(e) => {
-                  setFilters({ ...filters, status: e.target.value })
-                  setSelectedTicket(null)
-                  setMessages([])
-                }}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
-              >
-                <option value="">All Statuses</option>
-                <option value="open">Open</option>
-                <option value="in_progress">In Progress</option>
-                <option value="resolved">Resolved</option>
-                <option value="closed">Closed</option>
-                <option value="archived">Archived</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Priority</label>
-              <select
-                value={filters.priority}
-                onChange={(e) => {
-                  setFilters({ ...filters, priority: e.target.value })
-                  setSelectedTicket(null)
-                  setMessages([])
-                }}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
-              >
-                <option value="">All Priorities</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Assigned To</label>
-              <select
-                value={filters.assignedTo}
-                onChange={(e) => {
-                  setFilters({ ...filters, assignedTo: e.target.value })
-                  setSelectedTicket(null)
-                  setMessages([])
-                }}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
-              >
-                <option value="">All</option>
-                <option value="unassigned">Unassigned</option>
-              </select>
-            </div>
-          </div>
+  return (
+    <div className="p-4 sm:p-6 space-y-4">
+      <PageHeader
+        title="Customer Service Console"
+        description="Manage customer conversations, triage priority, and resolve tickets quickly."
+      />
+
+      {stats && (
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="fx-card p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Total Tickets</p><p className="text-2xl font-bold">{stats.total}</p></div>
+          <div className="fx-card p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Open</p><p className="text-2xl font-bold text-yellow-600">{stats.open}</p></div>
+          <div className="fx-card p-4"><p className="text-xs text-gray-500 dark:text-gray-400">In Progress</p><p className="text-2xl font-bold text-blue-600">{stats.inProgress}</p></div>
+          <div className="fx-card p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Resolved</p><p className="text-2xl font-bold text-green-600">{stats.resolved}</p></div>
+          <div className="fx-card p-4"><p className="text-xs text-gray-500 dark:text-gray-400">Unread</p><p className="text-2xl font-bold text-red-600">{stats.unreadMessages}</p></div>
+        </div>
+      )}
+
+      <div className="fx-card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-semibold">Filters</p>
+          {(filters.status || filters.priority || filters.assignedTo) && (
+            <button
+              onClick={() => {
+                setFilters({ status: '', priority: '', assignedTo: '' })
+                setSelectedTicket(null)
+                setMessages([])
+                setActiveMobilePanel('list')
+              }}
+              className="text-sm text-indigo-600 dark:text-indigo-400 font-medium"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <select
+            value={filters.status}
+            onChange={(e) => {
+              setFilters({ ...filters, status: e.target.value })
+              setSelectedTicket(null)
+              setMessages([])
+              setActiveMobilePanel('list')
+            }}
+            className="fx-select"
+          >
+            <option value="">All statuses</option>
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+            <option value="archived">Archived</option>
+          </select>
+          <select
+            value={filters.priority}
+            onChange={(e) => {
+              setFilters({ ...filters, priority: e.target.value })
+              setSelectedTicket(null)
+              setMessages([])
+              setActiveMobilePanel('list')
+            }}
+            className="fx-select"
+          >
+            <option value="">All priorities</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+          <select
+            value={filters.assignedTo}
+            onChange={(e) => {
+              setFilters({ ...filters, assignedTo: e.target.value })
+              setSelectedTicket(null)
+              setMessages([])
+              setActiveMobilePanel('list')
+            }}
+            className="fx-select"
+          >
+            <option value="">All assignees</option>
+            <option value="unassigned">Unassigned</option>
+          </select>
+          <input
+            value={ticketSearch}
+            onChange={(e) => setTicketSearch(e.target.value)}
+            placeholder="Search subject or customer..."
+            className="fx-input"
+          />
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-300px)]">
-        {/* Tickets List */}
-        <div className="w-full lg:w-96 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="font-semibold">Tickets ({tickets.length})</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-[360px,1fr] gap-4 h-[calc(100vh-280px)] min-h-[620px]">
+        <div className={`fx-card overflow-hidden flex flex-col ${activeMobilePanel === 'chat' ? 'hidden lg:flex' : 'flex'}`}>
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <p className="font-semibold">Tickets ({filteredTickets.length})</p>
+            {ticketsLoading ? <span className="text-xs text-gray-500">Syncing...</span> : null}
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {tickets.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <p>No tickets found</p>
-              </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {ticketsLoading ? (
+              <>
+                <SkeletonBlock className="h-20 w-full rounded-xl" />
+                <SkeletonBlock className="h-20 w-full rounded-xl" />
+                <SkeletonBlock className="h-20 w-full rounded-xl" />
+              </>
+            ) : filteredTickets.length === 0 ? (
+              <EmptyState title="No matching tickets" description="Adjust filters or search to find conversations." icon="search" />
             ) : (
-              tickets.map((ticket) => (
+              filteredTickets.map((ticket) => (
                 <button
                   key={ticket._id}
-                  onClick={() => setSelectedTicket(ticket)}
-                  className={`w-full text-left p-4 rounded-lg border transition ${
+                  onClick={() => {
+                    setSelectedTicket(ticket)
+                    setActiveMobilePanel('chat')
+                  }}
+                  className={`w-full text-left p-3 rounded-xl border transition ${
                     selectedTicket?._id === ticket._id
                       ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500'
                       : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-sm truncate">{ticket.subject}</h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {ticket.user?.fullName || ticket.user?.email || 'Unknown User'}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm truncate">{ticket.subject}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-1">
+                        {ticket.user?.fullName || ticket.user?.email || 'Unknown user'}
                       </p>
                     </div>
                     {ticket.unreadCount > 0 && (
-                      <span className="ml-2 bg-indigo-600 text-white text-xs px-2 py-0.5 rounded-full">
-                        {ticket.unreadCount}
-                      </span>
+                      <span className="bg-indigo-600 text-white text-xs px-2 py-0.5 rounded-full">{ticket.unreadCount}</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap text-xs mt-2">
-                    <span className={`px-2 py-0.5 rounded ${getStatusColor(ticket.status)}`}>
-                      {ticket.status.replace('_', ' ')}
-                    </span>
-                    <span className={`px-2 py-0.5 rounded ${getPriorityColor(ticket.priority)}`}>
-                      {ticket.priority}
-                    </span>
-                    <span className="text-gray-500 dark:text-gray-400">
-                      {formatRelativeDate(ticket.lastMessageAt)}
-                    </span>
+                  <div className="mt-2 flex items-center gap-2 flex-wrap">
+                    <AdminStatusBadge status={ticket.status} />
+                    <span className={`px-2 py-1 rounded-full text-xs ${getPriorityColor(ticket.priority)}`}>{ticket.priority}</span>
+                    <span className="text-xs text-gray-500">{formatRelativeDate(ticket.lastMessageAt)}</span>
                   </div>
                 </button>
               ))
@@ -412,266 +422,167 @@ export default function ChatManagement() {
           </div>
         </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 overflow-hidden">
-          {selectedTicket && tickets.length > 0 ? (
+        <div className={`fx-card overflow-hidden flex flex-col ${activeMobilePanel === 'list' ? 'hidden lg:flex' : 'flex'}`}>
+          {selectedTicket ? (
             <>
-              {/* Chat Header */}
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h2 className="font-semibold">{selectedTicket.subject}</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {selectedTicket.user?.fullName || selectedTicket.user?.email || 'Unknown User'}
-                      {selectedTicket.user?.uniqueId && ` (${selectedTicket.user.uniqueId})`}
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <button
+                        onClick={() => setActiveMobilePanel('list')}
+                        className="lg:hidden text-sm px-2 py-1 rounded bg-gray-100 dark:bg-gray-700"
+                      >
+                        Back
+                      </button>
+                      <p className="font-semibold truncate">{selectedTicket.subject}</p>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                      {selectedTicket.user?.fullName || selectedTicket.user?.email || 'Unknown user'}
+                      {selectedTicket.user?.uniqueId ? ` (${selectedTicket.user.uniqueId})` : ''}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded text-xs ${getStatusColor(selectedTicket.status)}`}>
-                      {selectedTicket.status.replace('_', ' ')}
-                    </span>
-                    <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(selectedTicket.priority)}`}>
-                      {selectedTicket.priority}
-                    </span>
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                    <AdminStatusBadge status={selectedTicket.status} />
+                    <span className={`px-2 py-1 rounded-full text-xs ${getPriorityColor(selectedTicket.priority)}`}>{selectedTicket.priority}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <select
-                    value={selectedTicket.status}
-                    onChange={(e) => updateTicket({ status: e.target.value })}
-                    className="text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
-                  >
+                <div className="flex items-center gap-2 flex-wrap">
+                  <select value={selectedTicket.status} onChange={(e) => updateTicket({ status: e.target.value })} className="fx-select !w-auto !py-2 !text-sm">
                     <option value="open">Open</option>
                     <option value="in_progress">In Progress</option>
                     <option value="resolved">Resolved</option>
                     <option value="closed">Closed</option>
                     <option value="archived">Archived</option>
                   </select>
-                  <select
-                    value={selectedTicket.priority}
-                    onChange={(e) => updateTicket({ priority: e.target.value })}
-                    className="text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
-                  >
+                  <select value={selectedTicket.priority} onChange={(e) => updateTicket({ priority: e.target.value })} className="fx-select !w-auto !py-2 !text-sm">
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                     <option value="urgent">Urgent</option>
                   </select>
-                  <button
-                    onClick={closeTicket}
-                    disabled={selectedTicket.status === 'closed' || selectedTicket.status === 'archived'}
-                    className="px-3 py-1.5 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
-                    title="Close ticket"
-                  >
+                  <button onClick={closeTicket} disabled={isTicketLocked} className="px-3 py-2 text-sm bg-gray-700 hover:bg-gray-800 text-white rounded-lg disabled:opacity-50">
                     Close
                   </button>
-                  <button
-                    onClick={archiveTicket}
-                    disabled={selectedTicket.status === 'archived'}
-                    className="px-3 py-1.5 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
-                    title="Archive ticket"
-                  >
+                  <button onClick={archiveTicket} disabled={selectedTicket.status === 'archived'} className="px-3 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50">
                     Archive
                   </button>
                 </div>
               </div>
 
-              {/* Messages */}
-              <div
-                ref={messagesContainerRef}
-                onScroll={handleScroll}
-                className="flex-1 min-h-0 overflow-y-auto p-4 space-y-1 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800"
-              >
-                {messages.map((message, index) => {
-                  const showDateSeparator = shouldShowDateSeparator(message, messages[index - 1])
-                  return (
-                    <div key={message._id}>
-                      {showDateSeparator && (
-                        <div className="flex items-center justify-center my-4">
-                          <div className="bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded-full">
-                            <span className="text-xs text-gray-600 dark:text-gray-300">
-                              {new Date(message.createdAt).toLocaleDateString('en-US', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                              })}
+              <div ref={messagesContainerRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-2 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+                {messagesLoading ? (
+                  <>
+                    <SkeletonBlock className="h-12 w-2/3 rounded-xl" />
+                    <SkeletonBlock className="h-12 w-1/2 rounded-xl ml-auto" />
+                    <SkeletonBlock className="h-12 w-3/4 rounded-xl" />
+                  </>
+                ) : messages.length === 0 ? (
+                  <EmptyState title="No messages yet" description="Start the conversation by sending the first response." icon="bell" />
+                ) : (
+                  messages.map((message, index) => {
+                    const showDateSeparator = shouldShowDateSeparator(message, messages[index - 1])
+                    return (
+                      <div key={message._id}>
+                        {showDateSeparator ? (
+                          <div className="flex justify-center py-2">
+                            <span className="px-3 py-1 rounded-full text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                              {new Date(message.createdAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                             </span>
                           </div>
-                        </div>
-                      )}
-                      <div className={`flex items-end gap-2 mb-3 ${message.senderType === 'admin' ? 'justify-end' : 'justify-start'}`}>
-                        {message.senderType === 'user' && (
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                            {message.sender?.fullName?.charAt(0)?.toUpperCase() || message.sender?.email?.charAt(0)?.toUpperCase() || 'U'}
-                          </div>
-                        )}
-                        <div className={`max-w-[75%] sm:max-w-[65%] rounded-2xl px-4 py-2.5 shadow-sm ${
-                          message.senderType === 'admin'
-                            ? 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-br-sm'
-                            : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-sm border border-gray-200 dark:border-gray-600'
-                        }`}>
-                          {message.senderType === 'user' && (
-                            <p className="text-xs font-semibold mb-1 opacity-90">
-                              {message.sender?.fullName || message.sender?.email || 'User'}
+                        ) : null}
+                        <div className={`flex items-end gap-2 ${message.senderType === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-[84%] sm:max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm ${
+                            message.senderType === 'admin'
+                              ? 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-br-sm'
+                              : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-sm border border-gray-200 dark:border-gray-600'
+                          }`}>
+                            <p className={`text-xs font-semibold mb-1 ${message.senderType === 'admin' ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-300'}`}>
+                              {message.senderType === 'admin'
+                                ? `${message.sender?.fullName || 'Support Team'} (Admin)`
+                                : (message.sender?.fullName || message.sender?.email || 'User')}
                             </p>
-                          )}
-                          {message.senderType === 'admin' && (
-                            <p className="text-xs font-semibold mb-1 text-indigo-100">
-                              {message.sender?.fullName || 'Support Team'} (Admin)
+                            <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.message}</p>
+                            {message.attachments?.length ? (
+                              <div className="mt-2 space-y-2">
+                                {message.attachments.map((attachment, idx) => (
+                                  <a
+                                    key={idx}
+                                    href={getImageUrl(attachment.path)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`block text-sm p-2 rounded-lg truncate ${
+                                      message.senderType === 'admin'
+                                        ? 'bg-indigo-700 hover:bg-indigo-800 text-white'
+                                        : 'bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-900 dark:text-white'
+                                    }`}
+                                  >
+                                    {attachment.filename}
+                                  </a>
+                                ))}
+                              </div>
+                            ) : null}
+                            <p className={`text-xs mt-2 ${message.senderType === 'admin' ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                              {formatMessageTime(message.createdAt)}
                             </p>
-                          )}
-                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.message}</p>
-                          {message.attachments && message.attachments.length > 0 && (
-                            <div className="mt-2 space-y-2">
-                              {message.attachments.map((attachment, idx) => (
-                                <a
-                                  key={idx}
-                                  href={getImageUrl(attachment.path)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`block text-sm flex items-center space-x-2 p-2 rounded-lg transition ${
-                                    message.senderType === 'admin'
-                                      ? 'bg-indigo-700 hover:bg-indigo-800 text-white'
-                                      : 'bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-900 dark:text-white'
-                                  }`}
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                  </svg>
-                                  <span className="truncate">{attachment.filename}</span>
-                                </a>
-                              ))}
-                            </div>
-                          )}
-                          <p className={`text-xs mt-2 ${message.senderType === 'admin' ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-400'}`}>
-                            {formatMessageTime(message.createdAt)}
-                          </p>
-                        </div>
-                        {message.senderType === 'admin' && (
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                            {message.sender?.fullName?.charAt(0)?.toUpperCase() || 'A'}
                           </div>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })
+                )}
               </div>
 
-              {/* Message Input */}
-              <div className="sticky bottom-0 z-10 p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                {attachments.length > 0 && (
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                {attachments.length > 0 ? (
                   <div className="mb-3 flex flex-wrap gap-2">
                     {attachments.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center space-x-2 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-800"
-                      >
-                        <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                        </svg>
-                        <span className="text-sm text-gray-700 dark:text-gray-300 truncate max-w-[150px]">{file.name}</span>
-                        <button
-                          onClick={() => removeAttachment(index)}
-                          className="text-red-500 hover:text-red-700 transition"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
+                      <div key={index} className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                        <span className="text-sm truncate max-w-[170px]">{file.name}</span>
+                        <button onClick={() => removeAttachment(index)} className="text-red-500 hover:text-red-700">x</button>
                       </div>
                     ))}
                   </div>
-                )}
-                <div className="flex items-end space-x-3">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition flex-shrink-0"
-                    title="Attach file"
-                  >
-                    <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
+                ) : null}
+                <div className="flex items-end gap-2">
+                  <button onClick={() => fileInputRef.current?.click()} className="px-3 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-sm">
+                    Attach
                   </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                  <input ref={fileInputRef} type="file" multiple onChange={handleFileSelect} className="hidden" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" />
+                  <textarea
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        if (!isTicketLocked) sendMessage()
+                      }
+                    }}
+                    placeholder={isTicketLocked ? 'This ticket is closed. Reopen to reply.' : 'Type a response...'}
+                    rows={2}
+                    disabled={isTicketLocked}
+                    className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base disabled:opacity-70"
                   />
-                  <div className="flex-1 relative">
-                    <textarea
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault()
-                          sendMessage()
-                        }
-                      }}
-                      placeholder="Type your message..."
-                      rows={1}
-                      className="w-full px-4 py-3 pr-12 border-2 border-gray-200 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-700 resize-none focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 transition text-base"
-                      style={{ minHeight: '48px', maxHeight: '120px' }}
-                    />
-                  </div>
                   <button
                     onClick={sendMessage}
-                    disabled={sending || (!newMessage.trim() && attachments.length === 0)}
-                    className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg hover:shadow-xl flex-shrink-0"
-                    title="Send message"
+                    disabled={isTicketLocked || sending || (!newMessage.trim() && attachments.length === 0)}
+                    className="px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50"
                   >
-                    {sending ? (
-                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                      </svg>
-                    )}
+                    {sending ? 'Sending...' : 'Send'}
                   </button>
                 </div>
-                {!isNearBottom() && (
-                  <div className="mt-3 flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => scrollToBottom('smooth')}
-                      className="px-3 py-1.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
-                    >
+                {!isNearBottom() ? (
+                  <div className="mt-2 flex justify-end">
+                    <button type="button" onClick={() => scrollToBottom('smooth')} className="px-3 py-1.5 text-xs rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
                       Jump to latest
                     </button>
                   </div>
-                )}
+                ) : null}
               </div>
             </>
-          ) : tickets.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
-              <div className="text-center">
-                <div className="mb-4">
-                  <svg className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </div>
-                <p className="text-lg font-semibold">No tickets found</p>
-                <p className="text-sm mt-2">No support tickets match your current filters</p>
-              </div>
-            </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
-              <div className="text-center">
-                <div className="mb-4">
-                  <svg className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </div>
-                <p className="text-lg font-semibold">Select a ticket to view messages</p>
-                <p className="text-sm mt-2">Choose a ticket from the list to start chatting</p>
-              </div>
+            <div className="flex-1 flex items-center justify-center">
+              <EmptyState title="Select a ticket to start" description="Pick a conversation from the list to view and reply." icon="dashboard" />
             </div>
           )}
         </div>
