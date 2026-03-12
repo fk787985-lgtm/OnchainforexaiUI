@@ -4,6 +4,59 @@ import toast from 'react-hot-toast'
 import { getImageUrl } from '../../utils/imageUrl.js'
 import SkeletonBlock from '../common/SkeletonBlock'
 
+function DocumentPreview({ doc }) {
+  const [imageFailed, setImageFailed] = useState(false)
+  const [videoFailed, setVideoFailed] = useState(false)
+
+  if (doc.type === 'image' && !imageFailed) {
+    return (
+      <img
+        src={doc.url}
+        alt={doc.label}
+        loading="lazy"
+        onError={() => setImageFailed(true)}
+        className="w-full h-44 object-cover rounded-md border border-gray-200 dark:border-gray-700"
+      />
+    )
+  }
+
+  if (doc.type === 'video' && !videoFailed) {
+    return (
+      <video
+        src={doc.url}
+        controls
+        preload="metadata"
+        onError={() => setVideoFailed(true)}
+        className="w-full h-44 object-cover rounded-md border border-gray-200 dark:border-gray-700"
+      />
+    )
+  }
+
+  if (doc.type === 'pdf') {
+    return (
+      <iframe
+        src={doc.url}
+        title={doc.label}
+        className="w-full h-64 rounded-md border border-gray-200 dark:border-gray-700 bg-white"
+      />
+    )
+  }
+
+  return (
+    <a
+      href={doc.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+    >
+      <span className="truncate">Open file</span>
+      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+      </svg>
+    </a>
+  )
+}
+
 export default function KYCLogList() {
   const [kycs, setKycs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -108,11 +161,17 @@ export default function KYCLogList() {
       .replace(/\b\w/g, (char) => char.toUpperCase())
   }
 
-  const getFileType = (path) => {
+  const getFileType = (path, label = '') => {
     if (!path) return 'file'
-    const extension = path.split('.').pop()?.toLowerCase() || ''
-    if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(extension)) return 'image'
-    if (['mp4', 'webm', 'mov'].includes(extension)) return 'video'
+    const sanitizedPath = String(path).split('#')[0].split('?')[0]
+    const extension = sanitizedPath.split('.').pop()?.toLowerCase() || ''
+    const normalizedLabel = String(label || '').toLowerCase()
+
+    if (normalizedLabel.includes('video')) return 'video'
+    if (normalizedLabel.includes('selfie') || normalizedLabel.includes('photo') || normalizedLabel.includes('passport') || normalizedLabel.includes('id')) return 'image'
+
+    if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'jfif'].includes(extension)) return 'image'
+    if (['mp4', 'webm', 'mov', 'm4v'].includes(extension)) return 'video'
     if (extension === 'pdf') return 'pdf'
     return 'file'
   }
@@ -130,7 +189,7 @@ export default function KYCLogList() {
       items.push({
         label,
         url,
-        type: getFileType(path)
+        type: getFileType(path, label)
       })
     }
 
@@ -380,35 +439,7 @@ export default function KYCLogList() {
                     {getDocumentItems(selectedKYC).map((doc) => (
                       <div key={doc.url} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                         <p className="font-medium text-gray-900 dark:text-white mb-2">{doc.label}</p>
-                        {doc.type === 'image' && (
-                          <a href={doc.url} target="_blank" rel="noopener noreferrer" className="block">
-                            <img
-                              src={doc.url}
-                              alt={doc.label}
-                              className="w-full h-36 object-cover rounded-md border border-gray-200 dark:border-gray-700"
-                            />
-                          </a>
-                        )}
-                        {doc.type === 'video' && (
-                          <video
-                            src={doc.url}
-                            controls
-                            className="w-full h-36 object-cover rounded-md border border-gray-200 dark:border-gray-700"
-                          />
-                        )}
-                        {(doc.type === 'pdf' || doc.type === 'file') && (
-                          <a
-                            href={doc.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                          >
-                            <span className="truncate">View file</span>
-                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                          </a>
-                        )}
+                        <DocumentPreview doc={doc} />
                       </div>
                     ))}
                   </div>
