@@ -1,0 +1,20 @@
+export default function KycStepLiveness({ videoPreviewUrl, onOpenRecorder, onNext, onBack }) {
+  return (
+    <div className="space-y-4 animate-fade-in">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Record a short 3-5 second verification clip.</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Look at the camera and blink or turn your head.</p>
+        <button onClick={onOpenRecorder} className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold">
+          {videoPreviewUrl ? 'Retake Video' : 'Start Video Verification'}
+        </button>
+        {videoPreviewUrl ? (
+          <video src={videoPreviewUrl} controls className="mt-3 w-full rounded-xl border border-gray-200 dark:border-gray-700" />
+        ) : null}
+      </div>
+      <div className="flex gap-3">
+        <button onClick={onBack} className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 rounded-xl font-semibold">Back</button>
+        <button onClick={onNext} className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold">Next</button>
+      </div>
+    </div>
+  )
+}
