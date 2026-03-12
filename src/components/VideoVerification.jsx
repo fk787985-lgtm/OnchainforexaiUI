@@ -5,21 +5,27 @@ export default function VideoVerification({ onComplete, onCancel }) {
   const [step, setStep] = useState(0)
   const [recording, setRecording] = useState(false)
   const [recordedVideo, setRecordedVideo] = useState(null)
-  const [countdown, setCountdown] = useState(0)
   const videoRef = useRef(null)
   const streamRef = useRef(null)
   const mediaRecorderRef = useRef(null)
   const recordedChunksRef = useRef([])
+  const verificationTimeoutRef = useRef(null)
+  const [recordingMimeType, setRecordingMimeType] = useState('video/webm')
+
+  const MAX_VIDEO_BYTES = 2 * 1024 * 1024
 
   const verificationSteps = [
     { action: 'Look straight ahead', icon: '👁️', duration: 2 },
-    { action: 'Look up', icon: '⬆️', duration: 2 },
-    { action: 'Look down', icon: '⬇️', duration: 2 },
-    { action: 'Turn head left', icon: '⬅️', duration: 2 },
-    { action: 'Turn head right', icon: '➡️', duration: 2 },
-    { action: 'Open your mouth', icon: '😮', duration: 2 },
-    { action: 'Blink your eyes', icon: '😊', duration: 2 }
+    { action: 'Blink once', icon: '😊', duration: 1 },
+    { action: 'Turn head left', icon: '⬅️', duration: 1 },
+    { action: 'Turn head right', icon: '➡️', duration: 1 }
   ]
+
+  const getSupportedMimeType = () => {
+    const candidates = ['video/webm;codecs=vp8', 'video/webm;codecs=vp9', 'video/webm']
+    const match = candidates.find((candidate) => MediaRecorder.isTypeSupported(candidate))
+    return match || ''
+  }
 
   useEffect(() => {
     startCamera()
@@ -31,7 +37,12 @@ export default function VideoVerification({ onComplete, onCancel }) {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 640, height: 480 },
+        video: {
+          facingMode: 'user',
+          width: { ideal: 480, max: 640 },
+          height: { ideal: 360, max: 480 },
+          frameRate: { ideal: 15, max: 20 }
+        },
         audio: false
       })
       streamRef.current = stream
@@ -45,6 +56,10 @@ export default function VideoVerification({ onComplete, onCancel }) {
   }
 
   const stopCamera = () => {
+    if (verificationTimeoutRef.current) {
+      clearTimeout(verificationTimeoutRef.current)
+      verificationTimeoutRef.current = null
+    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
@@ -61,9 +76,13 @@ export default function VideoVerification({ onComplete, onCancel }) {
     }
 
     try {
-      const mediaRecorder = new MediaRecorder(streamRef.current, {
-        mimeType: 'video/webm;codecs=vp8'
-      })
+      const mimeType = getSupportedMimeType()
+      const options = {
+        videoBitsPerSecond: 300000
+      }
+      if (mimeType) options.mimeType = mimeType
+      const mediaRecorder = new MediaRecorder(streamRef.current, options)
+      setRecordingMimeType(mimeType || 'video/webm')
       mediaRecorderRef.current = mediaRecorder
       recordedChunksRef.current = []
 
@@ -74,12 +93,18 @@ export default function VideoVerification({ onComplete, onCancel }) {
       }
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' })
+        const blob = new Blob(recordedChunksRef.current, { type: recordingMimeType || 'video/webm' })
+        if (blob.size > MAX_VIDEO_BYTES) {
+          toast.error('Video is too large. Please retake with better lighting and less movement.')
+          setRecordedVideo(null)
+          setRecording(false)
+          return
+        }
         setRecordedVideo(blob)
         setRecording(false)
       }
 
-      mediaRecorder.start()
+      mediaRecorder.start(250)
       setRecording(true)
       startVerificationSequence()
     } catch (error) {
@@ -96,7 +121,7 @@ export default function VideoVerification({ onComplete, onCancel }) {
       if (currentStep < verificationSteps.length) {
         setStep(currentStep)
         currentStep++
-        setTimeout(nextStep, verificationSteps[currentStep - 1].duration * 1000)
+        verificationTimeoutRef.current = setTimeout(nextStep, verificationSteps[currentStep - 1].duration * 1000)
       } else {
         stopRecording()
       }
@@ -181,7 +206,7 @@ export default function VideoVerification({ onComplete, onCancel }) {
                 {!recording && (
                   <div className="text-center py-4">
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      Please follow the instructions on screen. Make sure your face is clearly visible.
+                      Record a short 3-5 second clip. Keep your face clearly visible.
                     </p>
                     <button
                       onClick={startRecording}

@@ -47,6 +47,57 @@ const isAllowedDocumentFile = (file) => {
   return ALLOWED_DOCUMENT_MIME_TYPES.has(mime) || ALLOWED_DOCUMENT_EXTENSIONS.has(extension)
 }
 
+const MAX_IMAGE_WIDTH = 1280
+const MAX_IMAGE_HEIGHT = 1280
+const IMAGE_QUALITY = 0.78
+const MAX_TOTAL_UPLOAD_BYTES = 8 * 1024 * 1024
+
+const loadImageElement = (file) => new Promise((resolve, reject) => {
+  const objectUrl = URL.createObjectURL(file)
+  const image = new Image()
+  image.onload = () => {
+    URL.revokeObjectURL(objectUrl)
+    resolve(image)
+  }
+  image.onerror = () => {
+    URL.revokeObjectURL(objectUrl)
+    reject(new Error('Failed to read image'))
+  }
+  image.src = objectUrl
+})
+
+const compressImageFile = async (file, fallbackName = 'document.jpg') => {
+  const mime = String(file?.type || '').toLowerCase()
+  if (!mime.startsWith('image/')) return file
+  if (mime.includes('gif')) return file
+
+  try {
+    const image = await loadImageElement(file)
+    const ratio = Math.min(1, MAX_IMAGE_WIDTH / image.width, MAX_IMAGE_HEIGHT / image.height)
+    const width = Math.max(1, Math.floor(image.width * ratio))
+    const height = Math.max(1, Math.floor(image.height * ratio))
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return file
+    ctx.drawImage(image, 0, 0, width, height)
+
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob(resolve, 'image/jpeg', IMAGE_QUALITY)
+    })
+
+    if (!blob) return file
+    if (blob.size >= file.size) return file
+
+    const baseName = String(file.name || fallbackName).replace(/\.[^.]+$/, '')
+    const newName = `${baseName || 'document'}-compressed.jpg`
+    return new File([blob], newName, { type: 'image/jpeg' })
+  } catch {
+    return file
+  }
+}
+
 export default function KYCVerify() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
@@ -279,26 +330,28 @@ export default function KYCVerify() {
     }
   }
 
-  const handleFrontUpload = (file) => {
+  const handleFrontUpload = async (file) => {
     if (!file) return
     if (!isAllowedDocumentFile(file)) {
       toast.error(FILE_TYPE_ERROR)
       return
     }
+    const optimizedFile = await compressImageFile(file, 'document-front.jpg')
     if (frontPreviewUrl) URL.revokeObjectURL(frontPreviewUrl)
-    setFrontFile(file)
-    setFrontPreviewUrl(URL.createObjectURL(file))
+    setFrontFile(optimizedFile)
+    setFrontPreviewUrl(URL.createObjectURL(optimizedFile))
   }
 
-  const handleBackUpload = (file) => {
+  const handleBackUpload = async (file) => {
     if (!file) return
     if (!isAllowedDocumentFile(file)) {
       toast.error(FILE_TYPE_ERROR)
       return
     }
+    const optimizedFile = await compressImageFile(file, 'document-back.jpg')
     if (backPreviewUrl) URL.revokeObjectURL(backPreviewUrl)
-    setBackFile(file)
-    setBackPreviewUrl(URL.createObjectURL(file))
+    setBackFile(optimizedFile)
+    setBackPreviewUrl(URL.createObjectURL(optimizedFile))
   }
 
   const handleSelfieCaptured = (blob) => {
@@ -367,6 +420,18 @@ export default function KYCVerify() {
 
     if (!frontFile || (selectedDocMeta.requiresBack && !backFile) || !selfieFile || !videoFile) {
       toast.error('Please complete all steps before submission')
+      return
+    }
+
+    const totalUploadBytes = [
+      frontFile,
+      selectedDocMeta.requiresBack ? backFile : null,
+      selfieFile,
+      videoFile
+    ].filter(Boolean).reduce((sum, file) => sum + (file.size || 0), 0)
+
+    if (totalUploadBytes > MAX_TOTAL_UPLOAD_BYTES) {
+      toast.error('Uploads are too large. Use lower-size images/video and try again.')
       return
     }
 
