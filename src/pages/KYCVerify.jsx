@@ -110,14 +110,6 @@ export default function KYCVerify() {
     load()
   }, [])
 
-  useEffect(() => {
-    return () => {
-      ;[frontPreviewUrl, backPreviewUrl, selfiePreviewUrl, videoPreviewUrl].forEach((url) => {
-        if (url) URL.revokeObjectURL(url)
-      })
-    }
-  }, [frontPreviewUrl, backPreviewUrl, selfiePreviewUrl, videoPreviewUrl])
-
   const setPersonalField = (field, value) => {
     setPersonalInfo((prev) => ({ ...prev, [field]: value }))
   }
@@ -132,14 +124,46 @@ export default function KYCVerify() {
     }
   }
 
-  const splitAddress = (address) => {
+  const splitAddress = (address, nationality) => {
     const parts = String(address || '').split(',').map((part) => part.trim()).filter(Boolean)
+    const fallbackCountry = (nationality || '').trim() || 'N/A'
+
+    if (!parts.length) {
+      return {
+        street: 'N/A',
+        city: 'N/A',
+        state: '',
+        zipCode: '',
+        country: fallbackCountry
+      }
+    }
+
+    if (parts.length === 1) {
+      return {
+        street: parts[0],
+        city: 'N/A',
+        state: '',
+        zipCode: '',
+        country: fallbackCountry
+      }
+    }
+
+    if (parts.length === 2) {
+      return {
+        street: parts[0],
+        city: parts[1],
+        state: '',
+        zipCode: '',
+        country: fallbackCountry
+      }
+    }
+
     return {
       street: parts[0] || '',
       city: parts[1] || '',
       state: parts[2] || '',
       zipCode: parts[3] || '',
-      country: parts[4] || ''
+      country: parts[4] || fallbackCountry
     }
   }
 
@@ -267,7 +291,7 @@ export default function KYCVerify() {
     setLoading(true)
     try {
       const { firstName, lastName } = splitName(personalInfo.fullName)
-      const address = splitAddress(personalInfo.address)
+      const address = splitAddress(personalInfo.address, personalInfo.nationality)
 
       const step1 = await submitKycStep1({
         firstName,
@@ -393,6 +417,8 @@ export default function KYCVerify() {
               <KycStepReviewSubmit
                 personalInfo={personalInfo}
                 docTypeLabel={selectedDocMeta.label}
+                frontFile={frontFile}
+                backFile={backFile}
                 frontPreviewUrl={frontPreviewUrl}
                 backPreviewUrl={backPreviewUrl}
                 selfiePreviewUrl={selfiePreviewUrl}

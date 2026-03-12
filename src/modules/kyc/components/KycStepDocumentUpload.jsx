@@ -17,6 +17,7 @@ export default function KycStepDocumentUpload({
   onBack
 }) {
   const selected = DOC_OPTIONS.find((o) => o.value === docType) || DOC_OPTIONS[0]
+  const isPdf = (file) => (file?.type || '').toLowerCase() === 'application/pdf'
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -34,7 +35,19 @@ export default function KycStepDocumentUpload({
         <input className="fx-input !py-2" type="file" accept="image/*,.pdf" onChange={(e) => onFrontUpload(e.target.files?.[0])} />
         <p className="fx-help">Only images (JPEG, PNG), PDF, and video files are allowed.</p>
         {frontFile ? <p className="fx-help">Uploaded: {frontFile.name || 'Captured file'}</p> : null}
-        {frontPreviewUrl ? <img src={frontPreviewUrl} alt="Front preview" className="mt-2 w-full max-h-48 object-cover rounded-xl border border-gray-200 dark:border-gray-700" /> : null}
+        {frontPreviewUrl && !isPdf(frontFile) ? (
+          <img src={frontPreviewUrl} alt="Front preview" className="mt-2 w-full max-h-48 object-cover rounded-xl border border-gray-200 dark:border-gray-700" />
+        ) : null}
+        {frontPreviewUrl && isPdf(frontFile) ? (
+          <a
+            href={frontPreviewUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-flex items-center rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400"
+          >
+            Open Front PDF
+          </a>
+        ) : null}
       </div>
 
       {selected.requiresBack ? (
@@ -43,7 +56,19 @@ export default function KycStepDocumentUpload({
           <input className="fx-input !py-2" type="file" accept="image/*,.pdf" onChange={(e) => onBackUpload(e.target.files?.[0])} />
           <p className="fx-help">Only images (JPEG, PNG), PDF, and video files are allowed.</p>
           {backFile ? <p className="fx-help">Uploaded: {backFile.name || 'Captured file'}</p> : null}
-          {backPreviewUrl ? <img src={backPreviewUrl} alt="Back preview" className="mt-2 w-full max-h-48 object-cover rounded-xl border border-gray-200 dark:border-gray-700" /> : null}
+          {backPreviewUrl && !isPdf(backFile) ? (
+            <img src={backPreviewUrl} alt="Back preview" className="mt-2 w-full max-h-48 object-cover rounded-xl border border-gray-200 dark:border-gray-700" />
+          ) : null}
+          {backPreviewUrl && isPdf(backFile) ? (
+            <a
+              href={backPreviewUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex items-center rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400"
+            >
+              Open Back PDF
+            </a>
+          ) : null}
         </div>
       ) : null}
 

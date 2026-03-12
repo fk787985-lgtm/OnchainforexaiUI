@@ -1,6 +1,8 @@
 export default function KycStepReviewSubmit({
   personalInfo,
   docTypeLabel,
+  frontFile,
+  backFile,
   frontPreviewUrl,
   backPreviewUrl,
   selfiePreviewUrl,
@@ -11,6 +13,8 @@ export default function KycStepReviewSubmit({
   onBack,
   onSubmit
 }) {
+  const isPdf = (file) => (file?.type || '').toLowerCase() === 'application/pdf'
+
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="fx-card p-4">
@@ -29,8 +33,32 @@ export default function KycStepReviewSubmit({
           <p className="font-semibold">Document ({docTypeLabel})</p>
           <button onClick={() => onEditStep(2)} className="text-sm text-indigo-600 dark:text-indigo-400">Edit</button>
         </div>
-        {frontPreviewUrl ? <img src={frontPreviewUrl} alt="Document front preview" className="w-full max-h-52 object-cover rounded-xl border border-gray-200 dark:border-gray-700 mb-2" /> : null}
-        {requiresBack && backPreviewUrl ? <img src={backPreviewUrl} alt="Document back preview" className="w-full max-h-52 object-cover rounded-xl border border-gray-200 dark:border-gray-700" /> : null}
+        {frontPreviewUrl && !isPdf(frontFile) ? (
+          <img src={frontPreviewUrl} alt="Document front preview" className="w-full max-h-52 object-cover rounded-xl border border-gray-200 dark:border-gray-700 mb-2" />
+        ) : null}
+        {frontPreviewUrl && isPdf(frontFile) ? (
+          <a
+            href={frontPreviewUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mb-2 inline-flex items-center rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400"
+          >
+            Open Front PDF
+          </a>
+        ) : null}
+        {requiresBack && backPreviewUrl && !isPdf(backFile) ? (
+          <img src={backPreviewUrl} alt="Document back preview" className="w-full max-h-52 object-cover rounded-xl border border-gray-200 dark:border-gray-700" />
+        ) : null}
+        {requiresBack && backPreviewUrl && isPdf(backFile) ? (
+          <a
+            href={backPreviewUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-indigo-600 dark:text-indigo-400"
+          >
+            Open Back PDF
+          </a>
+        ) : null}
       </div>
 
       <div className="fx-card p-4">

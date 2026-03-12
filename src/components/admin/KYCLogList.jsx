@@ -134,7 +134,19 @@ export default function KYCLogList() {
       })
     }
 
-    if (kyc.documents && typeof kyc.documents === 'object') {
+    if (kyc.documents instanceof Map) {
+      kyc.documents.forEach((value, key) => {
+        addItem(formatDocumentLabel(key), value)
+      })
+    } else if (Array.isArray(kyc.documents)) {
+      kyc.documents.forEach((entry, idx) => {
+        if (entry && typeof entry === 'object') {
+          const key = entry.key || entry.name || `Document ${idx + 1}`
+          const value = entry.value || entry.path || entry.url
+          addItem(formatDocumentLabel(key), value)
+        }
+      })
+    } else if (kyc.documents && typeof kyc.documents === 'object') {
       Object.entries(kyc.documents).forEach(([key, value]) => {
         addItem(formatDocumentLabel(key), value)
       })
@@ -145,6 +157,13 @@ export default function KYCLogList() {
         addItem(formatDocumentLabel(key), value)
       })
     }
+
+    // Backward compatibility for old KYC records that used top-level fields.
+    ;['passport', 'nationalId', 'driverLicense', 'proofOfAddress', 'taskDocument', 'liveSelfie'].forEach((key) => {
+      if (kyc[key]) {
+        addItem(formatDocumentLabel(key), kyc[key])
+      }
+    })
 
     addItem('Selfie', kyc.selfie)
     addItem('Verification Video', kyc.verificationVideo)
@@ -207,7 +226,19 @@ export default function KYCLogList() {
                     <td className="px-6 py-4">
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => setSelectedKYC(kyc)}
+                          onClick={async () => {
+                            try {
+                              const response = await api.get(`/api/admin/kyc/${kyc._id}`)
+                              if (response.data?.success && response.data.kyc) {
+                                setSelectedKYC(response.data.kyc)
+                                return
+                              }
+                            } catch (error) {
+                              console.error('Error fetching KYC details:', error)
+                              toast.error('Failed to load complete KYC details')
+                            }
+                            setSelectedKYC(kyc)
+                          }}
                           className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm"
                         >
                           View
@@ -263,7 +294,19 @@ export default function KYCLogList() {
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => setSelectedKYC(kyc)}
+                    onClick={async () => {
+                      try {
+                        const response = await api.get(`/api/admin/kyc/${kyc._id}`)
+                        if (response.data?.success && response.data.kyc) {
+                          setSelectedKYC(response.data.kyc)
+                          return
+                        }
+                      } catch (error) {
+                        console.error('Error fetching KYC details:', error)
+                        toast.error('Failed to load complete KYC details')
+                      }
+                      setSelectedKYC(kyc)
+                    }}
                     className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm"
                   >
                     View
