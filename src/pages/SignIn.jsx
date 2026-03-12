@@ -10,6 +10,7 @@ import Button from '../components/ui/Button'
 import Alert from '../components/ui/Alert'
 import Icon from '../components/ui/Icon'
 import PageHeader from '../components/ui/PageHeader'
+import { getClientNetworkMeta } from '../utils/clientNetworkMeta'
 
 export default function SignIn() {
   const location = useLocation()
@@ -106,12 +107,13 @@ export default function SignIn() {
     setLoading(true)
 
     try {
+      const networkMeta = await getClientNetworkMeta()
       const response = await api.post('/api/auth/signin', {
         email: formData.email.toLowerCase(),
         password: formData.password,
         twoFactorCode: formData.twoFactorCode || undefined,
-        clientTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone || undefined,
-        clientLocale: navigator.language || undefined
+        clientLocale: navigator.language || undefined,
+        ...networkMeta
       }, {
         timeout: 10000
       })

@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 import ThemeToggle from '../components/ThemeToggle'
 import PasswordInput from '../components/PasswordInput'
+import { getClientNetworkMeta } from '../utils/clientNetworkMeta'
 
 export default function AdminSignIn() {
   const { settings: siteSettings } = useSiteSettings()
@@ -89,11 +90,12 @@ export default function AdminSignIn() {
     setLoading(true)
 
     try {
+      const networkMeta = await getClientNetworkMeta()
       const response = await api.post('/api/auth/admin/signin', {
         email: formData.email.toLowerCase(),
         password: formData.password,
-        clientTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone || undefined,
-        clientLocale: navigator.language || undefined
+        clientLocale: navigator.language || undefined,
+        ...networkMeta
       }, {
         timeout: 10000
       })

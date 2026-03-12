@@ -13,7 +13,6 @@ import TransferModal from '../components/TransferModal'
 import { getImageUrl } from '../utils/imageUrl.js'
 import { formatMarketPrice, getChangeMeta } from '../utils/formatters/marketFormatters'
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../api/modules/notificationsApi'
-import PageHeader from '../components/ui/PageHeader'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 
@@ -613,7 +612,7 @@ export default function Dashboard() {
                         })}
                       </div>
                     ) : (
-                      <EmptyState title="No notifications" description="You'll see trading, transfer, and security updates here." icon="bell" />
+                      <EmptyState title="No notifications" icon="bell" />
                     )}
                   </div>
                 </div>
@@ -883,11 +882,6 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
 
       {/* Main Content */}
       <main className="px-4 py-4 space-y-4 max-w-7xl mx-auto">
-        <PageHeader
-          title="Dashboard"
-          description="Track balances, market movers, and exchange updates in one place."
-          actions={<Badge label="Secure Session" status="verified" />}
-        />
         {/* Estimated Total Value */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="flex items-center justify-between mb-3">
@@ -977,7 +971,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 </button>
               </>
             ) : (
-              <EmptyState title="No market data available" description="Please try again in a moment." icon="market" />
+              <EmptyState title="No market data available" icon="market" />
             )}
           </div>
         </div>
@@ -1005,7 +999,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 </div>
               ))
             ) : (
-              <EmptyState title="No news available" description="Fresh market headlines will appear once fetched." icon="search" />
+              <EmptyState title="No news available" icon="search" />
             )}
           </div>
         </div>
@@ -1052,7 +1046,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 </button>
               </>
             ) : (
-              <EmptyState title="No stock data available" description="Stock updates are temporarily unavailable." icon="market" />
+              <EmptyState title="No stock data available" icon="market" />
             )}
           </div>
         </div>
@@ -1098,7 +1092,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 </button>
               </>
             ) : (
-              <EmptyState title="No forex data available" description="Forex updates are temporarily unavailable." icon="market" />
+              <EmptyState title="No forex data available" icon="market" />
             )}
           </div>
         </div>
