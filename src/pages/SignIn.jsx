@@ -109,7 +109,9 @@ export default function SignIn() {
       const response = await api.post('/api/auth/signin', {
         email: formData.email.toLowerCase(),
         password: formData.password,
-        twoFactorCode: formData.twoFactorCode || undefined
+        twoFactorCode: formData.twoFactorCode || undefined,
+        clientTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone || undefined,
+        clientLocale: navigator.language || undefined
       }, {
         timeout: 10000
       })

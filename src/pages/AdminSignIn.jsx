@@ -91,7 +91,9 @@ export default function AdminSignIn() {
     try {
       const response = await api.post('/api/auth/admin/signin', {
         email: formData.email.toLowerCase(),
-        password: formData.password
+        password: formData.password,
+        clientTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone || undefined,
+        clientLocale: navigator.language || undefined
       }, {
         timeout: 10000
       })

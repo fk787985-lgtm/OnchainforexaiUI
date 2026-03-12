@@ -41,16 +41,17 @@ export default function ChatManagement() {
   }, [filters.status, filters.priority, filters.assignedTo])
 
   useEffect(() => {
-    if (selectedTicket) {
-      setActiveMobilePanel('chat')
-      fetchMessages(selectedTicket._id)
-      // Poll for new messages every 3 seconds
-      const interval = setInterval(() => {
-        fetchMessages(selectedTicket._id, true)
-      }, 3000)
-      return () => clearInterval(interval)
-    }
-  }, [selectedTicket])
+    const ticketId = selectedTicket?._id
+    if (!ticketId) return
+
+    setActiveMobilePanel('chat')
+    fetchMessages(ticketId)
+    // Poll for new messages every 3 seconds
+    const interval = setInterval(() => {
+      fetchMessages(ticketId, true)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [selectedTicket?._id])
 
   const fetchStats = async () => {
     try {
@@ -85,16 +86,6 @@ export default function ChatManagement() {
       const response = await api.get(url)
       if (response.data.success) {
         setTickets(response.data.tickets)
-        // Clear selected ticket if it's not in the filtered results
-        if (selectedTicket) {
-          const ticketStillExists = response.data.tickets.some(
-            t => t._id === selectedTicket._id
-          )
-          if (!ticketStillExists) {
-            setSelectedTicket(null)
-            setMessages([])
-          }
-        }
       }
     } catch (error) {
       console.error('Error fetching tickets:', error)
@@ -118,7 +109,22 @@ export default function ChatManagement() {
           }
           return nextMessages
         })
-        setSelectedTicket(response.data.ticket)
+        if (!silent && response.data.ticket?._id) {
+          setSelectedTicket((prev) => {
+            if (!prev || prev._id !== response.data.ticket._id) {
+              return response.data.ticket
+            }
+            // Prevent render loops/blinking caused by replacing selected ticket on each poll.
+            if (
+              prev.status === response.data.ticket.status &&
+              prev.priority === response.data.ticket.priority &&
+              prev.unreadCount === response.data.ticket.unreadCount
+            ) {
+              return prev
+            }
+            return { ...prev, ...response.data.ticket }
+          })
+        }
         if (!silent) {
           fetchTickets()
           fetchStats()
