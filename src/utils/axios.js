@@ -19,6 +19,9 @@ const getBaseURL = () => {
 const baseURL = getBaseURL()
 
 // Log API configuration (both dev and prod for debugging)
+
+/* 
+
 console.log('🔧 API Configuration:', {
   baseURL: baseURL || '(empty - using Vite proxy)',
   apiUrlFromConfig: API_URL || '(empty)',
@@ -27,6 +30,8 @@ console.log('🔧 API Configuration:', {
   isDev: import.meta.env.DEV,
   isProd: import.meta.env.PROD
 })
+*/
+
 
 const api = axios.create({
   baseURL: baseURL, // Use helper function to ensure correct URL
