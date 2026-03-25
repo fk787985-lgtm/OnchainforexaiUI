@@ -22,7 +22,7 @@ export const SiteSettingsProvider = ({ children }) => {
       contact: {
         telegram: '',
         whatsapp: '',
-        email: 'support@onchainbittles.online'
+        email: 'support@onchainforexai.com'
       },
       envValues: {},
       seo: {
@@ -63,7 +63,7 @@ export const SiteSettingsProvider = ({ children }) => {
             contact: {
               telegram: fetchedSettings.site?.contact?.telegram || '',
               whatsapp: fetchedSettings.site?.contact?.whatsapp || '',
-              email: fetchedSettings.site?.contact?.email || 'support@onchainbittles.online'
+              email: fetchedSettings.site?.contact?.email || 'support@onchainforexai.com'
             },
             envValues: fetchedSettings.site?.envValues || (typeof fetchedSettings.site?.envValues === 'object' && !Array.isArray(fetchedSettings.site?.envValues) ? Object.fromEntries(Object.entries(fetchedSettings.site?.envValues)) : {}),
             seo: {

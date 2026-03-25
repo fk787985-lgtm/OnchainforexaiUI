@@ -202,7 +202,7 @@ export default function HelpSupport() {
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
               <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Other Ways to Reach Us</h3>
               <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                <p><strong className="text-gray-900 dark:text-white">Email:</strong> {siteSettings.site.contact?.email || 'support@onchainbittles.online'}</p>
+                <p><strong className="text-gray-900 dark:text-white">Email:</strong> {siteSettings.site.contact?.email || 'support@onchainforexai.com'}</p>
                 <p><strong className="text-gray-900 dark:text-white">Response Time:</strong> Usually within 24 hours</p>
                 <p><strong className="text-gray-900 dark:text-white">Business Hours:</strong> Monday - Friday, 9 AM - 6 PM (UTC)</p>
               </div>
