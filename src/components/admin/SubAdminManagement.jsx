@@ -129,6 +129,34 @@ export default function SubAdminManagement() {
     setShowAssignModal(true)
   }
 
+  const handleLoginAsSubAdmin = async (subAdmin) => {
+    if (!window.confirm(`Login as ${subAdmin.fullName || subAdmin.email}? You will be switched from admin session to sub-admin session.`)) {
+      return
+    }
+
+    try {
+      const response = await api.post(`/api/admin/subadmins/${subAdmin._id}/login-as`)
+      if (!response.data.success || !response.data.token) {
+        toast.error(response.data?.message || 'Failed to login as sub-admin')
+        return
+      }
+
+      localStorage.clear()
+      sessionStorage.clear()
+      document.cookie.split(';').forEach((c) => {
+        document.cookie = c
+          .replace(/^ +/, '')
+          .replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/')
+      })
+
+      localStorage.setItem('token', response.data.token)
+      window.location.replace('/subadmin/dashboard')
+    } catch (error) {
+      console.error('Error logging in as sub-admin:', error)
+      toast.error(error.response?.data?.message || 'Failed to login as sub-admin')
+    }
+  }
+
   const openPermissionsModal = (subAdmin) => {
     setPermissionTarget(subAdmin)
     setPermissionsForm({
@@ -259,6 +287,12 @@ export default function SubAdminManagement() {
                         className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
                       >
                         Assign Users
+                      </button>
+                      <button
+                        onClick={() => handleLoginAsSubAdmin(subAdmin)}
+                        className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 font-medium"
+                      >
+                        Login As
                       </button>
                       <button
                         onClick={() => openPermissionsModal(subAdmin)}
