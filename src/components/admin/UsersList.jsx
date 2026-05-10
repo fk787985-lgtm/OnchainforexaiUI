@@ -317,7 +317,7 @@ export default function UsersList() {
         addBalance: isSubAdmin ? true : addBalance,
         logToDeposit,
         logToWithdrawal,
-        notifyUserEmail,
+        notifyUserEmail: isSubAdmin ? true : notifyUserEmail,
         description: (isSubAdmin || addBalance) ? 'Deposit' : 'Withdrawal'
       })
       if (response.data.success) {
@@ -885,6 +885,13 @@ export default function UsersList() {
                           <p className="font-semibold text-gray-900 dark:text-white">Edit User Info</p>
                           <input
                             type="text"
+                            value={userDetails.username || ''}
+                            onChange={(e) => setUserDetails({ ...userDetails, username: e.target.value })}
+                            className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"
+                            placeholder="Username"
+                          />
+                          <input
+                            type="text"
                             value={userDetails.fullName || ''}
                             onChange={(e) => setUserDetails({ ...userDetails, fullName: e.target.value })}
                             className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"
@@ -901,6 +908,7 @@ export default function UsersList() {
                             onClick={async () => {
                               try {
                                 const response = await api.put(`/api/admin/users/${userDetails._id}`, {
+                                  username: userDetails.username,
                                   fullName: userDetails.fullName,
                                   phone: userDetails.phone
                                 })
@@ -962,6 +970,20 @@ export default function UsersList() {
                       {canAddBalance && (
                         <div className="space-y-3 p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                           <p className="font-semibold text-gray-900 dark:text-white">Add Balance</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                            <div className="p-2 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600">
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Current Balance</p>
+                              <p className="font-semibold text-gray-900 dark:text-white">
+                                {formatCurrency(userDetails.balance || 0)}
+                              </p>
+                            </div>
+                            <div className="p-2 rounded bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                              <p className="text-xs text-green-700 dark:text-green-300">Balance After Add</p>
+                              <p className="font-semibold text-green-700 dark:text-green-300">
+                                {formatCurrency((userDetails.balance || 0) + (parseFloat(balanceAmount) || 0))}
+                              </p>
+                            </div>
+                          </div>
                           <input
                             type="number"
                             step="0.01"
