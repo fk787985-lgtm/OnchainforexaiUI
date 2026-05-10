@@ -2,6 +2,24 @@ import { useState, useEffect } from 'react'
 import api from '../../utils/axios'
 import toast from 'react-hot-toast'
 
+const PERMISSION_FIELDS = [
+  { key: 'can_view_users', label: 'View users' },
+  { key: 'can_edit_users', label: 'Edit users' },
+  { key: 'can_add_balance', label: 'Add balance to users' },
+  { key: 'can_activate_user', label: 'Activate users' },
+  { key: 'can_deactivate_user', label: 'Deactivate users' },
+  { key: 'can_notify_users', label: 'Notify users' }
+]
+
+const DEFAULT_PERMISSIONS = {
+  can_view_users: true,
+  can_edit_users: false,
+  can_add_balance: false,
+  can_activate_user: false,
+  can_deactivate_user: false,
+  can_notify_users: false
+}
+
 export default function SubAdminManagement() {
   const [subAdmins, setSubAdmins] = useState([])
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -10,12 +28,16 @@ export default function SubAdminManagement() {
   const [users, setUsers] = useState([])
   const [assignedUsers, setAssignedUsers] = useState([])
   const [loading, setLoading] = useState(false)
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false)
+  const [permissionTarget, setPermissionTarget] = useState(null)
+  const [permissionsForm, setPermissionsForm] = useState(DEFAULT_PERMISSIONS)
   
   // Create form state
   const [createForm, setCreateForm] = useState({
     fullName: '',
     email: '',
-    phone: ''
+    phone: '',
+    permissions: DEFAULT_PERMISSIONS
   })
 
   useEffect(() => {
@@ -58,7 +80,7 @@ export default function SubAdminManagement() {
       if (response.data.success) {
         toast.success(`Sub-admin created! Password: ${response.data.password}`)
         setShowCreateModal(false)
-        setCreateForm({ fullName: '', email: '', phone: '' })
+        setCreateForm({ fullName: '', email: '', phone: '', permissions: DEFAULT_PERMISSIONS })
         fetchSubAdmins()
       }
     } catch (error) {
@@ -107,6 +129,36 @@ export default function SubAdminManagement() {
     setShowAssignModal(true)
   }
 
+  const openPermissionsModal = (subAdmin) => {
+    setPermissionTarget(subAdmin)
+    setPermissionsForm({
+      ...DEFAULT_PERMISSIONS,
+      ...(subAdmin.subAdminPermissions || {})
+    })
+    setShowPermissionsModal(true)
+  }
+
+  const handleUpdatePermissions = async () => {
+    if (!permissionTarget) return
+    setLoading(true)
+    try {
+      const response = await api.put(`/api/admin/subadmins/${permissionTarget._id}/permissions`, {
+        permissions: permissionsForm
+      })
+      if (response.data.success) {
+        toast.success('Permissions updated successfully')
+        setShowPermissionsModal(false)
+        setPermissionTarget(null)
+        fetchSubAdmins()
+      }
+    } catch (error) {
+      console.error('Error updating permissions:', error)
+      toast.error(error.response?.data?.message || 'Failed to update permissions')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleAssignUsers = async () => {
     if (!selectedSubAdmin) return
 
@@ -149,6 +201,7 @@ export default function SubAdminManagement() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Name</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Email</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Assigned Users</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Permissions</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Created</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Actions</th>
@@ -165,6 +218,28 @@ export default function SubAdminManagement() {
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">{subAdmin.email}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {subAdmin.subAdminAssignedUsers?.length || 0} user(s)
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <div className="flex flex-wrap gap-1 max-w-xs">
+                        {PERMISSION_FIELDS.filter(
+                          (permission) => ({ ...DEFAULT_PERMISSIONS, ...(subAdmin.subAdminPermissions || {}) })[permission.key]
+                        ).length > 0 ? (
+                          PERMISSION_FIELDS.filter(
+                            (permission) => ({ ...DEFAULT_PERMISSIONS, ...(subAdmin.subAdminPermissions || {}) })[permission.key]
+                          ).map((permission) => (
+                            <span
+                              key={`${subAdmin._id}-${permission.key}`}
+                              className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                            >
+                              {permission.label}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                            No permissions
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -184,6 +259,12 @@ export default function SubAdminManagement() {
                         className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
                       >
                         Assign Users
+                      </button>
+                      <button
+                        onClick={() => openPermissionsModal(subAdmin)}
+                        className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium"
+                      >
+                        Permissions
                       </button>
                       <button
                         onClick={() => handleToggleStatus(subAdmin)}
@@ -225,7 +306,7 @@ export default function SubAdminManagement() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan="7" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                     No sub-admins found. Create one to get started.
                   </td>
                 </tr>
@@ -283,6 +364,29 @@ export default function SubAdminManagement() {
                   placeholder="Enter phone number"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Permissions</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {PERMISSION_FIELDS.map((permission) => (
+                    <label key={permission.key} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <input
+                        type="checkbox"
+                        checked={!!createForm.permissions?.[permission.key]}
+                        onChange={(e) =>
+                          setCreateForm((prev) => ({
+                            ...prev,
+                            permissions: {
+                              ...(prev.permissions || DEFAULT_PERMISSIONS),
+                              [permission.key]: e.target.checked
+                            }
+                          }))
+                        }
+                      />
+                      {permission.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
               <div className="flex space-x-3 pt-4">
                 <button
                   onClick={() => setShowCreateModal(false)}
@@ -296,6 +400,62 @@ export default function SubAdminManagement() {
                   className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-semibold transition disabled:opacity-50"
                 >
                   {loading ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Permissions Modal */}
+      {showPermissionsModal && permissionTarget && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Permissions for {permissionTarget.fullName}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowPermissionsModal(false)
+                    setPermissionTarget(null)
+                  }}
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-6 space-y-3">
+              {PERMISSION_FIELDS.map((permission) => (
+                <label key={permission.key} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <span className="text-sm text-gray-800 dark:text-gray-200">{permission.label}</span>
+                  <input
+                    type="checkbox"
+                    checked={!!permissionsForm[permission.key]}
+                    onChange={(e) => setPermissionsForm((prev) => ({ ...prev, [permission.key]: e.target.checked }))}
+                  />
+                </label>
+              ))}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    setShowPermissionsModal(false)
+                    setPermissionTarget(null)
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdatePermissions}
+                  disabled={loading}
+                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : 'Save Permissions'}
                 </button>
               </div>
             </div>

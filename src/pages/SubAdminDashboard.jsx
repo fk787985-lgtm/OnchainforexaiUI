@@ -16,6 +16,7 @@ export default function SubAdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
   const { theme } = useTheme()
   const navigate = useNavigate()
 
@@ -30,6 +31,7 @@ export default function SubAdminDashboard() {
       try {
         const response = await api.get('/api/auth/me')
         if (response.data.success && response.data.user.role === 'subadmin') {
+          setCurrentUser(response.data.user)
           // Check if sub-admin is active
           if (!response.data.user.isSubAdminActive) {
             localStorage.removeItem('token')
@@ -90,6 +92,25 @@ export default function SubAdminDashboard() {
     return titles[activeTab] || 'Sub-Admin'
   }
 
+  const subAdminPermissions = {
+    can_view_users: true,
+    can_edit_users: false,
+    can_add_balance: false,
+    can_activate_user: false,
+    can_deactivate_user: false,
+    can_notify_users: false,
+    ...(currentUser?.subAdminPermissions || {})
+  }
+
+  useEffect(() => {
+    if (activeTab === 'notify' && !subAdminPermissions.can_notify_users) {
+      setActiveTab('dashboard')
+    }
+    if (activeTab === 'users' && !subAdminPermissions.can_view_users) {
+      setActiveTab('dashboard')
+    }
+  }, [activeTab, subAdminPermissions.can_notify_users, subAdminPermissions.can_view_users])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -131,8 +152,8 @@ export default function SubAdminDashboard() {
           {activeTab === 'dashboard' && (
             <SubAdminDashboardContent stats={stats} recentLogins={recentLogins} />
           )}
-          {activeTab === 'users' && <UsersList />}
-          {activeTab === 'notify' && <SubAdminNotifyUsers />}
+          {activeTab === 'users' && subAdminPermissions.can_view_users && <UsersList />}
+          {activeTab === 'notify' && subAdminPermissions.can_notify_users && <SubAdminNotifyUsers />}
         </main>
       </div>
 

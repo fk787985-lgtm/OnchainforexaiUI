@@ -10,6 +10,20 @@ export default function UsersList() {
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState(null)
   const isSubAdmin = currentUser?.role === 'subadmin'
+  const subAdminPermissions = {
+    can_view_users: true,
+    can_edit_users: false,
+    can_add_balance: false,
+    can_activate_user: false,
+    can_deactivate_user: false,
+    can_notify_users: false,
+    ...(currentUser?.subAdminPermissions || {})
+  }
+  const canViewUsers = !isSubAdmin || subAdminPermissions.can_view_users
+  const canEditUsers = !isSubAdmin || subAdminPermissions.can_edit_users
+  const canAddBalance = !isSubAdmin || subAdminPermissions.can_add_balance
+  const canActivateUser = !isSubAdmin || subAdminPermissions.can_activate_user
+  const canDeactivateUser = !isSubAdmin || subAdminPermissions.can_deactivate_user
   const [showLogsUser, setShowLogsUser] = useState(null)
   const [userLogs, setUserLogs] = useState([])
   const [logsLoading, setLogsLoading] = useState(false)
@@ -89,6 +103,9 @@ export default function UsersList() {
       }
     } catch (error) {
       console.error('Error fetching users:', error)
+      if (error.response?.status === 403) {
+        alert(error.response?.data?.message || 'Access denied to users list')
+      }
     } finally {
       setLoading(false)
     }
@@ -218,9 +235,12 @@ export default function UsersList() {
       let requestBody = {}
       
       if (isSubAdmin) {
-        // Sub-admins can only update winTradeSettings
+        // Sub-admins can update winTradeSettings and activation status (if granted).
         requestBody = {
-          winTradeSettings: settingsToSave
+          winTradeSettings: settingsToSave,
+          ...((canActivateUser || canDeactivateUser) && typeof userDetails.isActive === 'boolean'
+            ? { isActive: userDetails.isActive }
+            : {})
         }
       } else {
         // Admins can update all settings
@@ -294,11 +314,11 @@ export default function UsersList() {
     try {
       const response = await api.post(`/api/admin/users/${userDetails._id}/balance`, {
         amount: parseFloat(balanceAmount),
-        addBalance,
+        addBalance: isSubAdmin ? true : addBalance,
         logToDeposit,
         logToWithdrawal,
         notifyUserEmail,
-        description: addBalance ? 'Deposit' : 'Withdrawal'
+        description: (isSubAdmin || addBalance) ? 'Deposit' : 'Withdrawal'
       })
       if (response.data.success) {
         alert(addBalance ? 'Balance added successfully' : 'Balance subtracted successfully')
@@ -498,6 +518,14 @@ export default function UsersList() {
     )
   }
 
+  if (!canViewUsers) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center text-gray-600 dark:text-gray-300">
+        You do not have permission to view users.
+      </div>
+    )
+  }
+
   return (
     <>
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
@@ -572,16 +600,19 @@ export default function UsersList() {
                       <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-1">
                         <button
                           onClick={() => handleViewUser(user._id)}
+                          disabled={!canViewUsers}
                           className="px-2 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition whitespace-nowrap"
                         >
                           View
                         </button>
-                        <button
-                          onClick={() => handleEdit(user)}
-                          className="px-2 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition whitespace-nowrap"
-                        >
-                          Edit
-                        </button>
+                        {(canEditUsers || canAddBalance || canActivateUser || canDeactivateUser) && (
+                          <button
+                            onClick={() => handleEdit(user)}
+                            className="px-2 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition whitespace-nowrap"
+                          >
+                            Edit
+                          </button>
+                        )}
                         {!isSubAdmin && (
                           <>
                             <button
@@ -844,6 +875,113 @@ export default function UsersList() {
 
               {/* Right Column */}
               <div className="space-y-6">
+                {/* Sub-admin allowed actions */}
+                {isSubAdmin && (canEditUsers || canAddBalance || canActivateUser || canDeactivateUser) && (
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                    <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Allowed User Actions</h4>
+                    <div className="space-y-4">
+                      {canEditUsers && (
+                        <div className="space-y-3 p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                          <p className="font-semibold text-gray-900 dark:text-white">Edit User Info</p>
+                          <input
+                            type="text"
+                            value={userDetails.fullName || ''}
+                            onChange={(e) => setUserDetails({ ...userDetails, fullName: e.target.value })}
+                            className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"
+                            placeholder="Full name"
+                          />
+                          <input
+                            type="text"
+                            value={userDetails.phone || ''}
+                            onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
+                            className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"
+                            placeholder="Phone number"
+                          />
+                          <button
+                            onClick={async () => {
+                              try {
+                                const response = await api.put(`/api/admin/users/${userDetails._id}`, {
+                                  fullName: userDetails.fullName,
+                                  phone: userDetails.phone
+                                })
+                                if (response.data.success) {
+                                  alert('User info updated successfully')
+                                  await fetchUsers()
+                                }
+                              } catch (error) {
+                                alert(error.response?.data?.message || 'Failed to update user info')
+                              }
+                            }}
+                            className="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold"
+                          >
+                            Save User Info
+                          </button>
+                        </div>
+                      )}
+
+                      {(canActivateUser || canDeactivateUser) && (
+                        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                          <div>
+                            <p className="font-semibold text-gray-900 dark:text-white">User Status</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {userDetails.isActive ? 'Currently active' : 'Currently inactive'}
+                            </p>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              const nextStatus = !userDetails.isActive
+                              if (nextStatus && !canActivateUser) {
+                                alert('You do not have permission to activate users.')
+                                return
+                              }
+                              if (!nextStatus && !canDeactivateUser) {
+                                alert('You do not have permission to deactivate users.')
+                                return
+                              }
+                              try {
+                                const response = await api.put(`/api/admin/users/${userDetails._id}/settings`, {
+                                  isActive: nextStatus
+                                })
+                                if (response.data.success) {
+                                  setUserDetails({ ...userDetails, isActive: nextStatus })
+                                  await fetchUsers()
+                                }
+                              } catch (error) {
+                                alert(error.response?.data?.message || 'Failed to update user status')
+                              }
+                            }}
+                            className={`px-4 py-2 rounded-lg text-white ${
+                              userDetails.isActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
+                            }`}
+                          >
+                            {userDetails.isActive ? 'Deactivate' : 'Activate'}
+                          </button>
+                        </div>
+                      )}
+
+                      {canAddBalance && (
+                        <div className="space-y-3 p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                          <p className="font-semibold text-gray-900 dark:text-white">Add Balance</p>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={balanceAmount}
+                            onChange={(e) => setBalanceAmount(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"
+                            placeholder="Amount to add"
+                          />
+                          <button
+                            onClick={handleBalanceChange}
+                            className="w-full px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+                          >
+                            Add Balance
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Balance Management Card - Hidden for Sub-admin */}
                 {!isSubAdmin && (
                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 rounded-xl p-6 border border-gray-200 dark:border-gray-700">

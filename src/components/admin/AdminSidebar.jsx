@@ -35,6 +35,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         { id: 'deposits', label: 'Deposit Log' },
         { id: 'withdrawals', label: 'Withdrawal Log' },
         { id: 'transfers', label: 'Transfer Log' },
+        { id: 'balance-logs', label: 'Balance Logs' },
         { id: 'kyc', label: 'KYC Log' },
         { id: 'kyc-settings', label: 'KYC Settings' },
         { id: 'chat', label: 'Customer Service' },

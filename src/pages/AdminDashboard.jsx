@@ -10,6 +10,7 @@ import CoinsList from '../components/admin/CoinsList'
 import WithdrawalLogList from '../components/admin/WithdrawalLogList'
 import DepositLogList from '../components/admin/DepositLogList'
 import TransferLogList from '../components/admin/TransferLogList'
+import BalanceLogsList from '../components/admin/BalanceLogsList'
 import KYCLogList from '../components/admin/KYCLogList'
 import KYCSettings from '../components/admin/KYCSettings'
 import ChatManagement from '../components/admin/ChatManagement'
@@ -92,6 +93,7 @@ export default function AdminDashboard() {
       'deposits': 'Deposit Log',
       'withdrawals': 'Withdrawal Log',
       'transfers': 'Transfer Log',
+      'balance-logs': 'Balance Logs',
       'kyc': 'KYC Log',
       'kyc-settings': 'KYC Settings',
       'chat': 'Customer Service',
@@ -150,6 +152,7 @@ export default function AdminDashboard() {
           {activeTab === 'deposits' && <DepositLogList />}
           {activeTab === 'withdrawals' && <WithdrawalLogList />}
           {activeTab === 'transfers' && <TransferLogList />}
+          {activeTab === 'balance-logs' && <BalanceLogsList />}
           {activeTab === 'kyc' && <KYCLogList />}
           {activeTab === 'kyc-settings' && <KYCSettings />}
           {activeTab === 'chat' && <ChatManagement />}

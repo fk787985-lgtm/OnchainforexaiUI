@@ -168,7 +168,16 @@ export default function KYCLogList() {
     const normalizedLabel = String(label || '').toLowerCase()
 
     if (normalizedLabel.includes('video')) return 'video'
-    if (normalizedLabel.includes('selfie') || normalizedLabel.includes('photo') || normalizedLabel.includes('passport') || normalizedLabel.includes('id')) return 'image'
+    if (
+      normalizedLabel.includes('selfie') ||
+      normalizedLabel.includes('photo') ||
+      normalizedLabel.includes('passport') ||
+      normalizedLabel.includes('id') ||
+      normalizedLabel.includes('license') ||
+      normalizedLabel.includes('document') ||
+      normalizedLabel.includes('front') ||
+      normalizedLabel.includes('back')
+    ) return 'image'
 
     if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'jfif'].includes(extension)) return 'image'
     if (['mp4', 'webm', 'mov', 'm4v'].includes(extension)) return 'video'
