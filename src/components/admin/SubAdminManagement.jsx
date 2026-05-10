@@ -8,7 +8,8 @@ const PERMISSION_FIELDS = [
   { key: 'can_add_balance', label: 'Add balance to users' },
   { key: 'can_activate_user', label: 'Activate users' },
   { key: 'can_deactivate_user', label: 'Deactivate users' },
-  { key: 'can_notify_users', label: 'Notify users' }
+  { key: 'can_notify_users', label: 'Notify users' },
+  { key: 'can_customer_service', label: 'Customer service' }
 ]
 
 const DEFAULT_PERMISSIONS = {
@@ -17,7 +18,8 @@ const DEFAULT_PERMISSIONS = {
   can_add_balance: false,
   can_activate_user: false,
   can_deactivate_user: false,
-  can_notify_users: false
+  can_notify_users: false,
+  can_customer_service: false
 }
 
 export default function SubAdminManagement() {

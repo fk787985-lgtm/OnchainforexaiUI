@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../utils/axios'
 import toast from 'react-hot-toast'
-import { getImageUrl } from '../utils/imageUrl.js'
 import useChatAutoScroll from '../hooks/useChatAutoScroll'
 import { formatRelativeDate, formatMessageTime, shouldShowDateSeparator } from '../utils/chatTime'
+import MessageAttachments from '../components/chat/MessageAttachments'
 
 export default function CustomerService() {
   const navigate = useNavigate()
@@ -321,28 +321,10 @@ export default function CustomerService() {
                             </p>
                           )}
                           <p className={`text-sm whitespace-pre-wrap leading-relaxed ${message.senderType === 'user' ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{message.message}</p>
-                          {message.attachments && message.attachments.length > 0 && (
-                            <div className="mt-2 space-y-2">
-                              {message.attachments.map((attachment, idx) => (
-                                <a
-                                  key={idx}
-                                  href={getImageUrl(attachment.path)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`block text-sm flex items-center space-x-2 p-2 rounded-lg transition ${
-                                    message.senderType === 'user'
-                                      ? 'bg-indigo-700 hover:bg-indigo-800 text-white'
-                                      : 'bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-900 dark:text-white'
-                                  }`}
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                  </svg>
-                                  <span className="truncate">{attachment.filename}</span>
-                                </a>
-                              ))}
-                            </div>
-                          )}
+                          <MessageAttachments
+                            attachments={message.attachments || []}
+                            isOwnMessage={message.senderType === 'user'}
+                          />
                           <p className={`text-xs mt-2 ${message.senderType === 'user' ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-400'}`}>
                             {formatMessageTime(message.createdAt)}
                           </p>

@@ -7,6 +7,7 @@ import SubAdminSidebar from '../components/admin/SubAdminSidebar'
 import SubAdminDashboardContent from '../components/admin/SubAdminDashboardContent'
 import UsersList from '../components/admin/UsersList'
 import SubAdminNotifyUsers from '../components/admin/SubAdminNotifyUsers'
+import ChatManagement from '../components/admin/ChatManagement'
 import ChangePasswordModal from '../components/admin/ChangePasswordModal'
 
 export default function SubAdminDashboard() {
@@ -87,7 +88,8 @@ export default function SubAdminDashboard() {
     const titles = {
       'dashboard': 'Dashboard',
       'users': 'Assigned Users',
-      'notify': 'Notify Users'
+      'notify': 'Notify Users',
+      'chat': 'Customer Service'
     }
     return titles[activeTab] || 'Sub-Admin'
   }
@@ -99,6 +101,7 @@ export default function SubAdminDashboard() {
     can_activate_user: false,
     can_deactivate_user: false,
     can_notify_users: false,
+    can_customer_service: false,
     ...(currentUser?.subAdminPermissions || {})
   }
 
@@ -109,7 +112,10 @@ export default function SubAdminDashboard() {
     if (activeTab === 'users' && !subAdminPermissions.can_view_users) {
       setActiveTab('dashboard')
     }
-  }, [activeTab, subAdminPermissions.can_notify_users, subAdminPermissions.can_view_users])
+    if (activeTab === 'chat' && !subAdminPermissions.can_customer_service) {
+      setActiveTab('dashboard')
+    }
+  }, [activeTab, subAdminPermissions.can_notify_users, subAdminPermissions.can_view_users, subAdminPermissions.can_customer_service])
 
   if (loading) {
     return (
@@ -154,6 +160,7 @@ export default function SubAdminDashboard() {
           )}
           {activeTab === 'users' && subAdminPermissions.can_view_users && <UsersList />}
           {activeTab === 'notify' && subAdminPermissions.can_notify_users && <SubAdminNotifyUsers />}
+          {activeTab === 'chat' && subAdminPermissions.can_customer_service && <ChatManagement />}
         </main>
       </div>
 

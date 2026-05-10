@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import api from '../../utils/axios'
 import toast from 'react-hot-toast'
-import { getImageUrl } from '../../utils/imageUrl.js'
 import useChatAutoScroll from '../../hooks/useChatAutoScroll'
 import { formatRelativeDate, formatMessageTime, shouldShowDateSeparator } from '../../utils/chatTime'
 import PageHeader from '../ui/PageHeader'
 import EmptyState from '../ui/EmptyState'
 import SkeletonBlock from '../common/SkeletonBlock'
 import AdminStatusBadge from './AdminStatusBadge'
+import MessageAttachments from '../chat/MessageAttachments'
 
 export default function ChatManagement() {
   const [tickets, setTickets] = useState([])
@@ -505,29 +505,14 @@ export default function ChatManagement() {
                           }`}>
                             <p className={`text-xs font-semibold mb-1 ${message.senderType === 'admin' ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-300'}`}>
                               {message.senderType === 'admin'
-                                ? `${message.sender?.fullName || 'Support Team'} (Admin)`
+                                ? `${message.sender?.fullName || 'Support Team'} (${message.sender?.role === 'subadmin' ? 'Sub-admin' : 'Admin'})`
                                 : (message.sender?.fullName || message.sender?.email || 'User')}
                             </p>
                             <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.message}</p>
-                            {message.attachments?.length ? (
-                              <div className="mt-2 space-y-2">
-                                {message.attachments.map((attachment, idx) => (
-                                  <a
-                                    key={idx}
-                                    href={getImageUrl(attachment.path)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`block text-sm p-2 rounded-lg truncate ${
-                                      message.senderType === 'admin'
-                                        ? 'bg-indigo-700 hover:bg-indigo-800 text-white'
-                                        : 'bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-900 dark:text-white'
-                                    }`}
-                                  >
-                                    {attachment.filename}
-                                  </a>
-                                ))}
-                              </div>
-                            ) : null}
+                            <MessageAttachments
+                              attachments={message.attachments || []}
+                              isOwnMessage={message.senderType === 'admin'}
+                            />
                             <p className={`text-xs mt-2 ${message.senderType === 'admin' ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-400'}`}>
                               {formatMessageTime(message.createdAt)}
                             </p>

@@ -17,6 +17,7 @@ export default function UsersList() {
     can_activate_user: false,
     can_deactivate_user: false,
     can_notify_users: false,
+    can_customer_service: false,
     ...(currentUser?.subAdminPermissions || {})
   }
   const canViewUsers = !isSubAdmin || subAdminPermissions.can_view_users

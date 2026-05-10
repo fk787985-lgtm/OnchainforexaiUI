@@ -111,13 +111,15 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
     can_activate_user: false,
     can_deactivate_user: false,
     can_notify_users: false,
+    can_customer_service: false,
     ...(currentUser?.subAdminPermissions || {})
   }
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     ...(subAdminPermissions.can_view_users ? [{ id: 'users', label: 'Assigned Users', icon: '👥' }] : []),
-    ...(subAdminPermissions.can_notify_users ? [{ id: 'notify', label: 'Notify Users', icon: '🔔' }] : [])
+    ...(subAdminPermissions.can_notify_users ? [{ id: 'notify', label: 'Notify Users', icon: '🔔' }] : []),
+    ...(subAdminPermissions.can_customer_service ? [{ id: 'chat', label: 'Customer Service', icon: '💬' }] : [])
   ]
 
   const handleTabClick = (tabId) => {
