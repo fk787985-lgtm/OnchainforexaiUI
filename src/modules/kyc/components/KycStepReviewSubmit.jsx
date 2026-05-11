@@ -22,35 +22,35 @@ export default function KycStepReviewSubmit({
     <div className="space-y-4 animate-fade-in">
       <div className="fx-card p-4 sm:p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <p className="font-semibold text-base">Review & Submit</p>
+          <p className="font-semibold text-base text-gray-900 dark:text-gray-100">Review & Submit</p>
           <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
             Final Step
           </span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <button onClick={() => onEditStep(1)} className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <button onClick={() => onEditStep(1)} className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700">
             Edit Personal
           </button>
-          <button onClick={() => onEditStep(2)} className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <button onClick={() => onEditStep(2)} className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700">
             Edit Document
           </button>
-          <button onClick={() => onEditStep(3)} className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <button onClick={() => onEditStep(3)} className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700">
             Edit Selfie
           </button>
-          <button onClick={() => onEditStep(4)} className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <button onClick={() => onEditStep(4)} className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700">
             Edit Video
           </button>
         </div>
 
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
-          <p className="font-semibold mb-2">Personal Information</p>
+          <p className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Personal Information</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">{personalInfo.fullName}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">{personalInfo.dateOfBirth} • {personalInfo.nationality}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">{personalInfo.address}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">{personalInfo.phoneNumber}</p>
         </div>
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
-          <p className="font-semibold mb-2">Identity Document ({docTypeLabel})</p>
+          <p className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Identity Document ({docTypeLabel})</p>
           {frontPreviewUrl && !isPdf(frontFile) ? (
             <img src={frontPreviewUrl} alt="Document front preview" className="w-full max-h-52 object-cover rounded-xl border border-gray-200 dark:border-gray-700 mb-2" />
           ) : null}
@@ -80,11 +80,11 @@ export default function KycStepReviewSubmit({
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
-            <p className="font-semibold mb-2">Selfie</p>
+            <p className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Selfie</p>
             {selfiePreviewUrl ? <img src={selfiePreviewUrl} alt="Selfie preview" className="w-full max-h-52 object-cover rounded-xl border border-gray-200 dark:border-gray-700" /> : null}
           </div>
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
-            <p className="font-semibold mb-2">Liveness Video</p>
+            <p className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Liveness Video</p>
             {videoPreviewUrl ? <video src={videoPreviewUrl} controls className="w-full rounded-xl border border-gray-200 dark:border-gray-700" /> : null}
           </div>
         </div>
@@ -105,7 +105,7 @@ export default function KycStepReviewSubmit({
       </div>
 
       <div className="flex gap-3">
-        <button onClick={onBack} className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 rounded-xl font-semibold">Back</button>
+        <button onClick={onBack} className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl font-semibold">Back</button>
         <button onClick={onSubmit} disabled={loading || !canSubmit} className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold disabled:opacity-60">
           {loading ? 'Submitting...' : 'Submit Verification'}
         </button>

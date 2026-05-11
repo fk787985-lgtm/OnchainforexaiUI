@@ -15,8 +15,12 @@ export default function KycStepPersonalInfo({ form, onChange, onNext, loading, c
       }}
       className="space-y-4 animate-fade-in"
     >
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
-        <p className="text-sm font-semibold mb-2">Step readiness</p>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Personal Information</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Enter details exactly as shown on your official documents.</p>
+      </div>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3">
+        <p className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-100">Step readiness</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {checklist.map((item) => (
             <p key={item.label} className={`text-xs ${item.done ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
