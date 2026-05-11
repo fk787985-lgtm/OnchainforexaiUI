@@ -14,7 +14,8 @@ export default function KycStepDocumentUpload({
   onFrontUpload,
   onBackUpload,
   onNext,
-  onBack
+  onBack,
+  canProceed
 }) {
   const selected = DOC_OPTIONS.find((o) => o.value === docType) || DOC_OPTIONS[0]
   const isPdf = (file) => (file?.type || '').toLowerCase() === 'application/pdf'
@@ -28,6 +29,19 @@ export default function KycStepDocumentUpload({
             <option key={option.value} value={option.value}>{option.label}</option>
           ))}
         </select>
+      </div>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
+        <p className="text-sm font-semibold mb-2">Document checklist</p>
+        <div className="space-y-1">
+          <p className={`text-xs ${frontFile ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            {frontFile ? '✓' : '•'} Front side uploaded
+          </p>
+          {selected.requiresBack ? (
+            <p className={`text-xs ${backFile ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+              {backFile ? '✓' : '•'} Back side uploaded
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <div>
@@ -74,7 +88,7 @@ export default function KycStepDocumentUpload({
 
       <div className="flex gap-3">
         <button onClick={onBack} className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 rounded-xl font-semibold">Back</button>
-        <button onClick={onNext} className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold">Next</button>
+        <button onClick={onNext} disabled={!canProceed} className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold disabled:opacity-60">Next</button>
       </div>
     </div>
   )

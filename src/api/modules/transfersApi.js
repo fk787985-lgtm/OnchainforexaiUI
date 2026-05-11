@@ -1,6 +1,6 @@
 import api from '../../utils/axios'
 
-export const searchTransferUsers = async (query) => {
+export const lookupTransferRecipient = async (query) => {
   const response = await api.get(`/api/transfers/search?query=${encodeURIComponent(query)}`)
   return response.data
 }

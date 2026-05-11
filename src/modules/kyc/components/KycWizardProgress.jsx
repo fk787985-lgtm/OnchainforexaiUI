@@ -3,7 +3,7 @@ const STEP_ITEMS = [
   { id: 2, label: 'Document' },
   { id: 3, label: 'Selfie' },
   { id: 4, label: 'Liveness' },
-  { id: 5, label: 'Review' }
+  { id: 5, label: 'Submit' }
 ]
 
 export default function KycWizardProgress({ step }) {

@@ -1,4 +1,12 @@
-export default function KycStepPersonalInfo({ form, onChange, onNext, loading }) {
+export default function KycStepPersonalInfo({ form, onChange, onNext, loading, canProceed }) {
+  const checklist = [
+    { label: 'Full legal name', done: Boolean(form.fullName?.trim()) },
+    { label: 'Date of birth', done: Boolean(form.dateOfBirth) },
+    { label: 'Nationality', done: Boolean(form.nationality?.trim()) },
+    { label: 'Residential address', done: Boolean(form.address?.trim()) },
+    { label: 'Phone number', done: Boolean(form.phoneNumber?.trim()) }
+  ]
+
   return (
     <form
       onSubmit={(e) => {
@@ -7,6 +15,16 @@ export default function KycStepPersonalInfo({ form, onChange, onNext, loading })
       }}
       className="space-y-4 animate-fade-in"
     >
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
+        <p className="text-sm font-semibold mb-2">Step readiness</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {checklist.map((item) => (
+            <p key={item.label} className={`text-xs ${item.done ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+              {item.done ? '✓' : '•'} {item.label}
+            </p>
+          ))}
+        </div>
+      </div>
       <div>
         <label className="fx-label">Full Name *</label>
         <input
@@ -57,7 +75,7 @@ export default function KycStepPersonalInfo({ form, onChange, onNext, loading })
           required
         />
       </div>
-      <button type="submit" disabled={loading} className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold disabled:opacity-60">
+      <button type="submit" disabled={loading || !canProceed} className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold disabled:opacity-60">
         {loading ? 'Saving...' : 'Next'}
       </button>
     </form>

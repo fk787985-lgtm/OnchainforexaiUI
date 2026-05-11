@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 import ModalShell from './common/ModalShell'
-import { createTransfer, getRecentTransferRecipients, searchTransferUsers } from '../api/modules/transfersApi'
+import { createTransfer, getRecentTransferRecipients, lookupTransferRecipient } from '../api/modules/transfersApi'
 import ConfirmDialog from './ui/ConfirmDialog'
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const MIN_UNIQUE_ID_LOOKUP_LENGTH = 6
 
 export default function TransferModal({ isOpen, onClose, onSuccess }) {
   const [searchQuery, setSearchQuery] = useState('')
@@ -36,8 +39,14 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (searchQuery.length >= 2) {
-        searchUsers()
+      const query = searchQuery.trim()
+      if (!query) {
+        setUsers([])
+        return
+      }
+
+      if (isLookupReady(query)) {
+        lookupRecipient(query)
       } else {
         setUsers([])
       }
@@ -46,18 +55,24 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
     return () => clearTimeout(timeoutId)
   }, [searchQuery])
 
-  const searchUsers = async () => {
-    if (searchQuery.length < 2) return
+  const isLookupReady = (query) => {
+    if (!query) return false
+    if (query.includes('@')) return EMAIL_REGEX.test(query)
+    return query.length >= MIN_UNIQUE_ID_LOOKUP_LENGTH
+  }
+
+  const lookupRecipient = async (query) => {
+    if (!isLookupReady(query)) return
 
     setSearching(true)
     try {
-      const data = await searchTransferUsers(searchQuery)
+      const data = await lookupTransferRecipient(query)
       if (data.success) {
         setUsers(data.users)
       }
     } catch (error) {
-      console.error('Error searching users:', error)
-      toast.error('Failed to search users')
+      console.error('Error looking up recipient:', error)
+      toast.error('Failed to lookup recipient')
     } finally {
       setSearching(false)
     }
@@ -222,7 +237,7 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 transition text-base"
-                placeholder="Search by username, email, or unique ID..."
+                placeholder="Enter full email or full user ID"
               />
               {searching && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center">
@@ -233,11 +248,16 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
                   Searching...
                 </p>
               )}
+              {!searching && searchQuery.trim() && !isLookupReady(searchQuery.trim()) && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                  Enter a complete email address or at least {MIN_UNIQUE_ID_LOOKUP_LENGTH} characters of full user ID.
+                </p>
+              )}
             </div>
 
             {/* User List */}
             <div className="flex-1 min-h-[300px] max-h-[400px] overflow-y-auto space-y-3 pr-1">
-              {searchQuery.length >= 2 && users.length > 0 ? (
+              {searchQuery.trim() && isLookupReady(searchQuery.trim()) && users.length > 0 ? (
                 users.map((user) => (
                   <button
                     key={user._id}
@@ -250,17 +270,17 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
                     </div>
                   </button>
                 ))
-              ) : searchQuery.length >= 2 && !searching ? (
+              ) : searchQuery.trim() && isLookupReady(searchQuery.trim()) && !searching ? (
                 <div className="flex items-center justify-center h-full min-h-[250px]">
                   <div className="text-center py-8">
                     <svg className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-500 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     <p className="text-gray-600 dark:text-gray-400 font-medium">No users found</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">Try a different search term</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">No recipient with that exact email or user ID</p>
                   </div>
                 </div>
-              ) : searchQuery.length < 2 && recentRecipients.length > 0 ? (
+              ) : !searchQuery.trim() && recentRecipients.length > 0 ? (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
                     Recent Recipients
@@ -285,7 +305,7 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
                     ))}
                   </div>
                 </div>
-              ) : searchQuery.length < 2 ? (
+              ) : !searchQuery.trim() ? (
                 <div className="flex items-center justify-center h-full min-h-[250px]">
                   <div className="text-center py-8">
                     <svg className="w-16 h-16 mx-auto mb-4 text-indigo-400 dark:text-indigo-500 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,7 +314,7 @@ export default function TransferModal({ isOpen, onClose, onSuccess }) {
                     <p className="text-gray-600 dark:text-gray-400 font-medium">
                       {recentLoading ? 'Loading recent recipients...' : 'No recent recipients yet'}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">Search to send to another user</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">Use exact email or full user ID lookup</p>
                   </div>
                 </div>
               ) : null}

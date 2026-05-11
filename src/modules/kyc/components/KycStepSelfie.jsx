@@ -1,4 +1,4 @@
-export default function KycStepSelfie({ selfiePreviewUrl, onOpenCapture, onNext, onBack }) {
+export default function KycStepSelfie({ selfiePreviewUrl, onOpenCapture, onNext, onBack, canProceed }) {
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
@@ -12,7 +12,7 @@ export default function KycStepSelfie({ selfiePreviewUrl, onOpenCapture, onNext,
       </div>
       <div className="flex gap-3">
         <button onClick={onBack} className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 rounded-xl font-semibold">Back</button>
-        <button onClick={onNext} className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold">Next</button>
+        <button onClick={onNext} disabled={!canProceed} className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold disabled:opacity-60">Next</button>
       </div>
     </div>
   )

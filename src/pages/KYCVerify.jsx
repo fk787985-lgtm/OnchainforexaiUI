@@ -51,6 +51,7 @@ const MAX_IMAGE_WIDTH = 1280
 const MAX_IMAGE_HEIGHT = 1280
 const IMAGE_QUALITY = 0.78
 const MAX_TOTAL_UPLOAD_BYTES = 8 * 1024 * 1024
+const KYC_DRAFT_STORAGE_KEY = 'kyc_wizard_draft_v3'
 
 const loadImageElement = (file) => new Promise((resolve, reject) => {
   const objectUrl = URL.createObjectURL(file)
@@ -127,6 +128,9 @@ export default function KYCVerify() {
   const [selfiePreviewUrl, setSelfiePreviewUrl] = useState('')
   const [videoFile, setVideoFile] = useState(null)
   const [videoPreviewUrl, setVideoPreviewUrl] = useState('')
+  const [declarationChecked, setDeclarationChecked] = useState(false)
+  const [showSubmitSuccess, setShowSubmitSuccess] = useState(false)
+  const [lastAutoSavedAt, setLastAutoSavedAt] = useState(null)
 
   const selectedDocMeta = useMemo(
     () => DOC_OPTIONS.find((item) => item.value === docType) || DOC_OPTIONS[0],
@@ -134,11 +138,36 @@ export default function KYCVerify() {
   )
 
   const isReadOnlyStatus = existingKYC && ['pending', 'under_review', 'approved'].includes(existingKYC.status)
+  const personalInfoComplete = Boolean(
+    personalInfo.fullName.trim() &&
+    personalInfo.dateOfBirth &&
+    personalInfo.nationality.trim() &&
+    personalInfo.address.trim() &&
+    personalInfo.phoneNumber.trim()
+  )
+  const documentStepComplete = Boolean(frontFile && (!selectedDocMeta.requiresBack || backFile))
+  const selfieStepComplete = Boolean(selfieFile)
+  const livenessStepComplete = Boolean(videoFile)
+  const canSubmitReview = Boolean(
+    personalInfoComplete &&
+    documentStepComplete &&
+    selfieStepComplete &&
+    livenessStepComplete &&
+    declarationChecked
+  )
 
   useEffect(() => {
     const load = async () => {
       setBootLoading(true)
       try {
+        let savedDraft = null
+        try {
+          const rawDraft = localStorage.getItem(KYC_DRAFT_STORAGE_KEY)
+          savedDraft = rawDraft ? JSON.parse(rawDraft) : null
+        } catch {
+          savedDraft = null
+        }
+
         const [settingsData, kycData] = await Promise.all([getKycSettings(), getMyKyc()])
         if (settingsData?.success) setKycSettings(settingsData.settings || null)
 
@@ -147,6 +176,7 @@ export default function KYCVerify() {
           setExistingKYC(kyc)
           if (['pending', 'under_review', 'approved'].includes(kyc.status)) {
             setStep(5)
+            localStorage.removeItem(KYC_DRAFT_STORAGE_KEY)
           }
 
           if (kyc.status !== 'approved') {
@@ -165,6 +195,25 @@ export default function KYCVerify() {
             })
           }
         }
+
+        const canRestoreDraft = !kycData?.kyc || ['rejected'].includes(kycData?.kyc?.status)
+        if (savedDraft && canRestoreDraft) {
+          if (savedDraft.personalInfo) {
+            setPersonalInfo((prev) => ({ ...prev, ...savedDraft.personalInfo }))
+          }
+          if (savedDraft.docType && DOC_OPTIONS.some((option) => option.value === savedDraft.docType)) {
+            setDocType(savedDraft.docType)
+          }
+          if (savedDraft.declarationChecked) {
+            setDeclarationChecked(Boolean(savedDraft.declarationChecked))
+          }
+          if (Number.isInteger(savedDraft.step) && savedDraft.step >= 1 && savedDraft.step <= 5) {
+            setStep(savedDraft.step)
+          }
+          if (savedDraft.savedAt) {
+            setLastAutoSavedAt(savedDraft.savedAt)
+          }
+        }
       } catch (error) {
         console.error('Failed to initialize KYC flow:', error)
         toast.error('Failed to load KYC information')
@@ -178,7 +227,72 @@ export default function KYCVerify() {
 
   const setPersonalField = (field, value) => {
     setPersonalInfo((prev) => ({ ...prev, [field]: value }))
+    if (declarationChecked) setDeclarationChecked(false)
   }
+
+  const handleDocTypeChange = (nextDocType) => {
+    setDocType(nextDocType)
+    if (declarationChecked) setDeclarationChecked(false)
+  }
+
+  useEffect(() => {
+    if (bootLoading || isReadOnlyStatus) return
+    const draft = {
+      step,
+      docType,
+      declarationChecked,
+      personalInfo,
+      mediaState: {
+        hasFront: Boolean(frontFile),
+        hasBack: Boolean(backFile),
+        hasSelfie: Boolean(selfieFile),
+        hasVideo: Boolean(videoFile)
+      },
+      savedAt: new Date().toISOString()
+    }
+    try {
+      localStorage.setItem(KYC_DRAFT_STORAGE_KEY, JSON.stringify(draft))
+      setLastAutoSavedAt(draft.savedAt)
+    } catch {
+      // Ignore localStorage write failures to avoid blocking the flow.
+    }
+  }, [
+    step,
+    docType,
+    declarationChecked,
+    personalInfo,
+    frontFile,
+    backFile,
+    selfieFile,
+    videoFile,
+    bootLoading,
+    isReadOnlyStatus
+  ])
+
+  useEffect(() => {
+    if (bootLoading || isReadOnlyStatus) return
+    const shouldSyncPersonalInfo = personalInfoComplete
+    if (!shouldSyncPersonalInfo) return
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const { firstName, lastName } = splitName(personalInfo.fullName)
+        const address = splitAddress(personalInfo.address, personalInfo.nationality)
+        await submitKycStep1({
+          firstName,
+          lastName,
+          dateOfBirth: personalInfo.dateOfBirth,
+          nationality: personalInfo.nationality,
+          phoneNumber: personalInfo.phoneNumber
+        })
+        await submitKycStep2(address)
+      } catch (error) {
+        console.error('Silent autosave failed:', error)
+      }
+    }, 900)
+
+    return () => clearTimeout(timeoutId)
+  }, [personalInfo, personalInfoComplete, bootLoading, isReadOnlyStatus])
 
   const splitName = (fullName) => {
     const trimmed = fullName.trim()
@@ -340,6 +454,7 @@ export default function KYCVerify() {
     if (frontPreviewUrl) URL.revokeObjectURL(frontPreviewUrl)
     setFrontFile(optimizedFile)
     setFrontPreviewUrl(URL.createObjectURL(optimizedFile))
+    if (declarationChecked) setDeclarationChecked(false)
   }
 
   const handleBackUpload = async (file) => {
@@ -352,6 +467,7 @@ export default function KYCVerify() {
     if (backPreviewUrl) URL.revokeObjectURL(backPreviewUrl)
     setBackFile(optimizedFile)
     setBackPreviewUrl(URL.createObjectURL(optimizedFile))
+    if (declarationChecked) setDeclarationChecked(false)
   }
 
   const handleSelfieCaptured = (blob) => {
@@ -359,6 +475,7 @@ export default function KYCVerify() {
     setSelfieFile(blob)
     setSelfiePreviewUrl(URL.createObjectURL(blob))
     setShowSelfieCapture(false)
+    if (declarationChecked) setDeclarationChecked(false)
   }
 
   const handleVideoCaptured = (blob) => {
@@ -366,6 +483,7 @@ export default function KYCVerify() {
     setVideoFile(blob)
     setVideoPreviewUrl(URL.createObjectURL(blob))
     setShowVideoCapture(false)
+    if (declarationChecked) setDeclarationChecked(false)
   }
 
   const validateStep = (targetStep) => {
@@ -413,6 +531,11 @@ export default function KYCVerify() {
   }
 
   const submitAll = async () => {
+    if (!declarationChecked) {
+      toast.error('Please confirm your declaration before submitting')
+      return
+    }
+
     if (isReadOnlyStatus) {
       toast.error('KYC is already under review or approved')
       return
@@ -454,6 +577,7 @@ export default function KYCVerify() {
 
       const formData = new FormData()
       appendKycDocuments(formData)
+      formData.append('selectedDocumentType', docType)
       formData.append('selfie', selfieFile, 'selfie.jpg')
       formData.append('verificationVideo', videoFile, 'verification-video.webm')
 
@@ -461,8 +585,14 @@ export default function KYCVerify() {
       if (!step3.success) throw new Error(step3.message || 'Step 3 failed')
 
       toast.success('KYC submitted successfully. Your verification is under review.')
-      setExistingKYC((prev) => ({ ...(prev || {}), status: 'pending' }))
-      setStep(5)
+      localStorage.removeItem(KYC_DRAFT_STORAGE_KEY)
+      setLastAutoSavedAt(null)
+      setShowSubmitSuccess(true)
+      setTimeout(() => {
+        setShowSubmitSuccess(false)
+        setExistingKYC((prev) => ({ ...(prev || {}), status: 'pending' }))
+        setStep(5)
+      }, 1700)
     } catch (error) {
       console.error('KYC submission error:', error)
       toast.error(error.response?.data?.message || error.message || 'Failed to submit KYC')
@@ -490,17 +620,52 @@ export default function KYCVerify() {
           </button>
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">KYC Verification</h1>
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Secure identity verification wizard</p>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+              Secure identity verification wizard
+              {lastAutoSavedAt ? ` • Auto-saved ${new Date(lastAutoSavedAt).toLocaleTimeString()}` : ''}
+            </p>
           </div>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+        {showSubmitSuccess ? (
+          <div className="fx-card p-8 text-center animate-pulse">
+            <div className="mx-auto mb-3 w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+              <svg className="w-7 h-7 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-green-600 dark:text-green-400 mb-1">Submission Successful</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Your documents are being prepared for compliance review.</p>
+          </div>
+        ) : null}
+
         <div className="fx-card p-4 sm:p-6">
           <KycWizardProgress step={step} />
         </div>
+        {!showSubmitSuccess && !isReadOnlyStatus ? (
+          <div className="fx-card p-4">
+            <p className="text-sm font-semibold mb-2">Completion status</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <span className={`text-xs px-2 py-1 rounded-full ${personalInfoComplete ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}`}>
+                Personal
+              </span>
+              <span className={`text-xs px-2 py-1 rounded-full ${documentStepComplete ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}`}>
+                Documents
+              </span>
+              <span className={`text-xs px-2 py-1 rounded-full ${selfieStepComplete ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}`}>
+                Selfie
+              </span>
+              <span className={`text-xs px-2 py-1 rounded-full ${livenessStepComplete ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}`}>
+                Liveness
+              </span>
+            </div>
+          </div>
+        ) : null}
 
-        {existingKYC?.status === 'approved' ? (
+        {!showSubmitSuccess ? (
+        existingKYC?.status === 'approved' ? (
           <div className="fx-card p-6 text-center">
             <h2 className="text-xl font-bold text-green-600 dark:text-green-400 mb-2">Verification Approved</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Your identity has been verified successfully.</p>
@@ -520,13 +685,14 @@ export default function KYCVerify() {
                 onChange={setPersonalField}
                 onNext={goNext}
                 loading={loading}
+                canProceed={personalInfoComplete}
               />
             ) : null}
 
             {step === 2 ? (
               <KycStepDocumentUpload
                 docType={docType}
-                onDocTypeChange={setDocType}
+                onDocTypeChange={handleDocTypeChange}
                 frontFile={frontFile}
                 backFile={backFile}
                 frontPreviewUrl={frontPreviewUrl}
@@ -535,6 +701,7 @@ export default function KYCVerify() {
                 onBackUpload={handleBackUpload}
                 onBack={() => setStep(1)}
                 onNext={goNext}
+                canProceed={documentStepComplete}
               />
             ) : null}
 
@@ -544,6 +711,7 @@ export default function KYCVerify() {
                 onOpenCapture={() => setShowSelfieCapture(true)}
                 onBack={() => setStep(2)}
                 onNext={goNext}
+                canProceed={selfieStepComplete}
               />
             ) : null}
 
@@ -553,6 +721,7 @@ export default function KYCVerify() {
                 onOpenRecorder={() => setShowVideoCapture(true)}
                 onBack={() => setStep(3)}
                 onNext={goNext}
+                canProceed={livenessStepComplete}
               />
             ) : null}
 
@@ -568,13 +737,16 @@ export default function KYCVerify() {
                 videoPreviewUrl={videoPreviewUrl}
                 requiresBack={selectedDocMeta.requiresBack}
                 loading={loading}
+                canSubmit={canSubmitReview}
+                declarationChecked={declarationChecked}
+                onDeclarationChange={setDeclarationChecked}
                 onEditStep={setStep}
                 onBack={() => setStep(4)}
                 onSubmit={submitAll}
               />
             ) : null}
           </div>
-        )}
+        ) : null}
       </main>
 
       {showSelfieCapture ? (
