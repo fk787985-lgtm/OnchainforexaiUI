@@ -664,89 +664,90 @@ export default function KYCVerify() {
           </div>
         ) : null}
 
-        {!showSubmitSuccess ? (
-        existingKYC?.status === 'approved' ? (
-          <div className="fx-card p-6 text-center">
-            <h2 className="text-xl font-bold text-green-600 dark:text-green-400 mb-2">Verification Approved</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Your identity has been verified successfully.</p>
-            <button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold">Go to Dashboard</button>
-          </div>
-        ) : existingKYC && ['pending', 'under_review'].includes(existingKYC.status) ? (
-          <div className="fx-card p-6 text-center">
-            <h2 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">Verification Under Review</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Your KYC has been submitted. Please wait for review completion.</p>
-            <button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold">Go to Dashboard</button>
-          </div>
-        ) : (
-          <div className="fx-card p-4 sm:p-6">
-            {step === 1 ? (
-              <KycStepPersonalInfo
-                form={personalInfo}
-                onChange={setPersonalField}
-                onNext={goNext}
-                loading={loading}
-                canProceed={personalInfoComplete}
-              />
-            ) : null}
+        {!showSubmitSuccess && (
+          existingKYC?.status === 'approved' ? (
+            <div className="fx-card p-6 text-center">
+              <h2 className="text-xl font-bold text-green-600 dark:text-green-400 mb-2">Verification Approved</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Your identity has been verified successfully.</p>
+              <button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold">Go to Dashboard</button>
+            </div>
+          ) : existingKYC && ['pending', 'under_review'].includes(existingKYC.status) ? (
+            <div className="fx-card p-6 text-center">
+              <h2 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">Verification Under Review</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Your KYC has been submitted. Please wait for review completion.</p>
+              <button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold">Go to Dashboard</button>
+            </div>
+          ) : (
+            <div className="fx-card p-4 sm:p-6">
+              {step === 1 ? (
+                <KycStepPersonalInfo
+                  form={personalInfo}
+                  onChange={setPersonalField}
+                  onNext={goNext}
+                  loading={loading}
+                  canProceed={personalInfoComplete}
+                />
+              ) : null}
 
-            {step === 2 ? (
-              <KycStepDocumentUpload
-                docType={docType}
-                onDocTypeChange={handleDocTypeChange}
-                frontFile={frontFile}
-                backFile={backFile}
-                frontPreviewUrl={frontPreviewUrl}
-                backPreviewUrl={backPreviewUrl}
-                onFrontUpload={handleFrontUpload}
-                onBackUpload={handleBackUpload}
-                onBack={() => setStep(1)}
-                onNext={goNext}
-                canProceed={documentStepComplete}
-              />
-            ) : null}
+              {step === 2 ? (
+                <KycStepDocumentUpload
+                  docType={docType}
+                  onDocTypeChange={handleDocTypeChange}
+                  frontFile={frontFile}
+                  backFile={backFile}
+                  frontPreviewUrl={frontPreviewUrl}
+                  backPreviewUrl={backPreviewUrl}
+                  onFrontUpload={handleFrontUpload}
+                  onBackUpload={handleBackUpload}
+                  onBack={() => setStep(1)}
+                  onNext={goNext}
+                  canProceed={documentStepComplete}
+                />
+              ) : null}
 
-            {step === 3 ? (
-              <KycStepSelfie
-                selfiePreviewUrl={selfiePreviewUrl}
-                onOpenCapture={() => setShowSelfieCapture(true)}
-                onBack={() => setStep(2)}
-                onNext={goNext}
-                canProceed={selfieStepComplete}
-              />
-            ) : null}
+              {step === 3 ? (
+                <KycStepSelfie
+                  selfiePreviewUrl={selfiePreviewUrl}
+                  onOpenCapture={() => setShowSelfieCapture(true)}
+                  onBack={() => setStep(2)}
+                  onNext={goNext}
+                  canProceed={selfieStepComplete}
+                />
+              ) : null}
 
-            {step === 4 ? (
-              <KycStepLiveness
-                videoPreviewUrl={videoPreviewUrl}
-                onOpenRecorder={() => setShowVideoCapture(true)}
-                onBack={() => setStep(3)}
-                onNext={goNext}
-                canProceed={livenessStepComplete}
-              />
-            ) : null}
+              {step === 4 ? (
+                <KycStepLiveness
+                  videoPreviewUrl={videoPreviewUrl}
+                  onOpenRecorder={() => setShowVideoCapture(true)}
+                  onBack={() => setStep(3)}
+                  onNext={goNext}
+                  canProceed={livenessStepComplete}
+                />
+              ) : null}
 
-            {step === 5 ? (
-              <KycStepReviewSubmit
-                personalInfo={personalInfo}
-                docTypeLabel={selectedDocMeta.label}
-                frontFile={frontFile}
-                backFile={backFile}
-                frontPreviewUrl={frontPreviewUrl}
-                backPreviewUrl={backPreviewUrl}
-                selfiePreviewUrl={selfiePreviewUrl}
-                videoPreviewUrl={videoPreviewUrl}
-                requiresBack={selectedDocMeta.requiresBack}
-                loading={loading}
-                canSubmit={canSubmitReview}
-                declarationChecked={declarationChecked}
-                onDeclarationChange={setDeclarationChecked}
-                onEditStep={setStep}
-                onBack={() => setStep(4)}
-                onSubmit={submitAll}
-              />
-            ) : null}
-          </div>
-        ) : null}
+              {step === 5 ? (
+                <KycStepReviewSubmit
+                  personalInfo={personalInfo}
+                  docTypeLabel={selectedDocMeta.label}
+                  frontFile={frontFile}
+                  backFile={backFile}
+                  frontPreviewUrl={frontPreviewUrl}
+                  backPreviewUrl={backPreviewUrl}
+                  selfiePreviewUrl={selfiePreviewUrl}
+                  videoPreviewUrl={videoPreviewUrl}
+                  requiresBack={selectedDocMeta.requiresBack}
+                  loading={loading}
+                  canSubmit={canSubmitReview}
+                  declarationChecked={declarationChecked}
+                  onDeclarationChange={setDeclarationChecked}
+                  onEditStep={setStep}
+                  onBack={() => setStep(4)}
+                  onSubmit={submitAll}
+                />
+              ) : null}
+            </div>
+          )
+        )}
       </main>
 
       {showSelfieCapture ? (
