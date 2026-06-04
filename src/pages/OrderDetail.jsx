@@ -258,15 +258,6 @@ export default function OrderDetail() {
               <span className="text-gray-900 dark:text-white font-semibold">{trade.leverage || 1}x</span>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Position Size</span>
-              <span className="text-gray-900 dark:text-white font-semibold">{formatPrice(positionSize)} USDT</span>
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Notional Value</span>
-              <span className="text-gray-900 dark:text-white font-semibold">{formatPrice(notionalValue)} USDT</span>
-            </div>
 
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-400">Mark Price</span>
@@ -295,10 +286,7 @@ export default function OrderDetail() {
               <span className="text-gray-900 dark:text-white font-semibold">{formatPrice(fundingFee)} USDT</span>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Total Fees</span>
-              <span className="text-gray-900 dark:text-white font-semibold">{formatPrice(totalFee)} USDT</span>
-            </div>
+           
 
             {/* Result - Highlighted with Red Glow */}
             {!isPending && (
@@ -331,10 +319,7 @@ export default function OrderDetail() {
                     ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700/50' 
                     : 'bg-red-50 dark:bg-red-900/40 border border-red-200 dark:border-red-600/60 shadow-lg shadow-red-200/50 dark:shadow-red-900/50'
                 }`}>
-                  <span className="text-gray-700 dark:text-gray-300">ROI</span>
-                  <span className={`font-bold ${isWin ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {roiPercent >= 0 ? '+' : ''}{roiPercent.toFixed(2)}%
-                  </span>
+                
                 </div>
               </>
             )}

@@ -135,6 +135,7 @@ export default function KYCVerify() {
   const [declarationChecked, setDeclarationChecked] = useState(false)
   const [showSubmitSuccess, setShowSubmitSuccess] = useState(false)
   const [lastAutoSavedAt, setLastAutoSavedAt] = useState(null)
+  const [isProcessingMedia, setIsProcessingMedia] = useState(false)
 
   const selectedDocMeta = useMemo(
     () => DOC_OPTIONS.find((item) => item.value === docType) || DOC_OPTIONS[0],
@@ -454,11 +455,16 @@ export default function KYCVerify() {
       toast.error(FILE_TYPE_ERROR)
       return
     }
-    const optimizedFile = await compressImageFile(file, 'document-front.jpg')
-    if (frontPreviewUrl) URL.revokeObjectURL(frontPreviewUrl)
-    setFrontFile(optimizedFile)
-    setFrontPreviewUrl(URL.createObjectURL(optimizedFile))
-    if (declarationChecked) setDeclarationChecked(false)
+    setIsProcessingMedia(true)
+    try {
+      const optimizedFile = await compressImageFile(file, 'document-front.jpg')
+      if (frontPreviewUrl) URL.revokeObjectURL(frontPreviewUrl)
+      setFrontFile(optimizedFile)
+      setFrontPreviewUrl(URL.createObjectURL(optimizedFile))
+      if (declarationChecked) setDeclarationChecked(false)
+    } finally {
+      setIsProcessingMedia(false)
+    }
   }
 
   const handleBackUpload = async (file) => {
@@ -467,11 +473,16 @@ export default function KYCVerify() {
       toast.error(FILE_TYPE_ERROR)
       return
     }
-    const optimizedFile = await compressImageFile(file, 'document-back.jpg')
-    if (backPreviewUrl) URL.revokeObjectURL(backPreviewUrl)
-    setBackFile(optimizedFile)
-    setBackPreviewUrl(URL.createObjectURL(optimizedFile))
-    if (declarationChecked) setDeclarationChecked(false)
+    setIsProcessingMedia(true)
+    try {
+      const optimizedFile = await compressImageFile(file, 'document-back.jpg')
+      if (backPreviewUrl) URL.revokeObjectURL(backPreviewUrl)
+      setBackFile(optimizedFile)
+      setBackPreviewUrl(URL.createObjectURL(optimizedFile))
+      if (declarationChecked) setDeclarationChecked(false)
+    } finally {
+      setIsProcessingMedia(false)
+    }
   }
 
   const handleSelfieCaptured = (blob) => {
@@ -535,6 +546,7 @@ export default function KYCVerify() {
   }
 
   const submitAll = async () => {
+    if (loading) return
     if (!declarationChecked) {
       toast.error('Please confirm your declaration before submitting')
       return
@@ -547,6 +559,10 @@ export default function KYCVerify() {
 
     if (!frontFile || (selectedDocMeta.requiresBack && !backFile) || !selfieFile || !videoFile) {
       toast.error('Please complete all steps before submission')
+      return
+    }
+    if (isProcessingMedia) {
+      toast.error('Please wait until files finish processing')
       return
     }
 
@@ -564,6 +580,13 @@ export default function KYCVerify() {
 
     setLoading(true)
     try {
+      const latest = await getMyKyc()
+      if (latest?.success && latest?.kyc && ['pending', 'under_review', 'approved'].includes(latest.kyc.status)) {
+        setExistingKYC(latest.kyc)
+        toast.error('Your KYC is already pending review')
+        return
+      }
+
       const { firstName, lastName } = splitName(personalInfo.fullName)
       const address = splitAddress(personalInfo.address, personalInfo.nationality)
 
