@@ -21,7 +21,7 @@ const baseURL = getBaseURL()
 // Log API configuration (both dev and prod for debugging)
 
 /* 
-
+hhh
 console.log('🔧 API Configuration:', {
   baseURL: baseURL || '(empty - using Vite proxy)',
   apiUrlFromConfig: API_URL || '(empty)',
