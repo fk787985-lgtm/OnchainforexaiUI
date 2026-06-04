@@ -7,6 +7,7 @@ import TradeOpeningModal from '../components/TradeOpeningModal'
 import TradeDetailModal from '../components/TradeDetailModal'
 import AnimatedPercentage from '../components/AnimatedPercentage'
 import AnimatedProgressPercentage from '../components/AnimatedProgressPercentage'
+import { getTradeNetProfit, getTradeRoiPercent } from '../utils/tradeMath'
 
 export default function TradeDetail() {
   const navigate = useNavigate()
@@ -262,9 +263,9 @@ export default function TradeDetail() {
             
             const sideLabel = trade.side === 'buy' ? 'Long' : 'Short'
             const resultEmoji = trade.result === 'win' ? '🎉' : '📉'
-            const profitColor = trade.result === 'win' ? 'text-green-400' : 'text-red-400'
-            const profitSign = trade.result === 'win' ? '+' : '-'
-            const profitValue = trade.result === 'win' ? (trade.profitPercent || 0) : (trade.lossPercent || 0)
+            const roiPercent = getTradeRoiPercent(trade)
+            const profitColor = roiPercent >= 0 ? 'text-green-400' : 'text-red-400'
+            const profitSign = roiPercent >= 0 ? '+' : ''
             
             toast.success(
               (t) => (
@@ -273,10 +274,10 @@ export default function TradeDetail() {
                   <div className="text-sm opacity-90">
                     <div>{sideLabel.toUpperCase()} {trade.symbol}</div>
                     <div className={`mt-1 ${profitColor}`}>
-                      {trade.result === 'win' ? 'Win' : 'Loss'}: {profitSign}{profitValue.toFixed(2)}%
+                      {trade.result === 'win' ? 'Win' : 'Loss'}: {profitSign}{roiPercent.toFixed(2)}%
                     </div>
                     <div className="text-xs opacity-75 mt-1">
-                      Profit: ${trade.profit > 0 ? '+' : ''}{trade.profit.toFixed(2)} USDT
+                      Profit: ${getTradeNetProfit(trade) > 0 ? '+' : ''}{getTradeNetProfit(trade).toFixed(2)} USDT
                     </div>
                   </div>
                 </div>
@@ -1134,10 +1135,9 @@ export default function TradeDetail() {
                   openOrders.map((order) => {
                     const timeRemaining = order.timer ? Math.max(0, order.timer - Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 1000)) : 0
                     const progress = order.timer ? ((order.timer - timeRemaining) / order.timer) * 100 : 0
-                    const potentialWinPercent = order.profitPercent || 0
-                    const potentialLossPercent = order.lossPercent || 0
-                    const targetPercent = potentialWinPercent > 0 ? potentialWinPercent : potentialLossPercent
-                    const isWin = potentialWinPercent > 0
+                    const roiPercent = getTradeRoiPercent(order)
+                    const targetPercent = Math.abs(roiPercent)
+                    const isWin = roiPercent >= 0
                     
                     return (
                       <div 
@@ -1236,8 +1236,9 @@ export default function TradeDetail() {
                 ) : (
                   <div className="space-y-2.5">
                     {tradeHistory.slice(0, 20).map((trade) => {
-                      const isWin = trade.result === 'win'
-                      const profitPercent = isWin ? (trade.profitPercent || 0) : (trade.lossPercent || 0)
+                      const roiPercent = getTradeRoiPercent(trade)
+                      const isWin = trade.result ? trade.result === 'win' : roiPercent >= 0
+                      const netProfit = getTradeNetProfit(trade)
                       
                       return (
                         <div 
@@ -1303,14 +1304,14 @@ export default function TradeDetail() {
                                     ? 'text-green-600 dark:text-green-400' 
                                     : 'text-red-600 dark:text-red-400'
                                 }`}>
-                                  {isWin ? '+' : '-'}{profitPercent.toFixed(2)}%
+                                  {roiPercent >= 0 ? '+' : ''}{roiPercent.toFixed(2)}%
                                 </div>
                                 <div className={`text-base font-bold ${
                                   isWin 
                                     ? 'text-green-600 dark:text-green-400' 
                                     : 'text-red-600 dark:text-red-400'
                                 }`}>
-                                  {trade.profit >= 0 ? '+' : ''}{formatPrice(trade.profit)} USDT
+                                  {netProfit >= 0 ? '+' : ''}{formatPrice(netProfit)} USDT
                                 </div>
                                 <span className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-md ${
                                   isWin 

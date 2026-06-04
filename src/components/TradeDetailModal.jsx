@@ -1,9 +1,11 @@
+import { getTradeNetProfit, getTradeRoiPercent } from '../utils/tradeMath'
+
 export default function TradeDetailModal({ trade, onClose }) {
   if (!trade) return null
 
   const isWin = trade.result === 'win'
-  const profitLoss = trade.profit || 0
-  const profitPercent = isWin ? (trade.profitPercent || 0) : (trade.lossPercent || 0)
+  const profitLoss = getTradeNetProfit(trade)
+  const profitPercent = getTradeRoiPercent(trade)
   const isPending = trade.status === 'open' || trade.result === 'pending'
 
   return (
@@ -85,14 +87,14 @@ export default function TradeDetailModal({ trade, onClose }) {
                   ? 'text-green-600 dark:text-green-400' 
                   : 'text-red-600 dark:text-red-400'
               }`}>
-                {trade.profit >= 0 ? '+' : ''}{formatPrice(trade.profit)} USDT
+                {profitLoss >= 0 ? '+' : ''}{formatPrice(profitLoss)} USDT
               </div>
               <div className={`text-sm font-semibold ${
                 isWin 
                   ? 'text-green-600 dark:text-green-400' 
                   : 'text-red-600 dark:text-red-400'
               }`}>
-                {isWin ? '+' : '-'}{profitPercent.toFixed(2)}%
+                {profitPercent >= 0 ? '+' : ''}{profitPercent.toFixed(2)}%
               </div>
             </div>
           )}

@@ -26,13 +26,16 @@ export default function KycStepDocumentUpload({
         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Identity Document</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Choose one document type and upload clear, readable images.</p>
       </div>
-      <div>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <label className="fx-label">Document Type *</label>
         <select className="fx-select" value={docType} onChange={(e) => onDocTypeChange(e.target.value)}>
           {DOC_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>{option.label}</option>
           ))}
         </select>
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {selected.requiresBack ? 'Front and back images are required for this document type.' : 'Only front page is required for this document type.'}
+        </p>
       </div>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3">
         <p className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-100">Document checklist</p>
@@ -48,7 +51,7 @@ export default function KycStepDocumentUpload({
         </div>
       </div>
 
-      <div>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <label className="fx-label">Front Side *</label>
         <input className="fx-input !py-2" type="file" accept="image/*,.pdf" onChange={(e) => onFrontUpload(e.target.files?.[0])} />
         <p className="fx-help">Only images (JPEG, PNG), PDF, and video files are allowed.</p>
@@ -69,7 +72,7 @@ export default function KycStepDocumentUpload({
       </div>
 
       {selected.requiresBack ? (
-        <div>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
           <label className="fx-label">Back Side *</label>
           <input className="fx-input !py-2" type="file" accept="image/*,.pdf" onChange={(e) => onBackUpload(e.target.files?.[0])} />
           <p className="fx-help">Only images (JPEG, PNG), PDF, and video files are allowed.</p>

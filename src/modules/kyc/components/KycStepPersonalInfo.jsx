@@ -13,13 +13,13 @@ export default function KycStepPersonalInfo({ form, onChange, onNext, loading, c
         e.preventDefault()
         onNext()
       }}
-      className="space-y-4 animate-fade-in"
+      className="space-y-5 animate-fade-in"
     >
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Personal Information</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Enter details exactly as shown on your official documents.</p>
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Personal Information</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Use legal details exactly as shown on your identity document.</p>
       </div>
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <p className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-100">Step readiness</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {checklist.map((item) => (
@@ -29,55 +29,59 @@ export default function KycStepPersonalInfo({ form, onChange, onNext, loading, c
           ))}
         </div>
       </div>
-      <div>
-        <label className="fx-label">Full Name *</label>
-        <input
-          className="fx-input"
-          value={form.fullName}
-          onChange={(e) => onChange('fullName', e.target.value)}
-          placeholder="Enter your legal full name"
-          required
-        />
-      </div>
-      <div>
-        <label className="fx-label">Date of Birth *</label>
-        <input
-          type="date"
-          className="fx-input"
-          value={form.dateOfBirth}
-          onChange={(e) => onChange('dateOfBirth', e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label className="fx-label">Nationality *</label>
-        <input
-          className="fx-input"
-          value={form.nationality}
-          onChange={(e) => onChange('nationality', e.target.value)}
-          placeholder="e.g. United States"
-          required
-        />
-      </div>
-      <div>
-        <label className="fx-label">Address *</label>
-        <input
-          className="fx-input"
-          value={form.address}
-          onChange={(e) => onChange('address', e.target.value)}
-          placeholder="Street, city, state/province, postal code, country"
-          required
-        />
-      </div>
-      <div>
-        <label className="fx-label">Phone Number *</label>
-        <input
-          className="fx-input"
-          value={form.phoneNumber}
-          onChange={(e) => onChange('phoneNumber', e.target.value)}
-          placeholder="+1 000 000 0000"
-          required
-        />
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
+            <label className="fx-label">Full Name *</label>
+            <input
+              className="fx-input"
+              value={form.fullName}
+              onChange={(e) => onChange('fullName', e.target.value)}
+              placeholder="Enter your legal full name"
+              required
+            />
+          </div>
+          <div>
+            <label className="fx-label">Date of Birth *</label>
+            <input
+              type="date"
+              className="fx-input"
+              value={form.dateOfBirth}
+              onChange={(e) => onChange('dateOfBirth', e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="fx-label">Nationality *</label>
+            <input
+              className="fx-input"
+              value={form.nationality}
+              onChange={(e) => onChange('nationality', e.target.value)}
+              placeholder="e.g. United States"
+              required
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="fx-label">Address *</label>
+            <input
+              className="fx-input"
+              value={form.address}
+              onChange={(e) => onChange('address', e.target.value)}
+              placeholder="Street, city, state/province, postal code, country"
+              required
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="fx-label">Phone Number *</label>
+            <input
+              className="fx-input"
+              value={form.phoneNumber}
+              onChange={(e) => onChange('phoneNumber', e.target.value)}
+              placeholder="+1 000 000 0000"
+              required
+            />
+          </div>
+        </div>
       </div>
       <button type="submit" disabled={loading || !canProceed} className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold disabled:opacity-60">
         {loading ? 'Saving...' : 'Next'}

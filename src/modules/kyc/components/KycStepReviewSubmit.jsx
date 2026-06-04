@@ -19,8 +19,8 @@ export default function KycStepReviewSubmit({
   const isPdf = (file) => (file?.type || '').toLowerCase() === 'application/pdf'
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="fx-card p-4 sm:p-5 space-y-4">
+    <div className="space-y-5 animate-fade-in">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 sm:p-5 space-y-4">
         <div className="flex items-center justify-between">
           <p className="font-semibold text-base text-gray-900 dark:text-gray-100">Review & Submit</p>
           <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
@@ -42,14 +42,14 @@ export default function KycStepReviewSubmit({
           </button>
         </div>
 
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-3">
           <p className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Personal Information</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">{personalInfo.fullName}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">{personalInfo.dateOfBirth} • {personalInfo.nationality}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">{personalInfo.address}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">{personalInfo.phoneNumber}</p>
         </div>
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-3">
           <p className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Identity Document ({docTypeLabel})</p>
           {frontPreviewUrl && !isPdf(frontFile) ? (
             <img src={frontPreviewUrl} alt="Document front preview" className="w-full max-h-52 object-cover rounded-xl border border-gray-200 dark:border-gray-700 mb-2" />
@@ -79,11 +79,11 @@ export default function KycStepReviewSubmit({
           ) : null}
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-3">
             <p className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Selfie</p>
             {selfiePreviewUrl ? <img src={selfiePreviewUrl} alt="Selfie preview" className="w-full max-h-52 object-cover rounded-xl border border-gray-200 dark:border-gray-700" /> : null}
           </div>
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-3">
             <p className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Liveness Video</p>
             {videoPreviewUrl ? <video src={videoPreviewUrl} controls className="w-full rounded-xl border border-gray-200 dark:border-gray-700" /> : null}
           </div>

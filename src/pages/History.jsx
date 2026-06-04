@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import api from '../utils/axios'
+import { getTradeNetProfit, getTradeRoiPercent } from '../utils/tradeMath'
 
 export default function History() {
   const [tradeHistory, setTradeHistory] = useState([])
@@ -289,8 +290,9 @@ export default function History() {
 
             {/* Trade Cards */}
             {filteredAndSortedTrades.map((trade) => {
-              const isWin = trade.result === 'win'
-              const profitPercent = isWin ? (trade.profitPercent || 0) : (trade.lossPercent || 0)
+              const roiPercent = getTradeRoiPercent(trade)
+              const isWin = trade.result ? trade.result === 'win' : roiPercent >= 0
+              const netProfit = getTradeNetProfit(trade)
               
               return (
                       <div 
@@ -347,7 +349,7 @@ export default function History() {
                             </svg>
                           )}
                           <div className="text-base font-bold">
-                            {isWin ? '+' : '-'}{profitPercent.toFixed(2)}%
+                            {roiPercent >= 0 ? '+' : ''}{roiPercent.toFixed(2)}%
                           </div>
                         </div>
                         <div className={`flex items-center justify-end space-x-1.5 mb-1.5 ${
@@ -359,7 +361,7 @@ export default function History() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <div className="text-sm font-bold">
-                            {trade.profit >= 0 ? '+' : ''}{formatPrice(trade.profit)}
+                            {netProfit >= 0 ? '+' : ''}{formatPrice(netProfit)}
                           </div>
                         </div>
                         <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-bold ${
@@ -453,7 +455,7 @@ export default function History() {
                             </svg>
                           )}
                           <div className="text-sm font-bold">
-                            {isWin ? '+' : '-'}{profitPercent.toFixed(2)}%
+                            {roiPercent >= 0 ? '+' : ''}{roiPercent.toFixed(2)}%
                           </div>
                         </div>
                         <div className={`flex items-center justify-end space-x-1 mb-1.5 ${
@@ -465,7 +467,7 @@ export default function History() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <div className="text-xs font-bold">
-                            {trade.profit >= 0 ? '+' : ''}{formatPrice(trade.profit)}
+                            {netProfit >= 0 ? '+' : ''}{formatPrice(netProfit)}
                           </div>
                         </div>
                         <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${

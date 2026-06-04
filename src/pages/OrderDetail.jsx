@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import { useTheme } from '../context/ThemeContext'
 import api from '../utils/axios'
+import {
+  formatDuration,
+  getTradeDirectionLabel,
+  getTradeDurationSeconds,
+  getTradeNetProfit,
+  getTradeRoiPercent
+} from '../utils/tradeMath'
 
 export default function OrderDetail() {
   const navigate = useNavigate()
   const { tradeId } = useParams()
   const location = useLocation()
-  const { theme } = useTheme()
   const tradeFromState = location.state?.trade
   
   const [trade, setTrade] = useState(tradeFromState || null)
@@ -97,8 +102,17 @@ export default function OrderDetail() {
 
   const isWin = trade.result === 'win'
   const isPending = trade.status === 'open' || trade.result === 'pending'
-  const profitLoss = trade.profit || 0
-  const profitPercent = isWin ? (trade.profitPercent || 0) : (trade.lossPercent || 0)
+  const netProfit = getTradeNetProfit(trade)
+  const roiPercent = getTradeRoiPercent(trade)
+  const directionLabel = getTradeDirectionLabel(trade)
+  const durationSeconds = getTradeDurationSeconds(trade)
+  const tradingFee = Number(trade?.fees?.trading || 0)
+  const fundingFee = Number(trade?.fees?.funding || 0)
+  const totalFee = Number(trade?.fees?.total || 0)
+  const notionalValue = Number(trade?.notionalValue || (trade?.marginUsed || trade?.amount || 0) * (trade?.leverage || 1))
+  const positionSize = Number(trade?.positionSize || notionalValue)
+  const liquidationPrice = Number(trade?.liquidationPrice || 0)
+  const markPrice = Number(trade?.markPrice || trade?.exitPrice || trade?.entryPrice || 0)
 
   const formatPrice = (price) => {
     if (!price) return '0.00'
@@ -180,7 +194,7 @@ export default function OrderDetail() {
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600 dark:text-gray-400">Type</span>
             <span className={`font-semibold ${trade.side === 'buy' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-              Market / {trade.side === 'buy' ? 'BUY' : 'SELL'}
+              Market / {directionLabel.toUpperCase()}
             </span>
           </div>
 
@@ -239,6 +253,53 @@ export default function OrderDetail() {
               <span className="text-gray-900 dark:text-white font-semibold">${formatPrice(trade.marginUsed || trade.amount)} USDT</span>
             </div>
 
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Leverage</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{trade.leverage || 1}x</span>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Position Size</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{formatPrice(positionSize)} USDT</span>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Notional Value</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{formatPrice(notionalValue)} USDT</span>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Mark Price</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{formatPrice(markPrice)}</span>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Liquidation Price</span>
+              <span className="text-gray-900 dark:text-white font-semibold">
+                {liquidationPrice > 0 ? formatPrice(liquidationPrice) : '---'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Trade Duration</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{formatDuration(durationSeconds)}</span>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Trading Fee</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{formatPrice(tradingFee)} USDT</span>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Funding Fee</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{formatPrice(fundingFee)} USDT</span>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Total Fees</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{formatPrice(totalFee)} USDT</span>
+            </div>
+
             {/* Result - Highlighted with Red Glow */}
             {!isPending && (
               <>
@@ -261,7 +322,18 @@ export default function OrderDetail() {
                 }`}>
                   <span className="text-gray-700 dark:text-gray-300">Profit / Loss</span>
                   <span className={`font-bold ${isWin ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {profitLoss >= 0 ? '+' : ''}{formatPrice(profitLoss)}
+                    {netProfit >= 0 ? '+' : ''}{formatPrice(netProfit)}
+                  </span>
+                </div>
+
+                <div className={`flex items-center justify-between text-sm p-3 rounded-lg ${
+                  isWin 
+                    ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700/50' 
+                    : 'bg-red-50 dark:bg-red-900/40 border border-red-200 dark:border-red-600/60 shadow-lg shadow-red-200/50 dark:shadow-red-900/50'
+                }`}>
+                  <span className="text-gray-700 dark:text-gray-300">ROI</span>
+                  <span className={`font-bold ${isWin ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {roiPercent >= 0 ? '+' : ''}{roiPercent.toFixed(2)}%
                   </span>
                 </div>
               </>

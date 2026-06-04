@@ -179,7 +179,7 @@ export default function KYCLogList() {
       normalizedLabel.includes('back')
     ) return 'image'
 
-    if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'jfif'].includes(extension)) return 'image'
+    if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'jfif', 'heic', 'heif'].includes(extension)) return 'image'
     if (['mp4', 'webm', 'mov', 'm4v'].includes(extension)) return 'video'
     if (extension === 'pdf') return 'pdf'
     return 'file'
