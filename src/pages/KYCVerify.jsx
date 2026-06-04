@@ -283,8 +283,8 @@ export default function KYCVerify() {
         const { firstName, lastName } = splitName(personalInfo.fullName)
         const address = splitAddress(personalInfo.address, personalInfo.nationality)
         await submitKycStep1({
-          firstName,
-          lastName,
+        firstName,
+        lastName,
           dateOfBirth: personalInfo.dateOfBirth,
           nationality: personalInfo.nationality,
           phoneNumber: personalInfo.phoneNumber
@@ -539,7 +539,7 @@ export default function KYCVerify() {
       toast.error('Please confirm your declaration before submitting')
       return
     }
-
+    
     if (isReadOnlyStatus) {
       toast.error('KYC is already under review or approved')
       return
@@ -623,7 +623,7 @@ export default function KYCVerify() {
             </svg>
           </button>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">KYC Verification</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">KYC Verification</h1>
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               Secure identity verification wizard
               {lastAutoSavedAt ? ` • Auto-saved ${new Date(lastAutoSavedAt).toLocaleTimeString()}` : ''}
@@ -643,8 +643,8 @@ export default function KYCVerify() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Verify Your Identity</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Complete the steps below to unlock full account capabilities and improve account security.
-            </p>
-          </div>
+                </p>
+              </div>
         ) : null}
 
         {showSubmitSuccess ? (
@@ -679,7 +679,7 @@ export default function KYCVerify() {
                 Liveness
               </span>
             </div>
-          </div>
+        </div>
         ) : null}
 
         {!showSubmitSuccess && (
