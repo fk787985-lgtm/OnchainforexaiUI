@@ -36,6 +36,8 @@ export default function UsersList() {
   const [logToWithdrawal, setLogToWithdrawal] = useState(false)
   const [notifyUserEmail, setNotifyUserEmail] = useState(true)
   const [newPassword, setNewPassword] = useState('')
+  const [showPasswordInput, setShowPasswordInput] = useState(false)
+  const [temporaryPassword, setTemporaryPassword] = useState('')
   const [appNotice, setAppNotice] = useState('')
   const [winTradeSettings, setWinTradeSettings] = useState({
     timer30s: { buyWin: { enabled: false, winPercent: 2, lossPercent: 2 }, sellWin: { enabled: false, winPercent: 2, lossPercent: 2 } },
@@ -136,6 +138,7 @@ export default function UsersList() {
 
   const handleEdit = async (user) => {
     setSelectedUser(user._id)
+    setTemporaryPassword('')
     try {
       const response = await api.get(`/api/admin/users/${user._id}`)
       if (response.data.success) {
@@ -178,6 +181,7 @@ export default function UsersList() {
 
   const handleViewUser = async (userId) => {
     setSelectedUser(userId)
+    setTemporaryPassword('')
     try {
       const response = await api.get(`/api/admin/users/${userId}`)
       if (response.data.success) {
@@ -349,10 +353,25 @@ export default function UsersList() {
       if (response.data.success) {
         alert('Password changed successfully')
         setNewPassword('')
+        setTemporaryPassword('')
       }
     } catch (error) {
       console.error('Error changing password:', error)
       alert('Failed to change password')
+    }
+  }
+
+  const handleGenerateTemporaryPassword = async () => {
+    if (!userDetails) return
+    try {
+      const response = await api.post(`/api/admin/users/${userDetails._id}/password/reset-temp`)
+      if (response.data.success) {
+        setTemporaryPassword(response.data.temporaryPassword || '')
+        alert('Temporary password generated successfully')
+      }
+    } catch (error) {
+      console.error('Error generating temporary password:', error)
+      alert(error.response?.data?.message || 'Failed to generate temporary password')
     }
   }
 
@@ -716,6 +735,7 @@ export default function UsersList() {
                     setUserDetails(null)
                     setBalanceAmount('')
                     setNewPassword('')
+                    setTemporaryPassword('')
                     setAppNotice('')
                   }}
                   className="text-white hover:bg-white/20 p-2 rounded-lg transition mb-2"
@@ -1082,22 +1102,49 @@ export default function UsersList() {
                     Change Password
                   </h4>
                   <div className="space-y-4">
+                    <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-900/20">
+                      <p className="text-xs text-amber-800 dark:text-amber-200">
+                        For security, current user passwords are encrypted and cannot be viewed in plain text.
+                      </p>
+                    </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">New Password</label>
                       <input
-                        type="password"
+                        type={showPasswordInput ? 'text' : 'password'}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
                         placeholder="Enter new password (min 8 characters)"
                       />
+                      <label className="mt-2 inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                        <input
+                          type="checkbox"
+                          checked={showPasswordInput}
+                          onChange={(e) => setShowPasswordInput(e.target.checked)}
+                        />
+                        Show password
+                      </label>
                     </div>
-                    <button
-                      onClick={handleChangePassword}
-                      className="w-full px-6 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
-                    >
-                      Change Password
-                    </button>
+                    {temporaryPassword ? (
+                      <div className="p-3 rounded-lg border border-indigo-200 bg-indigo-50 dark:border-indigo-900 dark:bg-indigo-900/20">
+                        <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 mb-1">Latest Temporary Password</p>
+                        <p className="font-mono text-sm break-all text-indigo-800 dark:text-indigo-200">{temporaryPassword}</p>
+                      </div>
+                    ) : null}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        onClick={handleChangePassword}
+                        className="w-full px-6 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
+                      >
+                        Change Password
+                      </button>
+                      <button
+                        onClick={handleGenerateTemporaryPassword}
+                        className="w-full px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
+                      >
+                        Generate Temp Password
+                      </button>
+                    </div>
                   </div>
                 </div>
                 )}

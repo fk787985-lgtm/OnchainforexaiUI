@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
-import axios from 'axios'
 import { useTheme } from '../context/ThemeContext'
 import { getImageUrl } from '../utils/imageUrl.js'
 import { useSiteSettings } from '../context/SiteSettingsContext'
 import ThemeToggle from '../components/ThemeToggle'
+import api from '../utils/axios'
 
 export default function ForgotPassword() {
   const { settings: siteSettings } = useSiteSettings()
@@ -56,10 +56,8 @@ export default function ForgotPassword() {
     setLoading(true)
 
     try {
-      const response = await axios.post('/api/auth/forgot-password', { 
-        email: email.toLowerCase() 
-      }, {
-        timeout: 10000
+      const response = await api.post('/api/auth/forgot-password', {
+        email: email.toLowerCase()
       })
       
       if (response.data.success) {

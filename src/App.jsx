@@ -11,6 +11,7 @@ const SignUp = lazy(() => import('./pages/SignUp'))
 const SignIn = lazy(() => import('./pages/SignIn'))
 const AdminSignIn = lazy(() => import('./pages/AdminSignIn'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const ConfirmEmail = lazy(() => import('./pages/ConfirmEmail'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
@@ -76,6 +77,7 @@ function App() {
             <Route path="/signin" element={<SignIn />} />
             <Route path="/admin/signin" element={<AdminSignIn />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/confirm-email" element={<ConfirmEmail />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
