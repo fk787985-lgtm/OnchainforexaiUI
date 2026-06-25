@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../utils/axios'
 import ToggleSwitch from './ToggleSwitch'
+import UserCoinAddressModal from './UserCoinAddressModal'
 
 export default function UsersList() {
   const [users, setUsers] = useState([])
@@ -29,6 +30,7 @@ export default function UsersList() {
   const [userLogs, setUserLogs] = useState([])
   const [logsLoading, setLogsLoading] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
+  const [coinAddressUser, setCoinAddressUser] = useState(null)
   const [userDetails, setUserDetails] = useState(null)
   const [balanceAmount, setBalanceAmount] = useState('')
   const [addBalance, setAddBalance] = useState(true)
@@ -631,6 +633,14 @@ export default function UsersList() {
                             className="px-2 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition whitespace-nowrap"
                           >
                             Edit
+                          </button>
+                        )}
+                        {(canEditUsers || !isSubAdmin) && (
+                          <button
+                            onClick={() => setCoinAddressUser(user)}
+                            className="px-2 py-1.5 text-xs bg-slate-700 hover:bg-slate-800 text-white rounded-lg transition whitespace-nowrap"
+                          >
+                            Coin Address
                           </button>
                         )}
                         {!isSubAdmin && (
@@ -1382,6 +1392,12 @@ export default function UsersList() {
           </div>
         </div>
       )}
+
+      <UserCoinAddressModal
+        isOpen={Boolean(coinAddressUser)}
+        user={coinAddressUser}
+        onClose={() => setCoinAddressUser(null)}
+      />
     </>
   )
 }
