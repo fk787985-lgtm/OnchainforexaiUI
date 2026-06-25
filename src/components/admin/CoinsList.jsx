@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import api from '../../utils/axios'
 import { getImageUrl } from '../../utils/imageUrl.js'
+import PageHeader from '../ui/PageHeader'
+import EmptyState from '../ui/EmptyState'
 
 export default function CoinsList() {
   const [coins, setCoins] = useState([])
@@ -164,7 +166,9 @@ export default function CoinsList() {
           address: '',
           minDeposit: '',
           maxDeposit: '',
-          conversionRate: ''
+          conversionRate: '',
+          minWithdraw: '',
+          maxWithdraw: ''
         })
         setImageFile(null)
         setImagePreview(null)
@@ -178,27 +182,27 @@ export default function CoinsList() {
   if (loading) {
     return (
       <div className="p-6 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading coins...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto"></div>
+        <p className="mt-4 text-slate-600 dark:text-slate-400">Loading coins...</p>
       </div>
     )
   }
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h2 className="text-lg sm:text-xl font-bold">Manage Coins</h2>
+      <div className="fx-card overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <PageHeader title="Manage Coins" description="Configure listing data and coin funding settings." />
           <button
             onClick={handleCreate}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition"
+            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 hover:to-indigo-600 text-white rounded-lg font-semibold transition"
           >
             + Create Coin
           </button>
         </div>
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full min-w-[1000px]">
-            <thead className="bg-gray-50 dark:bg-gray-700">
+            <thead className="bg-slate-50 dark:bg-slate-800">
               <tr>
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Image</th>
                 <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Symbol</th>
@@ -252,7 +256,7 @@ export default function CoinsList() {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleEdit(coin)}
-                          className="px-2 py-1.5 text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
+                    className="px-2 py-1.5 text-xs sm:text-sm bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white rounded-lg transition"
                         >
                           Edit
                         </button>
@@ -268,7 +272,7 @@ export default function CoinsList() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan="8" className="px-6 py-4 text-center text-slate-500 dark:text-slate-400">
                     No coins found. Click "Create Coin" to add one.
                   </td>
                 </tr>
@@ -276,19 +280,83 @@ export default function CoinsList() {
             </tbody>
           </table>
         </div>
+        <div className="md:hidden divide-y divide-slate-200 dark:divide-slate-700">
+          {coins.length > 0 ? (
+            coins.map((coin) => (
+              <div key={coin._id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {coin.image ? (
+                      <img src={getImageUrl(coin.image)} alt={coin.symbol} className="w-10 h-10 rounded-full" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-slate-300 dark:bg-slate-700 flex items-center justify-center text-xs font-bold">
+                        {coin.symbol.charAt(0)}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{coin.symbol}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{coin.name}</p>
+                    </div>
+                  </div>
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    coin.isActive
+                      ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                      : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                  }`}>
+                    {coin.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div>
+                    <p className="text-slate-500 dark:text-slate-400">Price</p>
+                    <p className="text-slate-900 dark:text-slate-100">${coin.price.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500 dark:text-slate-400">24h</p>
+                    <p className={coin.change24h >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                      {coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500 dark:text-slate-400">Rank</p>
+                    <p className="text-slate-900 dark:text-slate-100">{coin.rank}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleEdit(coin)}
+                    className="px-3 py-2 text-xs bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white rounded-lg transition"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(coin._id)}
+                    className="px-3 py-2 text-xs bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-4">
+              <EmptyState title="No coins found" description="Create a coin to get started." icon="market" />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Create/Edit Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-bold">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
+            <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-cyan-500 to-indigo-600">
+              <h3 className="text-xl font-bold text-white">
                 {editingCoin ? 'Edit Coin' : 'Create New Coin'}
               </h3>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Symbol *</label>
                   <input
@@ -330,7 +398,7 @@ export default function CoinsList() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Price</label>
                   <input
@@ -355,7 +423,7 @@ export default function CoinsList() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">24h High</label>
                   <input
@@ -380,7 +448,7 @@ export default function CoinsList() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Volume</label>
                   <input
@@ -405,7 +473,7 @@ export default function CoinsList() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Rank</label>
                   <input
@@ -448,7 +516,7 @@ export default function CoinsList() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2">Min Deposit (USDT)</label>
                       <input
@@ -498,7 +566,7 @@ export default function CoinsList() {
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
                 <h4 className="text-lg font-semibold mb-4">Withdrawal Settings</h4>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Min Withdrawal (USDT)</label>
                     <input
@@ -533,10 +601,10 @@ export default function CoinsList() {
                 </div>
               </div>
 
-              <div className="flex space-x-4 pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition"
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white rounded-lg font-semibold transition"
                 >
                   {editingCoin ? 'Update Coin' : 'Create Coin'}
                 </button>
@@ -559,7 +627,9 @@ export default function CoinsList() {
                       address: '',
                       minDeposit: '',
                       maxDeposit: '',
-                      conversionRate: ''
+                      conversionRate: '',
+                      minWithdraw: '',
+                      maxWithdraw: ''
                     })
                     setImageFile(null)
                     setImagePreview(null)

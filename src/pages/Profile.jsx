@@ -262,7 +262,7 @@ export default function Profile() {
         {activeSection === 'deposits' && (
           <div className="space-y-4">
             {/* Filters */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
               <div className="flex flex-col gap-3">
                 {/* Search */}
                 <div className="w-full">
@@ -271,7 +271,7 @@ export default function Profile() {
                     placeholder="Search deposits..."
                     value={depositsSearchQuery}
                     onChange={(e) => setDepositsSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 text-sm"
+                    className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
                   />
                 </div>
                 
@@ -295,8 +295,8 @@ export default function Profile() {
                       }}
                       className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap ${
                         depositsDateFilter === filter.value
-                          ? 'bg-green-600 dark:bg-green-500 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white'
+                          : 'bg-slate-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       {filter.label}
@@ -306,14 +306,14 @@ export default function Profile() {
 
                 {/* Custom Date Range */}
                 {depositsDateFilter === 'custom' && (
-                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-3">
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-3">
                     <div className="flex-1">
                       <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1.5">Start Date</label>
                       <input
                         type="date"
                         value={depositsStartDate}
                         onChange={(e) => setDepositsStartDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 text-sm"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
                       />
                     </div>
                     <div className="flex-1">
@@ -322,7 +322,7 @@ export default function Profile() {
                         type="date"
                         value={depositsEndDate}
                         onChange={(e) => setDepositsEndDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 text-sm"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
                       />
                     </div>
                   </div>
@@ -378,19 +378,19 @@ export default function Profile() {
                   {filteredDeposits.map((deposit) => (
                     <div 
                       key={deposit._id} 
-                      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-4 sm:p-5 cursor-pointer hover:shadow-md dark:hover:shadow-lg transition-all duration-200 hover:border-green-300 dark:hover:border-green-700"
+                      className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 sm:p-5 cursor-pointer hover:shadow-md dark:hover:shadow-lg transition-all duration-200 hover:border-cyan-300 dark:hover:border-cyan-700"
                       onClick={() => setSelectedDeposit(deposit)}
                     >
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-bold text-base sm:text-lg text-gray-900 dark:text-white mb-1">
-                              <span className="text-green-600 dark:text-green-400">+{deposit.amount}</span> USDT
+                              <span className="text-cyan-600 dark:text-cyan-400">+{deposit.amount}</span> USDT
                             </div>
                             <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                               {deposit.description?.replace('Admin added balance', 'Deposit').replace('by admin', '') || 'Deposit'}
@@ -408,7 +408,7 @@ export default function Profile() {
                               {deposit.status.charAt(0).toUpperCase() + deposit.status.slice(1)}
                             </span>
                           )}
-                          <span className="inline-block px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-md text-xs font-semibold whitespace-nowrap">
+                            <span className="inline-block px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 rounded-md text-xs font-semibold whitespace-nowrap">
                             {deposit.type === 'admin_add' ? 'Deposit' : deposit.type}
                           </span>
                         </div>
@@ -431,7 +431,7 @@ export default function Profile() {
                   ))}
                 </div>
               ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-10 sm:p-12">
+                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-10 sm:p-12">
                   <div className="text-center">
                     <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -448,7 +448,7 @@ export default function Profile() {
         {activeSection === 'withdrawals' && (
           <div className="space-y-4">
             {/* Filters */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
               <div className="flex flex-col gap-3">
                 {/* Search */}
                 <div className="w-full">
@@ -457,7 +457,7 @@ export default function Profile() {
                     placeholder="Search withdrawals..."
                     value={withdrawalsSearchQuery}
                     onChange={(e) => setWithdrawalsSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 text-sm"
+                    className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
                   />
                 </div>
                 
@@ -481,8 +481,8 @@ export default function Profile() {
                       }}
                       className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap ${
                         withdrawalsDateFilter === filter.value
-                          ? 'bg-red-600 dark:bg-red-500 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white'
+                          : 'bg-slate-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       {filter.label}
@@ -492,14 +492,14 @@ export default function Profile() {
 
                 {/* Custom Date Range */}
                 {withdrawalsDateFilter === 'custom' && (
-                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-3">
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-3">
                     <div className="flex-1">
                       <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1.5">Start Date</label>
                       <input
                         type="date"
                         value={withdrawalsStartDate}
                         onChange={(e) => setWithdrawalsStartDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 text-sm"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
                       />
                     </div>
                     <div className="flex-1">
@@ -508,7 +508,7 @@ export default function Profile() {
                         type="date"
                         value={withdrawalsEndDate}
                         onChange={(e) => setWithdrawalsEndDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 text-sm"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
                       />
                     </div>
                   </div>
@@ -565,19 +565,19 @@ export default function Profile() {
                   {filteredWithdrawals.map((withdrawal) => (
                     <div 
                       key={withdrawal._id} 
-                      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-4 sm:p-5 cursor-pointer hover:shadow-md dark:hover:shadow-lg transition-all duration-200 hover:border-red-300 dark:hover:border-red-700"
+                      className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 sm:p-5 cursor-pointer hover:shadow-md dark:hover:shadow-lg transition-all duration-200 hover:border-cyan-300 dark:hover:border-cyan-700"
                       onClick={() => setSelectedWithdrawal(withdrawal)}
                     >
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                             </svg>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-bold text-base sm:text-lg text-gray-900 dark:text-white mb-1">
-                              <span className="text-red-600 dark:text-red-400">-{withdrawal.amount}</span> {withdrawal.coinSymbol}
+                              <span className="text-cyan-600 dark:text-cyan-400">-{withdrawal.amount}</span> {withdrawal.coinSymbol}
                             </div>
                             <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-mono truncate">
                               {withdrawal.walletAddress?.substring(0, 20)}...
@@ -613,7 +613,7 @@ export default function Profile() {
                   ))}
                 </div>
               ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-10 sm:p-12">
+                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-10 sm:p-12">
                   <div className="text-center">
                     <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -630,7 +630,7 @@ export default function Profile() {
         {activeSection === 'transfers' && (
           <div className="space-y-4 min-h-[calc(100vh-8rem)]">
             {/* Filters */}
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-200/50 dark:border-gray-700/50 p-5 shadow-lg">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
               <div className="flex flex-col gap-3">
                 {/* Search */}
                 <div className="w-full">
@@ -639,7 +639,7 @@ export default function Profile() {
                     placeholder="Search transfers..."
                     value={transfersSearchQuery}
                     onChange={(e) => setTransfersSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 text-sm"
+                    className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
                   />
                 </div>
                 
@@ -663,8 +663,8 @@ export default function Profile() {
                       }}
                       className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap ${
                         transfersDateFilter === filter.value
-                          ? 'bg-indigo-600 dark:bg-indigo-500 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white'
+                          : 'bg-slate-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       {filter.label}
@@ -674,14 +674,14 @@ export default function Profile() {
 
                 {/* Custom Date Range */}
                 {transfersDateFilter === 'custom' && (
-                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-3">
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-3">
                     <div className="flex-1">
                       <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1.5">Start Date</label>
                       <input
                         type="date"
                         value={transfersStartDate}
                         onChange={(e) => setTransfersStartDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 text-sm"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
                       />
                     </div>
                     <div className="flex-1">
@@ -690,7 +690,7 @@ export default function Profile() {
                         type="date"
                         value={transfersEndDate}
                         onChange={(e) => setTransfersEndDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 text-sm"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
                       />
                     </div>
                   </div>
@@ -754,7 +754,7 @@ export default function Profile() {
                     return (
                       <div 
                         key={transfer._id} 
-                        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-5 sm:p-6 cursor-pointer hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 hover:border-indigo-300 dark:hover:border-indigo-600 hover:scale-[1.01]"
+                        className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 cursor-pointer hover:shadow-lg transition-all duration-300 hover:border-cyan-300 dark:hover:border-cyan-700"
                         onClick={() => setSelectedTransfer(transfer)}
                       >
                         <div className="flex items-start justify-between gap-3 mb-3">
@@ -808,7 +808,7 @@ export default function Profile() {
                   })}
                 </div>
               ) : (
-                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-200/50 dark:border-gray-700/50 p-16 sm:p-20 shadow-lg min-h-[500px] flex items-center justify-center">
+                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-16 sm:p-20 shadow-sm min-h-[500px] flex items-center justify-center">
                   <div className="text-center">
                     <svg className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-gray-400 dark:text-gray-500 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -825,14 +825,14 @@ export default function Profile() {
 
       {/* Deposit Detail Modal */}
       {selectedDeposit && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-cyan-500 to-indigo-600">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Deposit Details</h3>
+                <h3 className="text-lg font-bold text-white">Deposit Details</h3>
                 <button
                   onClick={() => setSelectedDeposit(null)}
-                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  className="text-white/90 hover:text-white"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -916,7 +916,7 @@ export default function Profile() {
               </div>
               <button
                 onClick={() => setSelectedDeposit(null)}
-                className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition"
+                className="w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition"
               >
                 Close
               </button>
@@ -927,14 +927,14 @@ export default function Profile() {
 
       {/* Withdrawal Detail Modal */}
       {selectedWithdrawal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-cyan-500 to-indigo-600">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Withdrawal Details</h3>
+                <h3 className="text-lg font-bold text-white">Withdrawal Details</h3>
                 <button
                   onClick={() => setSelectedWithdrawal(null)}
-                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  className="text-white/90 hover:text-white"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -988,7 +988,7 @@ export default function Profile() {
               </div>
               <button
                 onClick={() => setSelectedWithdrawal(null)}
-                className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition"
+                className="w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition"
               >
                 Close
               </button>
@@ -999,14 +999,14 @@ export default function Profile() {
 
       {/* Transfer Detail Modal */}
       {selectedTransfer && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-cyan-500 to-indigo-600">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Transfer Details</h3>
+                <h3 className="text-lg font-bold text-white">Transfer Details</h3>
                 <button
                   onClick={() => setSelectedTransfer(null)}
-                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  className="text-white/90 hover:text-white"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1158,7 +1158,7 @@ export default function Profile() {
 
               <button
                 onClick={() => setSelectedTransfer(null)}
-                className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition"
+                className="w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-200 rounded-lg font-semibold transition"
               >
                 Close
               </button>

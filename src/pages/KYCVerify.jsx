@@ -630,17 +630,17 @@ export default function KYCVerify() {
 
   if (bootLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-500" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 text-gray-900 dark:text-gray-100 pb-20">
-      <header className="sticky top-0 z-20 bg-white/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-cyan-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 text-gray-900 dark:text-gray-100 pb-20">
+      <header className="sticky top-0 z-20 bg-white/90 dark:bg-slate-950/90 backdrop-blur border-b border-slate-200 dark:border-slate-800">
         <div className="px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+          <button onClick={() => navigate(-1)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
@@ -653,7 +653,7 @@ export default function KYCVerify() {
             </p>
           </div>
           <div className="ml-auto hidden sm:block">
-            <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+            <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300">
               Compliance Protected
             </span>
           </div>
@@ -662,7 +662,7 @@ export default function KYCVerify() {
 
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-4">
         {!showSubmitSuccess && !isReadOnlyStatus ? (
-          <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Verify Your Identity</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Complete the steps below to unlock full account capabilities and improve account security.
@@ -670,8 +670,16 @@ export default function KYCVerify() {
               </div>
         ) : null}
 
+        {!showSubmitSuccess && !isReadOnlyStatus && isProcessingMedia ? (
+          <div className="rounded-xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50/90 dark:bg-cyan-950/30 p-3">
+            <p className="text-xs sm:text-sm text-cyan-700 dark:text-cyan-300 font-medium">
+              Optimizing your upload for faster approval. Please wait before moving to final submit.
+            </p>
+          </div>
+        ) : null}
+
         {showSubmitSuccess ? (
-          <div className="rounded-2xl border border-green-200 dark:border-green-800 bg-white dark:bg-gray-900 p-8 text-center animate-pulse">
+          <div className="rounded-2xl border border-green-200 dark:border-green-800 bg-white dark:bg-slate-900 p-8 text-center animate-pulse">
             <div className="mx-auto mb-3 w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
               <svg className="w-7 h-7 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -682,11 +690,11 @@ export default function KYCVerify() {
           </div>
         ) : null}
 
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-6">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 sm:p-6">
           <KycWizardProgress step={step} />
         </div>
         {!showSubmitSuccess && !isReadOnlyStatus ? (
-          <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
             <p className="text-sm font-semibold mb-2">Completion status</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <span className={`text-xs px-2 py-1 rounded-full ${personalInfoComplete ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}`}>
@@ -707,19 +715,19 @@ export default function KYCVerify() {
 
         {!showSubmitSuccess && (
           existingKYC?.status === 'approved' ? (
-            <div className="rounded-2xl border border-green-200 dark:border-green-800 bg-white dark:bg-gray-900 p-6 text-center">
+            <div className="rounded-2xl border border-green-200 dark:border-green-800 bg-white dark:bg-slate-900 p-6 text-center">
               <h2 className="text-xl font-bold text-green-600 dark:text-green-400 mb-2">Verification Approved</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Your identity has been verified successfully.</p>
               <button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold">Go to Dashboard</button>
             </div>
           ) : existingKYC && ['pending', 'under_review'].includes(existingKYC.status) ? (
-            <div className="rounded-2xl border border-yellow-200 dark:border-yellow-800 bg-white dark:bg-gray-900 p-6 text-center">
+            <div className="rounded-2xl border border-yellow-200 dark:border-yellow-800 bg-white dark:bg-slate-900 p-6 text-center">
               <h2 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">Verification Under Review</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Your KYC has been submitted. Please wait for review completion.</p>
               <button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold">Go to Dashboard</button>
             </div>
           ) : (
-            <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-6">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 sm:p-6">
               {step === 1 ? (
                 <KycStepPersonalInfo
                   form={personalInfo}

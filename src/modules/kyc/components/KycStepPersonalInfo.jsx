@@ -15,11 +15,11 @@ export default function KycStepPersonalInfo({ form, onChange, onNext, loading, c
       }}
       className="space-y-5 animate-fade-in"
     >
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Personal Information</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Use legal details exactly as shown on your identity document.</p>
       </div>
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+      <div className="rounded-xl border border-cyan-100 dark:border-cyan-800/50 bg-cyan-50/70 dark:bg-cyan-950/20 p-4">
         <p className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-100">Step readiness</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {checklist.map((item) => (
@@ -29,7 +29,7 @@ export default function KycStepPersonalInfo({ form, onChange, onNext, loading, c
           ))}
         </div>
       </div>
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
             <label className="fx-label">Full Name *</label>
@@ -83,7 +83,11 @@ export default function KycStepPersonalInfo({ form, onChange, onNext, loading, c
           </div>
         </div>
       </div>
-      <button type="submit" disabled={loading || !canProceed} className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold disabled:opacity-60">
+      <button
+        type="submit"
+        disabled={loading || !canProceed}
+        className="w-full px-4 py-3 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white rounded-xl font-semibold disabled:opacity-60 transition"
+      >
         {loading ? 'Saving...' : 'Next'}
       </button>
     </form>

@@ -241,7 +241,7 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
     <ModalShell
       title="Withdraw Funds"
       onClose={handleClose}
-      headerClassName="from-red-500 to-red-600"
+      headerClassName="from-cyan-500 to-indigo-600"
       overlayClassName="bg-black/60 dark:bg-black/80 backdrop-blur-sm"
       icon={(
         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -255,6 +255,11 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
               Checking withdrawal eligibility...
             </div>
           )}
+          <div className="p-3 rounded-xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50/80 dark:bg-cyan-900/20">
+            <p className="text-xs sm:text-sm font-medium text-cyan-800 dark:text-cyan-200">
+              Withdrawals are protected by KYC and risk checks. Verify coin, network, and wallet before submitting.
+            </p>
+          </div>
           {/* Coin Selection */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Select Coin</label>
@@ -264,7 +269,7 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
                 const coin = coins.find(c => c._id === e.target.value)
                 setSelectedCoin(coin)
               }}
-              className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition text-gray-900 dark:text-white"
+              className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition text-gray-900 dark:text-white"
               required
             >
               <option value="">Select a coin</option>
@@ -286,10 +291,10 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
               max={selectedCoin?.maxWithdraw || settings?.withdrawal?.maxAmount || 10000}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className={`w-full px-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 transition text-gray-900 dark:text-white text-lg font-semibold ${
+              className={`w-full px-4 py-3 border-2 rounded-xl bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 transition text-gray-900 dark:text-white text-lg font-semibold ${
                 amountError
                   ? 'border-red-500 dark:border-red-500 focus:ring-red-500 focus:border-red-500'
-                  : 'border-gray-200 dark:border-gray-600 focus:ring-red-500 focus:border-red-500'
+                  : 'border-slate-200 dark:border-slate-700 focus:ring-cyan-500 focus:border-cyan-500'
               }`}
               placeholder="0.00"
               required
@@ -313,14 +318,14 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
 
           {/* Fee Display */}
           {amount && fee > 0 && (
-            <div className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl border border-gray-200 dark:border-gray-600">
+            <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-gray-600 dark:text-gray-400 font-medium">Withdrawal Fee:</span>
                 <span className="font-semibold text-gray-900 dark:text-white">{fee.toFixed(2)} USDT</span>
               </div>
               <div className="flex justify-between text-base pt-2 border-t border-gray-200 dark:border-gray-600">
                 <span className="text-gray-700 dark:text-gray-300 font-semibold">Total Deducted:</span>
-                <span className="font-bold text-red-600 dark:text-red-400">{totalAmount.toFixed(2)} USDT</span>
+                <span className="font-bold text-amber-600 dark:text-amber-400">{totalAmount.toFixed(2)} USDT</span>
               </div>
             </div>
           )}
@@ -332,7 +337,7 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
               type="text"
               value={walletAddress}
               onChange={(e) => setWalletAddress(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition font-mono text-sm text-gray-900 dark:text-white"
+              className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition font-mono text-sm text-gray-900 dark:text-white"
               minLength={10}
               placeholder="Enter your wallet address"
               required
@@ -346,7 +351,7 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
             <select
               value={network}
               onChange={(e) => setNetwork(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition text-gray-900 dark:text-white"
+              className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition text-gray-900 dark:text-white"
             >
               <option value="onchain">Onchain</option>
             </select>
@@ -357,14 +362,14 @@ export default function WithdrawalModal({ isOpen, onClose, onSuccess }) {
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-xl font-semibold transition shadow-md hover:shadow-lg"
+              className="flex-1 px-4 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-semibold transition shadow-md hover:shadow-lg"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || eligibilityChecking || !!amountError}
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl font-semibold transition shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white rounded-xl font-semibold transition shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
             >
               {loading ? 'Submitting...' : 'Submit Withdrawal'}
             </button>

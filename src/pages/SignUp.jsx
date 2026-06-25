@@ -391,7 +391,7 @@ export default function SignUp() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center px-3 sm:px-4 py-8 sm:py-12">
+    <div className="fx-page flex items-center justify-center px-3 sm:px-4 py-8 sm:py-12 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.2),transparent_45%),radial-gradient(circle_at_bottom,rgba(99,102,241,0.2),transparent_35%)]">
       <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10">
         <ThemeToggle />
       </div>
@@ -407,20 +407,20 @@ export default function SignUp() {
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain"
               />
             ) : (
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-lg sm:text-xl">
                   {siteSettings.site.name.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
-            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-cyan-500 to-indigo-500 bg-clip-text text-transparent">
               {siteSettings.site.name || 'XCrypto'}
             </span>
           </Link>
         </div>
 
         {/* Sign Up Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl p-5 sm:p-8 border border-gray-200 dark:border-gray-700">
+        <div className="fx-card rounded-xl sm:rounded-2xl shadow-2xl p-5 sm:p-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">Create Account</h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">Sign up to start trading today</p>
 
@@ -473,7 +473,7 @@ export default function SignUp() {
                 <button
                   type="submit"
                   disabled={checkingEmail || !!emailError || !email}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-indigo-700 hover:to-purple-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full bg-gradient-to-r from-cyan-500 to-indigo-600 text-white py-2.5 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-cyan-600 hover:to-indigo-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {checkingEmail ? (
                     <span className="flex items-center justify-center">
@@ -491,7 +491,7 @@ export default function SignUp() {
               <div className="space-y-2 sm:space-y-3">
                 <button
                   onClick={() => handleSocialAuth('Google')}
-                  className="w-full flex items-center justify-center space-x-2 sm:space-x-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base hover:bg-gray-50 dark:hover:bg-gray-600 transition shadow-sm transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full flex items-center justify-center space-x-2 sm:space-x-3 bg-white dark:bg-slate-800 text-gray-900 dark:text-white border border-slate-300 dark:border-slate-700 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -503,7 +503,7 @@ export default function SignUp() {
                 </button>
                 <button
                   onClick={() => handleSocialAuth('Apple')}
-                  className="w-full flex items-center justify-center space-x-2 sm:space-x-3 bg-black dark:bg-gray-900 text-white py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base hover:bg-gray-800 dark:hover:bg-gray-800 transition shadow-sm transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full flex items-center justify-center space-x-2 sm:space-x-3 bg-slate-900 dark:bg-black text-white py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base hover:bg-slate-800 dark:hover:bg-slate-900 transition shadow-sm transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
@@ -661,7 +661,7 @@ export default function SignUp() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-indigo-700 hover:to-purple-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full bg-gradient-to-r from-cyan-500 to-indigo-600 text-white py-2.5 sm:py-3 rounded-lg font-bold text-sm sm:text-base hover:from-cyan-600 hover:to-indigo-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center">
@@ -679,7 +679,7 @@ export default function SignUp() {
 
           <p className="mt-5 sm:mt-6 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             Already have an account?{' '}
-            <Link to="/signin" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-semibold">
+            <Link to="/signin" className="text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 font-semibold">
               Sign In
             </Link>
           </p>

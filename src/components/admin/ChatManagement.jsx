@@ -288,7 +288,7 @@ export default function ChatManagement() {
   const isTicketLocked = selectedTicket && ['closed', 'archived'].includes(selectedTicket.status)
 
   return (
-    <div className="p-4 sm:p-6 space-y-4">
+    <div className="p-3 sm:p-6 space-y-4">
       <PageHeader
         title="Customer Service Console"
         description="Manage customer conversations, triage priority, and resolve tickets quickly."
@@ -377,9 +377,9 @@ export default function ChatManagement() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[360px,1fr] gap-4 h-[calc(100vh-280px)] min-h-[620px]">
+      <div className="grid grid-cols-1 lg:grid-cols-[360px,1fr] gap-3 sm:gap-4 h-[calc(100vh-230px)] sm:h-[calc(100vh-280px)] min-h-[540px] sm:min-h-[620px]">
         <div className={`fx-card overflow-hidden flex flex-col ${activeMobilePanel === 'chat' ? 'hidden lg:flex' : 'flex'}`}>
-          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <p className="font-semibold">Tickets ({filteredTickets.length})</p>
             {ticketsLoading ? <span className="text-xs text-gray-500">Syncing...</span> : null}
           </div>
@@ -431,13 +431,13 @@ export default function ChatManagement() {
         <div className={`fx-card overflow-hidden flex flex-col ${activeMobilePanel === 'list' ? 'hidden lg:flex' : 'flex'}`}>
           {selectedTicket ? (
             <>
-              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 space-y-3">
+              <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <button
                         onClick={() => setActiveMobilePanel('list')}
-                        className="lg:hidden text-sm px-2 py-1 rounded bg-gray-100 dark:bg-gray-700"
+                        className="lg:hidden text-sm px-2.5 py-1.5 rounded bg-slate-100 dark:bg-slate-800"
                       >
                         Back
                       </button>
@@ -467,7 +467,7 @@ export default function ChatManagement() {
                     <option value="high">High</option>
                     <option value="urgent">Urgent</option>
                   </select>
-                  <button onClick={closeTicket} disabled={isTicketLocked} className="px-3 py-2 text-sm bg-gray-700 hover:bg-gray-800 text-white rounded-lg disabled:opacity-50">
+                  <button onClick={closeTicket} disabled={isTicketLocked} className="px-3 py-2 text-sm bg-slate-700 hover:bg-slate-800 text-white rounded-lg disabled:opacity-50">
                     Close
                   </button>
                   <button onClick={archiveTicket} disabled={selectedTicket.status === 'archived'} className="px-3 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50">
@@ -476,7 +476,7 @@ export default function ChatManagement() {
                 </div>
               </div>
 
-              <div ref={messagesContainerRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-2 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+              <div ref={messagesContainerRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-2 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
                 {messagesLoading ? (
                   <>
                     <SkeletonBlock className="h-12 w-2/3 rounded-xl" />
@@ -500,8 +500,8 @@ export default function ChatManagement() {
                         <div className={`flex items-end gap-2 ${message.senderType === 'admin' ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-[84%] sm:max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm ${
                             message.senderType === 'admin'
-                              ? 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-br-sm'
-                              : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-sm border border-gray-200 dark:border-gray-600'
+                              ? 'bg-gradient-to-br from-cyan-500 to-indigo-500 text-white rounded-br-sm'
+                              : 'bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-bl-sm border border-slate-200 dark:border-slate-700'
                           }`}>
                             <p className={`text-xs font-semibold mb-1 ${message.senderType === 'admin' ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-300'}`}>
                               {message.senderType === 'admin'
@@ -524,11 +524,11 @@ export default function ChatManagement() {
                 )}
               </div>
 
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
                 {attachments.length > 0 ? (
                   <div className="mb-3 flex flex-wrap gap-2">
                     {attachments.map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                      <div key={index} className="flex items-center gap-2 bg-cyan-50 dark:bg-cyan-900/20 px-3 py-2 rounded-lg border border-cyan-200 dark:border-cyan-800">
                         <span className="text-sm truncate max-w-[170px]">{file.name}</span>
                         <button onClick={() => removeAttachment(index)} className="text-red-500 hover:text-red-700">x</button>
                       </div>
@@ -536,7 +536,7 @@ export default function ChatManagement() {
                   </div>
                 ) : null}
                 <div className="flex items-end gap-2">
-                  <button onClick={() => fileInputRef.current?.click()} className="px-3 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-sm">
+                  <button onClick={() => fileInputRef.current?.click()} className="px-3 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm">
                     Attach
                   </button>
                   <input ref={fileInputRef} type="file" multiple onChange={handleFileSelect} className="hidden" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" />
@@ -552,12 +552,12 @@ export default function ChatManagement() {
                     placeholder={isTicketLocked ? 'This ticket is closed. Reopen to reply.' : 'Type a response...'}
                     rows={2}
                     disabled={isTicketLocked}
-                    className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base disabled:opacity-70"
+                    className="flex-1 px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500 text-base disabled:opacity-70"
                   />
                   <button
                     onClick={sendMessage}
                     disabled={isTicketLocked || sending || (!newMessage.trim() && attachments.length === 0)}
-                    className="px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50"
+                    className="px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 hover:to-indigo-600 text-white disabled:opacity-50"
                   >
                     {sending ? 'Sending...' : 'Send'}
                   </button>

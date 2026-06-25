@@ -248,8 +248,8 @@ export default function KYCLogList() {
             onClick={() => setStatusFilter(status)}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${
               statusFilter === status
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                ? 'bg-gradient-to-r from-cyan-500 to-indigo-500 text-white'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
             }`}
           >
             {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
@@ -257,10 +257,10 @@ export default function KYCLogList() {
         ))}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+      <div className="fx-card overflow-hidden">
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700">
+            <thead className="bg-slate-50 dark:bg-slate-800">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">User</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
@@ -268,7 +268,7 @@ export default function KYCLogList() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {kycs.length > 0 ? (
                 kycs.map((kyc) => (
                   <tr key={kyc._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -339,7 +339,7 @@ export default function KYCLogList() {
             </tbody>
           </table>
         </div>
-        <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
+        <div className="md:hidden divide-y divide-slate-200 dark:divide-slate-700">
           {kycs.length > 0 ? (
             kycs.map((kyc) => (
               <div key={kyc._id} className="p-4 space-y-3">
@@ -375,7 +375,7 @@ export default function KYCLogList() {
                       }
                       setSelectedKYC(kyc)
                     }}
-                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm"
+                    className="px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 hover:to-indigo-600 text-white rounded text-sm"
                   >
                     View
                   </button>
@@ -406,8 +406,8 @@ export default function KYCLogList() {
 
       {selectedKYC && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
+            <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">KYC Details</h3>
                 <button
@@ -420,7 +420,7 @@ export default function KYCLogList() {
                 </button>
               </div>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               <div>
                 <h4 className="font-semibold mb-2 text-gray-900 dark:text-white">User Information</h4>
                 <div className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
@@ -446,7 +446,7 @@ export default function KYCLogList() {
                 {getDocumentItems(selectedKYC).length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     {getDocumentItems(selectedKYC).map((doc) => (
-                      <div key={doc.url} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                      <div key={doc.url} className="border border-slate-200 dark:border-slate-700 rounded-lg p-3">
                         <p className="font-medium text-gray-900 dark:text-white mb-2">{doc.label}</p>
                         <DocumentPreview doc={doc} />
                       </div>
@@ -464,16 +464,16 @@ export default function KYCLogList() {
                 </div>
               )}
               {selectedKYC.status === 'pending' && (
-                <div className="flex space-x-3 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <button
                     onClick={() => handleApprove(selectedKYC._id)}
-                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+                    className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
                   >
                     Approve
                   </button>
                   <button
                     onClick={() => openRejectModal(selectedKYC._id)}
-                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold"
+                    className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold"
                   >
                     Reject
                   </button>

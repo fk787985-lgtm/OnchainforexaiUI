@@ -116,16 +116,21 @@ export default function KYCSettings() {
   }
 
   if (loading) {
-    return <div className="text-center py-10">Loading...</div>
+    return (
+      <div className="fx-card p-6 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mx-auto mb-3"></div>
+        <p className="text-slate-600 dark:text-slate-300">Loading KYC settings...</p>
+      </div>
+    )
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="fx-card p-6">
       <h2 className="text-xl font-bold mb-6">KYC Document Requirements</h2>
       
       {/* Video Verification & Selfie Settings */}
       <div className="mb-8 space-y-4">
-        <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg">
           <div>
             <label className="text-sm font-medium">Require Video Verification</label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -137,7 +142,7 @@ export default function KYCSettings() {
             onChange={(enabled) => setSettings({ ...settings, requireVideoVerification: enabled })}
           />
         </div>
-        <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg">
           <div>
             <label className="text-sm font-medium">Require Selfie</label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -152,7 +157,7 @@ export default function KYCSettings() {
       </div>
 
       {/* Add New Document */}
-      <div className="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900">
+      <div className="mb-6 p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900">
         <h3 className="text-lg font-semibold mb-4">Add Custom Document</h3>
         <div className="flex gap-2">
           <input
@@ -160,12 +165,12 @@ export default function KYCSettings() {
             value={newDocumentName}
             onChange={(e) => setNewDocumentName(e.target.value)}
             placeholder="Enter document name (e.g., Bank Statement)"
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+            className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
             onKeyPress={(e) => e.key === 'Enter' && handleAddDocument()}
           />
           <button
             onClick={handleAddDocument}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition"
+            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white rounded-lg font-semibold transition"
           >
             Add Document
           </button>
@@ -176,7 +181,7 @@ export default function KYCSettings() {
       <div className="space-y-4 mb-6">
         <h3 className="text-lg font-semibold">Document Types</h3>
         {settings.documents.map((doc, index) => (
-          <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <div key={index} className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg">
             <div className="flex items-center justify-between mb-4">
               <div className="flex-1">
                 <h4 className="font-medium text-gray-900 dark:text-white">{doc.name}</h4>
@@ -192,7 +197,7 @@ export default function KYCSettings() {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-lg">
                 <div>
                   <label className="text-sm font-medium">Required</label>
                   <p className="text-xs text-gray-500 dark:text-gray-400">User must provide this document</p>
@@ -202,7 +207,7 @@ export default function KYCSettings() {
                   onChange={(enabled) => handleUpdateDocument(index, 'required', enabled)}
                 />
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-lg">
                 <div>
                   <label className="text-sm font-medium">Allow Upload File</label>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -214,7 +219,7 @@ export default function KYCSettings() {
                   onChange={(enabled) => handleUpdateDocument(index, 'allowUpload', enabled)}
                 />
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-lg">
                 <div>
                   <label className="text-sm font-medium">Use Photo Capture</label>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -235,7 +240,7 @@ export default function KYCSettings() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold disabled:opacity-50"
+          className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white rounded-lg font-semibold disabled:opacity-50"
         >
           {saving ? 'Saving...' : 'Save Settings'}
         </button>

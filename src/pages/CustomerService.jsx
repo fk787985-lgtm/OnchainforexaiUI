@@ -462,8 +462,8 @@ export default function CustomerService() {
 
       {/* New Ticket Modal */}
       {showNewTicket && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
             <div className="p-6">
               <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Create New Ticket</h2>
               <div className="space-y-4">
@@ -474,7 +474,7 @@ export default function CustomerService() {
                     value={newTicketSubject}
                     onChange={(e) => setNewTicketSubject(e.target.value)}
                     placeholder="What can we help you with?"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                    className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400"
                     autoFocus
                   />
                 </div>
@@ -484,14 +484,14 @@ export default function CustomerService() {
                       setShowNewTicket(false)
                       setNewTicketSubject('')
                     }}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition"
+                    className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300 transition"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={createTicket}
                     disabled={loading || !newTicketSubject.trim()}
-                    className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white rounded-lg font-semibold disabled:opacity-50 transition"
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white rounded-lg font-semibold disabled:opacity-50 transition"
                   >
                     {loading ? 'Creating...' : 'Create'}
                   </button>

@@ -305,14 +305,14 @@ export default function SiteSettings() {
         <button
           onClick={handleSave}
           disabled={loading}
-          className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           {loading ? 'Saving...' : 'Save All Settings'}
         </button>
       </div>
 
       {/* General Site Settings */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
         <h3 className="text-lg font-semibold mb-4">General Settings</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -321,7 +321,7 @@ export default function SiteSettings() {
               type="text"
               value={settings.site.name}
               onChange={(e) => handleInputChange('site', 'name', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
               placeholder="Enter site name"
             />
           </div>
@@ -331,7 +331,7 @@ export default function SiteSettings() {
             <select
               value={settings.site.currency}
               onChange={(e) => handleInputChange('site', 'currency', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
             >
               <option value="USDT">USDT</option>
               <option value="USD">USD</option>
@@ -350,7 +350,7 @@ export default function SiteSettings() {
               onChange={(e) => handleInputChange('site', 'signupBonus', parseFloat(e.target.value) || 0)}
               min="0"
               step="0.01"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
               placeholder="0.00"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -362,21 +362,21 @@ export default function SiteSettings() {
       </div>
 
       {/* Environment Variables */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
         <h3 className="text-lg font-semibold mb-4">Environment Variables</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Manage environment variables that can be used throughout the application. These values are stored in the database and can be updated without modifying code.
         </p>
         
         {/* Add new env value */}
-        <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+        <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
           <label className="block text-sm font-medium mb-3">Add New Environment Variable</label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <input
               type="text"
               value={envKey}
               onChange={(e) => setEnvKey(e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+              className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
               placeholder="Key (e.g., API_KEY, BASE_URL)"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
@@ -388,7 +388,7 @@ export default function SiteSettings() {
               type="text"
               value={envValue}
               onChange={(e) => setEnvValue(e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+              className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
               placeholder="Value"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
@@ -398,7 +398,7 @@ export default function SiteSettings() {
             />
             <button
               onClick={handleAddEnvValue}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-sm transition"
+              className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white rounded-lg font-semibold text-sm transition"
             >
               Add Variable
             </button>
@@ -414,7 +414,7 @@ export default function SiteSettings() {
             {Object.entries(settings.site.envValues).map(([key, value]) => (
               <div
                 key={key}
-                className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+                className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
@@ -425,7 +425,7 @@ export default function SiteSettings() {
                       type="text"
                       value={value}
                       onChange={(e) => handleUpdateEnvValue(key, e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-sm"
                       placeholder="Enter value"
                     />
                   </div>
@@ -454,7 +454,7 @@ export default function SiteSettings() {
       </div>
 
       {/* Logo Upload */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
         <h3 className="text-lg font-semibold mb-4">Site Logo</h3>
         <div className="flex items-start gap-6">
           {settings.site.logo && (
@@ -462,7 +462,7 @@ export default function SiteSettings() {
               <img
                 src={getImageUrl(settings.site.logo)}
                 alt="Site Logo"
-                className="w-32 h-32 object-contain border border-gray-200 dark:border-gray-700 rounded-lg p-2"
+                className="w-32 h-32 object-contain border border-slate-200 dark:border-slate-700 rounded-lg p-2"
               />
             </div>
           )}
@@ -473,7 +473,7 @@ export default function SiteSettings() {
               accept="image/*"
               onChange={handleLogoUpload}
               disabled={uploadingLogo}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 disabled:opacity-50"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 disabled:opacity-50"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Recommended: PNG, SVG, or JPG. Max size: 5MB
@@ -486,7 +486,7 @@ export default function SiteSettings() {
       </div>
 
       {/* Favicon Upload */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
         <h3 className="text-lg font-semibold mb-4">Site Favicon</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           The favicon appears in browser tabs and bookmarks. Recommended: 32x32 or 16x16 PNG, or ICO format.
@@ -497,7 +497,7 @@ export default function SiteSettings() {
               <img
                 src={getImageUrl(settings.site.favicon)}
                 alt="Site Favicon"
-                className="w-16 h-16 object-contain border border-gray-200 dark:border-gray-700 rounded-lg p-2"
+                className="w-16 h-16 object-contain border border-slate-200 dark:border-slate-700 rounded-lg p-2"
               />
             </div>
           )}
@@ -508,7 +508,7 @@ export default function SiteSettings() {
               accept="image/png,image/x-icon,image/vnd.microsoft.icon,image/svg+xml"
               onChange={handleFaviconUpload}
               disabled={uploadingFavicon}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 disabled:opacity-50"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 disabled:opacity-50"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Recommended: PNG, ICO, or SVG. Max size: 2MB
@@ -521,7 +521,7 @@ export default function SiteSettings() {
       </div>
 
       {/* SEO Settings */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
         <h3 className="text-lg font-semibold mb-4">SEO Settings</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Configure meta tags and Open Graph settings for better search engine visibility and social media sharing.
@@ -533,7 +533,7 @@ export default function SiteSettings() {
               type="text"
               value={settings.site.seo.metaTitle}
               onChange={(e) => handleSEOChange('metaTitle', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
               placeholder="e.g., XCrypto - Forex & Crypto Exchange"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -546,7 +546,7 @@ export default function SiteSettings() {
             <textarea
               value={settings.site.seo.metaDescription}
               onChange={(e) => handleSEOChange('metaDescription', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
               placeholder="A brief description of your platform..."
               rows="3"
             />
@@ -561,7 +561,7 @@ export default function SiteSettings() {
               type="text"
               value={settings.site.seo.metaKeywords}
               onChange={(e) => handleSEOChange('metaKeywords', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
               placeholder="crypto, forex, trading, exchange"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -569,7 +569,7 @@ export default function SiteSettings() {
             </p>
           </div>
 
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
             <h4 className="text-md font-semibold mb-4">Open Graph (Social Media)</h4>
             <div className="space-y-4">
               <div>
@@ -578,7 +578,7 @@ export default function SiteSettings() {
                   type="text"
                   value={settings.site.seo.ogTitle}
                   onChange={(e) => handleSEOChange('ogTitle', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
                   placeholder="Title for social media shares"
                 />
               </div>
@@ -588,7 +588,7 @@ export default function SiteSettings() {
                 <textarea
                   value={settings.site.seo.ogDescription}
                   onChange={(e) => handleSEOChange('ogDescription', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
                   placeholder="Description for social media shares"
                   rows="2"
                 />
@@ -600,7 +600,7 @@ export default function SiteSettings() {
                   type="url"
                   value={settings.site.seo.ogImage}
                   onChange={(e) => handleSEOChange('ogImage', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
                   placeholder="https://example.com/og-image.jpg"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -613,7 +613,7 @@ export default function SiteSettings() {
       </div>
 
       {/* Transfer Settings */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
         <h3 className="text-lg font-semibold mb-4">Transfer Settings</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -624,7 +624,7 @@ export default function SiteSettings() {
               onChange={(e) => handleInputChange('transfer', 'minAmount', parseFloat(e.target.value) || 0)}
               min="0"
               step="0.01"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
             />
           </div>
 
@@ -636,14 +636,14 @@ export default function SiteSettings() {
               onChange={(e) => handleInputChange('transfer', 'maxAmount', parseFloat(e.target.value) || 0)}
               min="0"
               step="0.01"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
             />
           </div>
         </div>
       </div>
 
       {/* Contact Information */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
         <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
@@ -652,7 +652,7 @@ export default function SiteSettings() {
               type="text"
               value={settings.site.contact.telegram}
               onChange={(e) => handleContactChange('telegram', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
               placeholder="https://t.me/yourchannel"
             />
           </div>
@@ -663,7 +663,7 @@ export default function SiteSettings() {
               type="text"
               value={settings.site.contact.whatsapp}
               onChange={(e) => handleContactChange('whatsapp', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
               placeholder="https://wa.me/1234567890"
             />
           </div>
@@ -674,7 +674,7 @@ export default function SiteSettings() {
               type="email"
               value={settings.site.contact.email}
               onChange={(e) => handleContactChange('email', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
               placeholder="support@example.com"
             />
           </div>

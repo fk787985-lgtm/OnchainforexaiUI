@@ -153,7 +153,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
   const handleCoinSelect = (coin) => {
     // Check if coin has address configured
     if (!coin.address || coin.address.trim() === '') {
-      alert(`Wallet address not configured for ${coin.name}. Please contact admin.`)
+      toast.error(`Wallet address not configured for ${coin.name}. Please contact support.`)
       return
     }
     setSelectedPaymentCoin(coin)
@@ -163,7 +163,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
   const handleCopyAddress = () => {
     if (selectedPaymentCoin?.address) {
       navigator.clipboard.writeText(selectedPaymentCoin.address).then(() => {
-        alert('Address copied to clipboard!')
+        toast.success('Address copied to clipboard')
       }).catch(() => {
         // Fallback for older browsers
         const textArea = document.createElement('textarea')
@@ -172,7 +172,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
         textArea.select()
         document.execCommand('copy')
         document.body.removeChild(textArea)
-        alert('Address copied to clipboard!')
+        toast.success('Address copied to clipboard')
       })
     }
   }
@@ -356,9 +356,9 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
       />
       
       {/* Modal Card - Dark/Light Theme */}
-      <div className="relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-none sm:rounded-2xl shadow-2xl w-full h-full sm:max-w-2xl sm:max-h-[90vh] sm:h-auto flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700">
+      <div className="relative bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 rounded-none sm:rounded-2xl shadow-2xl w-full h-full sm:max-w-2xl sm:max-h-[90vh] sm:h-auto flex flex-col overflow-hidden border border-slate-200 dark:border-slate-700">
         {/* Header - Gradient Background */}
-        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 rounded-t-none sm:rounded-t-2xl flex justify-between items-center flex-shrink-0">
+        <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-cyan-500 to-indigo-600 rounded-t-none sm:rounded-t-2xl flex justify-between items-center flex-shrink-0">
           <div className="flex items-center space-x-2">
             <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -378,13 +378,13 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
         </div>
 
         {/* Content */}
-        <div className="p-4 sm:p-6 h-full flex flex-col overflow-hidden bg-white dark:bg-gray-900">
+        <div className="p-4 sm:p-6 h-full flex flex-col overflow-hidden bg-white dark:bg-slate-950">
           {step === 'select' ? (
             <>
               {/* Loading indicator (only show if initial load, not background refresh) */}
               {loading && coins.length === 0 && (
                 <div className="mb-4 flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
                   <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">Loading coins...</span>
                 </div>
               )}
@@ -396,7 +396,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                   placeholder="Search coins..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 text-sm sm:text-base"
+                  className="w-full px-4 py-2.5 sm:py-3 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm sm:text-base"
                 />
               </div>
 
@@ -409,7 +409,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                       <button
                         key={coin._id || coin.id}
                         onClick={() => handleCoinSelect(coin)}
-                        className="p-2 sm:p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition text-left"
+                        className="p-2 sm:p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 hover:border-cyan-500 dark:hover:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition text-left"
                       >
                         <div className="flex flex-col items-center space-y-1 sm:space-y-2">
                           {coin.image ? (
@@ -445,7 +445,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                       <button
                         key={coin._id || coin.id}
                         onClick={() => handleCoinSelect(coin)}
-                        className="w-full p-2.5 sm:p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition flex items-center justify-between"
+                        className="w-full p-2.5 sm:p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 hover:border-cyan-500 dark:hover:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition flex items-center justify-between"
                       >
                         <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                           {coin.image ? (
@@ -514,9 +514,9 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
 
                 {/* Deposit Limits Info */}
                 {(selectedPaymentCoin.minDeposit > 0 || selectedPaymentCoin.maxDeposit > 0) && (
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 flex-shrink-0">
-                    <div className="text-xs font-semibold mb-1.5 text-blue-900 dark:text-blue-200">💡 Deposit Limits</div>
-                    <div className="text-xs text-blue-700 dark:text-blue-300 flex flex-wrap gap-x-4 gap-y-1">
+                  <div className="p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg border border-cyan-200 dark:border-cyan-800 flex-shrink-0">
+                    <div className="text-xs font-semibold mb-1.5 text-cyan-900 dark:text-cyan-200">Deposit limits</div>
+                    <div className="text-xs text-cyan-700 dark:text-cyan-300 flex flex-wrap gap-x-4 gap-y-1">
                       {selectedPaymentCoin.minDeposit > 0 && (
                         <span>Minimum: {selectedPaymentCoin.minDeposit} USDT</span>
                       )}
@@ -560,7 +560,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                     />
                     <button
                       onClick={handleCopyAddress}
-                      className="p-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500 text-white rounded-lg transition flex-shrink-0"
+                      className="p-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white rounded-lg transition flex-shrink-0"
                       title="Copy address"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -582,7 +582,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
                     placeholder="Enter amount in USDT"
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 text-base"
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-base"
                   />
                   {selectedPaymentCoin.minDeposit > 0 && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
@@ -616,7 +616,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                     />
                     <label
                       htmlFor="screenshot-upload"
-                      className="flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-green-500 dark:hover:border-green-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                      className="flex items-center justify-center px-4 py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg cursor-pointer hover:border-cyan-500 dark:hover:border-cyan-500 hover:bg-slate-50 dark:hover:bg-slate-900 transition"
                     >
                       <svg className="w-5 h-5 mr-2 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -661,7 +661,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                   <ul className="text-xs text-amber-800 dark:text-amber-300 space-y-1 list-disc list-inside">
                     <li>Only send <strong>{selectedPaymentCoin.symbol}</strong> to this address</li>
                     <li>Double-check the address before sending</li>
-                    <li>Your deposit will be reviewed by admin after submission</li>
+                    <li>Your deposit will be reviewed by compliance after submission</li>
                     <li>Processing may take a few minutes</li>
                   </ul>
                 </div>
@@ -671,7 +671,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                   <button
                     onClick={handleSubmitDeposit}
                     disabled={submittingDeposit || !depositAmount || parseFloat(depositAmount) < 1}
-                    className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-semibold text-base transition shadow-md hover:shadow-lg"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 disabled:bg-slate-400 dark:disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-lg font-semibold text-base transition shadow-md hover:shadow-lg"
                   >
                     {submittingDeposit ? (
                       <span className="flex items-center justify-center">
@@ -687,7 +687,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                   </button>
                   <button
                     onClick={() => setStep('select')}
-                    className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium text-sm transition"
+                    className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium text-sm transition"
                   >
                     ← Back to Coin Selection
                   </button>

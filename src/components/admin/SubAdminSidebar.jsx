@@ -134,20 +134,20 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 z-50 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
       >
         <div className="flex flex-col h-full">
           {/* Logo/Header */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 {siteSettings.site.logo ? (
@@ -157,7 +157,7 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
                     className="w-8 h-8 rounded-lg object-contain"
                   />
                 ) : (
-                  <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-lg flex items-center justify-center">
                     <span className="text-white font-bold text-sm">
                       {siteSettings.site.name.charAt(0).toUpperCase()}
                     </span>
@@ -167,12 +167,12 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
                   <h2 className="text-sm font-bold text-gray-900 dark:text-white">
                     {siteSettings.site.name}
                   </h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Sub-Admin</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Sub-Admin</p>
                 </div>
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="lg:hidden text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                className="lg:hidden text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -183,9 +183,9 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
 
           {/* User Info */}
           {currentUser && (
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold text-sm">
                     {currentUser.fullName?.charAt(0).toUpperCase() || 'S'}
                   </span>
@@ -211,8 +211,8 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
                     onClick={() => handleTabClick(item.id)}
                     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                       activeTab === item.id
-                        ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     <span className="text-lg">{item.icon}</span>
@@ -225,7 +225,7 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
               <li>
                 <button
                   onClick={handleLoginAsSubAdminUser}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30"
+                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30"
                 >
                   <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -237,14 +237,14 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+          <div className="p-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
             <div className="lg:hidden">
               <ThemeToggle />
             </div>
             {onChangePassword && (
               <button
                 onClick={onChangePassword}
-                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors font-semibold"
+                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white transition-colors font-semibold"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -268,9 +268,9 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
       {/* Mobile Menu Button */}
       <button
         onClick={() => setSidebarOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+        className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700"
       >
-        <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>

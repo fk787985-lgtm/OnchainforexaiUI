@@ -538,15 +538,15 @@ export default function UsersList() {
   if (loading) {
     return (
       <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading users...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto"></div>
+        <p className="mt-4 text-slate-600 dark:text-slate-400">Loading users...</p>
       </div>
     )
   }
 
   if (!canViewUsers) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center text-gray-600 dark:text-gray-300">
+      <div className="fx-card p-8 text-center text-slate-600 dark:text-slate-300">
         You do not have permission to view users.
       </div>
     )
@@ -554,8 +554,8 @@ export default function UsersList() {
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="fx-card overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h2 className="text-lg sm:text-xl font-bold">All Users</h2>
             {/* Search Input */}
@@ -565,15 +565,15 @@ export default function UsersList() {
                 placeholder="Search by name, email, username, ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="fx-input w-full pl-10 pr-4 py-2.5"
               />
-              <svg className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
           </div>
         </div>
-        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+        <div className="hidden lg:block overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
           <div className="inline-block min-w-full align-middle">
             <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 rounded-lg">
               <table className="w-full min-w-[1120px] divide-y divide-gray-200 dark:divide-gray-700">
@@ -679,6 +679,78 @@ export default function UsersList() {
             </div>
           </div>
         </div>
+
+        <div className="lg:hidden divide-y divide-slate-200 dark:divide-slate-700">
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map((user) => (
+              <div key={user._id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">{user.fullName || 'N/A'}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">ID: {user.uniqueId || user.payid || 'N/A'}</p>
+                  </div>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(user.balance || 0)}</p>
+                </div>
+
+                <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
+                  <span className={`px-2 py-1 rounded-full ${user.isEmailVerified ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'}`}>
+                    Email {user.isEmailVerified ? 'Yes' : 'No'}
+                  </span>
+                  <span className={`px-2 py-1 rounded-full ${user.isKycVerified ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'}`}>
+                    KYC {user.isKycVerified ? 'Yes' : 'No'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleViewUser(user._id)}
+                    disabled={!canViewUsers}
+                    className="px-3 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                  >
+                    View
+                  </button>
+                  {(canEditUsers || canAddBalance || canActivateUser || canDeactivateUser) && (
+                    <button
+                      onClick={() => handleEdit(user)}
+                      className="px-3 py-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {(canManageCoinAddress || !isSubAdmin) && (
+                    <button
+                      onClick={() => setCoinAddressUser(user)}
+                      className="px-3 py-2 text-xs bg-slate-700 hover:bg-slate-800 text-white rounded-lg transition"
+                    >
+                      Coin Address
+                    </button>
+                  )}
+                  {!isSubAdmin && (
+                    <button
+                      onClick={() => handleShowLogs(user._id)}
+                      className="px-3 py-2 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
+                    >
+                      Logs
+                    </button>
+                  )}
+                  {!isSubAdmin && (
+                    <button
+                      onClick={() => handleLoginAsUser(user._id)}
+                      className="col-span-2 px-3 py-2 text-xs bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+                    >
+                      Login As
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="px-6 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+              {searchQuery ? 'No users found matching your search' : 'No users found'}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Logs Modal */}
@@ -739,8 +811,8 @@ export default function UsersList() {
 
       {/* User Details Full Page - This is a very large component, continuing in next part due to size */}
       {selectedUser && userDetails && (
-        <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 overflow-y-auto">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 sm:px-6 py-4 sm:py-5 sticky top-0 z-10 shadow-lg">
+        <div className="fixed inset-0 bg-white dark:bg-slate-950 z-50 overflow-y-auto">
+          <div className="bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 sm:px-6 py-4 sm:py-5 sticky top-0 z-10 shadow-lg">
             <div className="flex justify-between items-start sm:items-center">
               <div className="flex-1 min-w-0">
                 <button

@@ -20,24 +20,24 @@ export default function KycStepReviewSubmit({
 
   return (
     <div className="space-y-5 animate-fade-in">
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 sm:p-5 space-y-4">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 sm:p-5 space-y-4">
         <div className="flex items-center justify-between">
           <p className="font-semibold text-base text-gray-900 dark:text-gray-100">Review & Submit</p>
-          <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+          <span className="text-xs px-2 py-1 rounded-full bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
             Final Step
           </span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <button onClick={() => onEditStep(1)} className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <button onClick={() => onEditStep(1)} className="px-3 py-2 text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-gray-900 dark:text-gray-100 hover:bg-slate-200 dark:hover:bg-slate-700">
             Edit Personal
           </button>
-          <button onClick={() => onEditStep(2)} className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <button onClick={() => onEditStep(2)} className="px-3 py-2 text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-gray-900 dark:text-gray-100 hover:bg-slate-200 dark:hover:bg-slate-700">
             Edit Document
           </button>
-          <button onClick={() => onEditStep(3)} className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <button onClick={() => onEditStep(3)} className="px-3 py-2 text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-gray-900 dark:text-gray-100 hover:bg-slate-200 dark:hover:bg-slate-700">
             Edit Selfie
           </button>
-          <button onClick={() => onEditStep(4)} className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <button onClick={() => onEditStep(4)} className="px-3 py-2 text-sm rounded-lg bg-slate-100 dark:bg-slate-800 text-gray-900 dark:text-gray-100 hover:bg-slate-200 dark:hover:bg-slate-700">
             Edit Video
           </button>
         </div>
@@ -105,8 +105,12 @@ export default function KycStepReviewSubmit({
       </div>
 
       <div className="flex gap-3">
-        <button onClick={onBack} className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl font-semibold">Back</button>
-        <button onClick={onSubmit} disabled={loading || !canSubmit} className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold disabled:opacity-60">
+        <button onClick={onBack} className="flex-1 px-4 py-3 bg-slate-200 dark:bg-slate-700 text-gray-900 dark:text-gray-100 rounded-xl font-semibold">Back</button>
+        <button
+          onClick={onSubmit}
+          disabled={loading || !canSubmit}
+          className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white rounded-xl font-semibold disabled:opacity-60 transition"
+        >
           {loading ? 'Submitting...' : 'Submit Verification'}
         </button>
       </div>
