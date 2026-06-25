@@ -1,13 +1,13 @@
 :root {
   /* Brand + semantic colors */
-  --fx-color-bg: #f8fafc;
+  --fx-color-bg: #f1f5f9;
   --fx-color-surface: #ffffff;
-  --fx-color-surface-muted: #f1f5f9;
+  --fx-color-surface-muted: #e2e8f0;
   --fx-color-border: #e2e8f0;
   --fx-color-text: #0f172a;
   --fx-color-text-muted: #475569;
-  --fx-color-primary: #4f46e5;
-  --fx-color-primary-strong: #4338ca;
+  --fx-color-primary: #06b6d4;
+  --fx-color-primary-strong: #2563eb;
   --fx-color-success: #16a34a;
   --fx-color-warning: #d97706;
   --fx-color-danger: #dc2626;
@@ -43,13 +43,13 @@
 
 .dark {
   --fx-color-bg: #020617;
-  --fx-color-surface: #0f172a;
-  --fx-color-surface-muted: #1e293b;
-  --fx-color-border: #334155;
+  --fx-color-surface: #0b1220;
+  --fx-color-surface-muted: #111827;
+  --fx-color-border: #1f2937;
   --fx-color-text: #f8fafc;
   --fx-color-text-muted: #94a3b8;
-  --fx-color-primary: #818cf8;
-  --fx-color-primary-strong: #6366f1;
+  --fx-color-primary: #22d3ee;
+  --fx-color-primary-strong: #3b82f6;
   --fx-color-success: #22c55e;
   --fx-color-warning: #f59e0b;
   --fx-color-danger: #ef4444;

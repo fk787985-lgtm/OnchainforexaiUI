@@ -23,7 +23,7 @@ export default function DashboardContent({ stats, recentLogins }) {
         <>
           {/* User Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-[1.02] transition-transform">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm opacity-90">Total Users</p>
@@ -34,7 +34,7 @@ export default function DashboardContent({ stats, recentLogins }) {
                 </svg>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-[1.02] transition-transform">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm opacity-90">Verified Users</p>
@@ -45,7 +45,7 @@ export default function DashboardContent({ stats, recentLogins }) {
                 </svg>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 dark:from-yellow-600 dark:to-yellow-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-br from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-[1.02] transition-transform">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm opacity-90">Unverified Users</p>
@@ -56,7 +56,7 @@ export default function DashboardContent({ stats, recentLogins }) {
                 </svg>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-[1.02] transition-transform">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm opacity-90">Total Logins</p>
@@ -71,7 +71,7 @@ export default function DashboardContent({ stats, recentLogins }) {
 
           {/* Deposit Stats - Only Total and Amount */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-[1.02] transition-transform">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm opacity-90">Total Deposits</p>
@@ -82,7 +82,7 @@ export default function DashboardContent({ stats, recentLogins }) {
                 </svg>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-indigo-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-br from-cyan-500 to-indigo-600 dark:from-cyan-600 dark:to-indigo-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-[1.02] transition-transform">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm opacity-90">Total Deposit Amount</p>
@@ -97,7 +97,7 @@ export default function DashboardContent({ stats, recentLogins }) {
 
           {/* Withdrawal Stats - Only Total and Amount */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            <div className="bg-gradient-to-br from-red-500 to-red-600 dark:from-red-600 dark:to-red-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-br from-rose-500 to-red-600 dark:from-rose-600 dark:to-red-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-[1.02] transition-transform">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm opacity-90">Total Withdrawals</p>
@@ -108,7 +108,7 @@ export default function DashboardContent({ stats, recentLogins }) {
                 </svg>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-rose-500 to-rose-600 dark:from-rose-600 dark:to-rose-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-br from-red-500 to-pink-600 dark:from-red-600 dark:to-pink-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-[1.02] transition-transform">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm opacity-90">Total Withdrawal Amount</p>
@@ -123,7 +123,7 @@ export default function DashboardContent({ stats, recentLogins }) {
 
           {/* Transfer & KYC Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="bg-gradient-to-br from-violet-500 to-violet-600 dark:from-violet-600 dark:to-violet-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-br from-violet-500 to-indigo-600 dark:from-violet-600 dark:to-indigo-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-[1.02] transition-transform">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm opacity-90">Total Transfers</p>
@@ -134,7 +134,7 @@ export default function DashboardContent({ stats, recentLogins }) {
                 </svg>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-fuchsia-500 to-fuchsia-600 dark:from-fuchsia-600 dark:to-fuchsia-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-br from-fuchsia-500 to-purple-600 dark:from-fuchsia-600 dark:to-purple-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-[1.02] transition-transform">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm opacity-90">Total Transfer Amount</p>
@@ -145,7 +145,7 @@ export default function DashboardContent({ stats, recentLogins }) {
                 </svg>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-br from-sky-500 to-cyan-600 dark:from-sky-600 dark:to-cyan-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-[1.02] transition-transform">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm opacity-90">Pending KYC</p>
@@ -156,7 +156,7 @@ export default function DashboardContent({ stats, recentLogins }) {
                 </svg>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-lime-500 to-lime-600 dark:from-lime-600 dark:to-lime-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-105 transition-transform">
+            <div className="bg-gradient-to-br from-lime-500 to-emerald-600 dark:from-lime-600 dark:to-emerald-700 p-4 sm:p-6 rounded-xl shadow-lg text-white transform hover:scale-[1.02] transition-transform">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm opacity-90">Approved KYC</p>
@@ -172,35 +172,35 @@ export default function DashboardContent({ stats, recentLogins }) {
       )}
 
       {/* Recent Logins */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="fx-card overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-lg sm:text-xl font-bold">Recent Logins</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px]">
-            <thead className="bg-gray-50 dark:bg-gray-700">
+            <thead className="bg-slate-50 dark:bg-slate-800">
               <tr>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">User</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Device</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Location</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">IP</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Date</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase">User</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase">Device</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase">Location</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase">IP</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {recentLogins.length > 0 ? (
                 recentLogins.map((login, index) => (
-                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <tr key={index} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <div>
                         <p className="text-xs sm:text-sm font-medium">{login.userId?.fullName || 'N/A'}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{login.userId?.email || 'N/A'}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{login.userId?.email || 'N/A'}</p>
                       </div>
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm">{login.deviceType}</td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm">
                       {login.location || `${login.city || 'Unknown'}, ${login.country || 'Unknown'}`}
-                      {login.isp && <span className="block text-xs text-gray-500 dark:text-gray-400 mt-1">ISP: {login.isp}</span>}
+                      {login.isp && <span className="block text-xs text-slate-500 dark:text-slate-400 mt-1">ISP: {login.isp}</span>}
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-mono">{login.ip}</td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm">{formatDate(login.loginAt)}</td>

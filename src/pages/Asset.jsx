@@ -177,7 +177,7 @@ export default function Asset() {
   return (
     <div className="fx-page pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-700 backdrop-blur">
         <div className="px-4 py-4">
           {/* Est. Total Value Section */}
           <div className="mb-4">
@@ -292,14 +292,14 @@ export default function Asset() {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
             <div className="flex space-x-6">
               <button
                 onClick={() => setActiveTab('crypto')}
                 className={`pb-2 px-1 text-sm font-medium transition ${
                   activeTab === 'crypto'
-                    ? 'text-yellow-500 border-b-2 border-yellow-500'
-                    : 'text-gray-600 dark:text-gray-400'
+                    ? 'text-cyan-600 dark:text-cyan-400 border-b-2 border-cyan-500'
+                    : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
                 Crypto
@@ -308,8 +308,8 @@ export default function Asset() {
                 onClick={() => setActiveTab('account')}
                 className={`pb-2 px-1 text-sm font-medium transition ${
                   activeTab === 'account'
-                    ? 'text-yellow-500 border-b-2 border-yellow-500'
-                    : 'text-gray-600 dark:text-gray-400'
+                    ? 'text-cyan-600 dark:text-cyan-400 border-b-2 border-cyan-500'
+                    : 'text-slate-600 dark:text-slate-400'
                 }`}
               >
                 Account
@@ -328,11 +328,11 @@ export default function Asset() {
             <SkeletonBlock className="h-20 w-full rounded-xl" />
           </div>
         ) : activeTab === 'crypto' ? (
-          <div className="space-y-0">
+          <div className="space-y-3">
             {filteredAssets.map((asset) => (
               <div
                 key={asset.symbol}
-                className="border-b border-gray-100 dark:border-gray-800 py-4"
+                className="fx-card py-4"
               >
                 <div className="flex items-start justify-between mb-3">
                   {/* Left: Icon and Name */}
@@ -407,9 +407,7 @@ export default function Asset() {
               <EmptyState title="No assets found" description="Try a different search term or refresh market data." icon="market" />
             )}
           </div>
-        ) : (
-          <EmptyState title="Account tab coming soon" description="Advanced account analytics will appear in a future release." icon="dashboard" />
-        )}
+        ) : (<EmptyState title="Account tab coming soon" description="Advanced account analytics will appear in a future release." icon="dashboard" />)}
       </main>
 
       {/* Bottom Navigation Bar */}

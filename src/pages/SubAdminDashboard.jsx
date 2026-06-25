@@ -102,6 +102,8 @@ export default function SubAdminDashboard() {
     can_deactivate_user: false,
     can_notify_users: false,
     can_customer_service: false,
+    can_manage_trade_access: false,
+    can_manage_coin_address: false,
     ...(currentUser?.subAdminPermissions || {})
   }
 

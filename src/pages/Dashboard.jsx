@@ -450,12 +450,12 @@ export default function Dashboard() {
   return (
     <div className="fx-page transition-colors pb-20">
       {/* Header with Hamburger */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-700 shadow-sm backdrop-blur">
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -481,7 +481,7 @@ export default function Dashboard() {
           <div className="flex items-center space-x-2">
             <button 
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {theme === 'dark' ? (
@@ -496,7 +496,7 @@ export default function Dashboard() {
             </button>
             <button 
               onClick={() => navigate('/customer-service')}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition relative"
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition relative"
               title="Customer Service"
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -506,7 +506,7 @@ export default function Dashboard() {
             <div className="relative">
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition relative"
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition relative"
                 title="Notifications"
               >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -521,8 +521,8 @@ export default function Dashboard() {
               
               {/* Notifications Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-[calc(100vw-1rem)] max-w-sm sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-[80vh] overflow-hidden flex flex-col">
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+                <div className="absolute right-0 mt-2 w-[calc(100vw-1rem)] max-w-sm sm:w-96 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 max-h-[80vh] overflow-hidden flex flex-col">
+                  <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-gray-900 dark:text-white">Notifications ({notifications.length})</h3>
                       {unreadCount > 0 ? <Badge label={`${unreadCount} unread`} status="pending" /> : null}
@@ -533,7 +533,7 @@ export default function Dashboard() {
                           e.stopPropagation()
                           await markAllAsRead()
                         }}
-                        className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                        className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline font-medium"
                       >
                         Mark all as read
                       </button>
@@ -541,7 +541,7 @@ export default function Dashboard() {
                   </div>
                   <div className="overflow-y-auto flex-1" style={{ maxHeight: 'calc(80vh - 80px)' }}>
                     {notifications.length > 0 ? (
-                      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                      <div className="divide-y divide-slate-200 dark:divide-slate-700">
                         {notifications.map((notification) => {
                           const notifId = String(notification._id).trim()
                           const isExpanded = expandedNotifications.has(notifId)
@@ -561,8 +561,8 @@ export default function Dashboard() {
                                 console.log('🔔 [Frontend] Clicked notification, marking as read:', notifId)
                                 await markAsRead(notifId)
                               }}
-                              className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition ${
-                                !notification.read ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
+                              className={`p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition ${
+                                !notification.read ? 'bg-cyan-50 dark:bg-cyan-900/20' : ''
                               }`}
                             >
                               <div className="flex items-start space-x-3">
@@ -594,7 +594,7 @@ export default function Dashboard() {
                                           return newSet
                                         })
                                       }}
-                                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline mt-1 font-medium"
+                                      className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline mt-1 font-medium"
                                     >
                                       {isExpanded ? 'Show less' : 'Show more'}
                                     </button>
@@ -604,7 +604,7 @@ export default function Dashboard() {
                                   </div>
                                 </div>
                                 {!notification.read && (
-                                  <div className="w-2 h-2 bg-indigo-600 rounded-full flex-shrink-0 mt-2"></div>
+                                  <div className="w-2 h-2 bg-cyan-500 rounded-full flex-shrink-0 mt-2"></div>
                                 )}
                               </div>
                             </div>
@@ -632,13 +632,13 @@ export default function Dashboard() {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-56 sm:w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-56 sm:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 z-50 transform transition-transform duration-300 ease-in-out ${
 sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header - Improved UI */}
-          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-3 sm:p-4 md:p-5 text-white">
+          <div className="bg-gradient-to-br from-cyan-500 to-indigo-600 p-3 sm:p-4 md:p-5 text-white">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
@@ -834,7 +834,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           </nav>
 
           {/* Sidebar Footer */}
-          <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 space-y-1.5 sm:space-y-2 bg-gray-50 dark:bg-gray-900/50">
+          <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-700 space-y-1.5 sm:space-y-2 bg-slate-50 dark:bg-slate-950/50">
             <button 
               onClick={() => setShowLanguageModal(true)}
               className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
@@ -883,12 +883,12 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       {/* Main Content */}
       <main className="px-4 py-4 space-y-4 max-w-7xl mx-auto">
         {/* Estimated Total Value */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="fx-card p-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-gray-600 dark:text-gray-400">Estimated Total Value (USDT)</span>
             <button
               onClick={() => setBalanceVisible(!balanceVisible)}
-              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               {balanceVisible ? (
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -908,7 +908,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             </span>
             <button 
               onClick={() => setShowAddFundsModal(true)}
-              className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold text-sm hover:opacity-90 transition"
+              className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-500 text-white rounded-lg font-semibold text-sm hover:opacity-90 transition"
             >
               Add Funds
             </button>
@@ -916,8 +916,8 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         </div>
 
         {/* Crypto Coin List Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="fx-card">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700">
             <div className="flex space-x-1 overflow-x-auto scrollbar-hide">
               {['favourites', 'hot', 'alpha', 'new', 'gainers', 'losers'].map((tab) => (
                 <button
@@ -925,8 +925,8 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                   onClick={() => setActiveCryptoTab(tab)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition ${
                     activeCryptoTab === tab
-                      ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -942,14 +942,14 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             ) : currentCryptoData.length > 0 ? (
               <>
                 {/* Table Header */}
-                <div className="grid grid-cols-3 gap-4 pb-3 mb-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-xs text-gray-600 dark:text-gray-400">
+                <div className="grid grid-cols-3 gap-4 pb-3 mb-3 border-b border-slate-200 dark:border-slate-700 font-semibold text-xs text-slate-600 dark:text-slate-400">
                   <div>Name</div>
                   <div className="text-right">Last Price</div>
                   <div className="text-right">24h Change%</div>
                 </div>
                 <div className="space-y-3">
                   {currentCryptoData.slice(0, 5).map((coin, index) => (
-                    <div key={coin.id || index} className="grid grid-cols-3 gap-4 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <div key={coin.id || index} className="grid grid-cols-3 gap-4 py-2 border-b border-slate-100 dark:border-slate-700 last:border-0">
                       <div className="flex-1">
                         <div className="font-semibold text-sm">{coin.name}</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">{coin.symbol}</div>
@@ -965,7 +965,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 </div>
                 <button 
                   onClick={() => navigate(`/crypto/${activeCryptoTab}`)}
-                  className="w-full mt-4 py-2 text-indigo-600 dark:text-indigo-400 font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition"
+                  className="w-full mt-4 py-2 text-cyan-600 dark:text-cyan-400 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition"
                 >
                   View More
                 </button>
@@ -977,8 +977,8 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         </div>
 
         {/* News Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="fx-card">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700">
             <h3 className="font-bold text-lg">Discover</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Crypto News & Updates</p>
           </div>
@@ -989,7 +989,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
               </div>
             ) : news.length > 0 ? (
               news.map((item, index) => (
-                <div key={index} className="pb-3 border-b border-gray-100 dark:border-gray-700 last:border-0 last:pb-0">
+                <div key={index} className="pb-3 border-b border-slate-100 dark:border-slate-700 last:border-0 last:pb-0">
                   <h4 className="font-semibold text-sm mb-1">{item.title}</h4>
                   <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
                     <span>{item.source}</span>
@@ -1005,8 +1005,8 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         </div>
 
         {/* Stock List Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="fx-card">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700">
             <h3 className="font-bold text-lg">Stocks</h3>
           </div>
           <div className="p-4">
@@ -1017,14 +1017,14 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             ) : stocks.length > 0 ? (
               <>
                 {/* Table Header */}
-                <div className="grid grid-cols-3 gap-4 pb-3 mb-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-xs text-gray-600 dark:text-gray-400">
+                <div className="grid grid-cols-3 gap-4 pb-3 mb-3 border-b border-slate-200 dark:border-slate-700 font-semibold text-xs text-slate-600 dark:text-slate-400">
                   <div>Name</div>
                   <div className="text-right">Last Price</div>
                   <div className="text-right">24h Change%</div>
                 </div>
                 <div className="space-y-3">
                   {stocks.slice(0, 5).map((stock, index) => (
-                    <div key={index} className="grid grid-cols-3 gap-4 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <div key={index} className="grid grid-cols-3 gap-4 py-2 border-b border-slate-100 dark:border-slate-700 last:border-0">
                       <div className="flex-1">
                         <div className="font-semibold text-sm">{stock.name}</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">{stock.symbol}</div>
@@ -1040,7 +1040,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 </div>
                 <button 
                   onClick={() => navigate('/stocks')}
-                  className="w-full mt-4 py-2 text-indigo-600 dark:text-indigo-400 font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition"
+                  className="w-full mt-4 py-2 text-cyan-600 dark:text-cyan-400 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition"
                 >
                   View More
                 </button>
@@ -1052,8 +1052,8 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         </div>
 
         {/* Forex Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="fx-card">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700">
             <h3 className="font-bold text-lg">Forex</h3>
           </div>
           <div className="p-4">
@@ -1064,14 +1064,14 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             ) : forex.length > 0 ? (
               <>
                 {/* Table Header */}
-                <div className="grid grid-cols-3 gap-4 pb-3 mb-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-xs text-gray-600 dark:text-gray-400">
+                <div className="grid grid-cols-3 gap-4 pb-3 mb-3 border-b border-slate-200 dark:border-slate-700 font-semibold text-xs text-slate-600 dark:text-slate-400">
                   <div>Pair</div>
                   <div className="text-right">Last Price</div>
                   <div className="text-right">24h Change%</div>
                 </div>
                 <div className="space-y-3">
                   {forex.slice(0, 5).map((forexPair, index) => (
-                    <div key={index} className="grid grid-cols-3 gap-4 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <div key={index} className="grid grid-cols-3 gap-4 py-2 border-b border-slate-100 dark:border-slate-700 last:border-0">
                       <div className="flex-1">
                         <div className="font-semibold text-sm">{forexPair.pair}</div>
                       </div>
@@ -1086,7 +1086,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 </div>
                 <button 
                   onClick={() => navigate('/forex')}
-                  className="w-full mt-4 py-2 text-indigo-600 dark:text-indigo-400 font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition"
+                  className="w-full mt-4 py-2 text-cyan-600 dark:text-cyan-400 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition"
                 >
                   View More
                 </button>
@@ -1098,8 +1098,8 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         </div>
 
         {/* Gold Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="fx-card">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700">
             <h3 className="font-bold text-lg">Precious Metals</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Gold, Silver & More</p>
           </div>
@@ -1111,13 +1111,13 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             ) : gold ? (
               <>
                 {/* Table Header */}
-                <div className="grid grid-cols-3 gap-4 pb-3 mb-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-xs text-gray-600 dark:text-gray-400">
+                <div className="grid grid-cols-3 gap-4 pb-3 mb-3 border-b border-slate-200 dark:border-slate-700 font-semibold text-xs text-slate-600 dark:text-slate-400">
                   <div>Name</div>
                   <div className="text-right">Last Price</div>
                   <div className="text-right">24h Change%</div>
                 </div>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                  <div className="grid grid-cols-3 gap-4 py-2 border-b border-slate-100 dark:border-slate-700">
                     <div className="flex-1">
                       <div className="font-semibold text-sm">{gold.name}</div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">{gold.symbol} • {gold.unit}</div>
@@ -1132,7 +1132,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 </div>
                 <button 
                   onClick={() => navigate('/metals')}
-                  className="w-full mt-4 py-2 text-indigo-600 dark:text-indigo-400 font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition"
+                  className="w-full mt-4 py-2 text-cyan-600 dark:text-cyan-400 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition"
                 >
                   View More
                 </button>
@@ -1147,7 +1147,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       </main>
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-30 safe-area-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-700 z-30 safe-area-bottom backdrop-blur">
         <div className="flex items-center justify-around px-2 py-2">
           {[
             { name: 'Home', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', route: '/dashboard' },
@@ -1169,8 +1169,8 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 item.isAction
                   ? 'text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300'
                   : location.pathname === item.route
-                  ? 'text-indigo-600 dark:text-indigo-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  ? 'text-cyan-600 dark:text-cyan-400'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1185,12 +1185,12 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       {/* Language Selection Modal */}
       {showLanguageModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Select Language</h3>
               <button
                 onClick={() => setShowLanguageModal(false)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1230,8 +1230,8 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                   }}
                   className={`w-full text-left px-4 py-3 rounded-lg transition flex items-center space-x-3 ${
                     userLanguage === lang.code
-                      ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white'
+                      ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300'
+                      : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white'
                   }`}
                 >
                   <span className="text-2xl">{lang.flag}</span>

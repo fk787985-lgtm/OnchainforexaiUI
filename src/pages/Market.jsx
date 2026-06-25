@@ -5,6 +5,8 @@ import { getPopularStocks } from '../services/stocksApi'
 import { getForexRates } from '../services/forexApi'
 import { getAllMetals } from '../services/metalsApi'
 import { formatMarketPrice, getChangeMeta } from '../utils/formatters/marketFormatters'
+import PageHeader from '../components/ui/PageHeader'
+import EmptyState from '../components/ui/EmptyState'
 
 export default function Market() {
   const navigate = useNavigate()
@@ -198,27 +200,26 @@ export default function Market() {
   const filteredData = getFilteredAndSortedData()
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors pb-20">
+    <div className="fx-page text-gray-900 dark:text-white transition-colors pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-700 shadow-sm backdrop-blur">
         <div className="px-4 py-3 flex items-center space-x-3">
           <button
             onClick={() => navigate('/dashboard')}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <div className="flex-1">
-            <h1 className="text-xl font-bold">Market</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">All Markets Overview</p>
+            <PageHeader title="Market" description="Live prices across crypto, forex, stocks, and metals." />
           </div>
         </div>
       </header>
 
       {/* Tabs */}
-      <div className="sticky top-[73px] z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="sticky top-[89px] z-30 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-700 backdrop-blur">
         <div className="px-2 sm:px-4">
           <div className="flex space-x-1 overflow-x-auto scrollbar-hide -mb-px">
             {[
@@ -232,8 +233,8 @@ export default function Market() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-t-lg text-xs sm:text-sm font-medium whitespace-nowrap transition active:scale-95 ${
                   activeTab === tab.id
-                    ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border-b-2 border-indigo-600'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 border-b-2 border-cyan-500'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,7 +249,7 @@ export default function Market() {
 
       {/* Crypto Category Filter (only for crypto tab) */}
       {activeTab === 'crypto' && (
-        <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-3 sm:px-4 py-2 sm:py-3 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
           <div className="flex space-x-1.5 sm:space-x-2 overflow-x-auto scrollbar-hide">
             {['hot', 'gainers', 'losers', 'new', 'alpha', 'favourites'].map((category) => (
               <button
@@ -256,8 +257,8 @@ export default function Market() {
                 onClick={() => setCryptoCategory(category)}
                 className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition active:scale-95 ${
                   cryptoCategory === category
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    ? 'bg-gradient-to-r from-cyan-500 to-indigo-500 text-white'
+                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                 }`}
               >
                 {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -268,7 +269,7 @@ export default function Market() {
       )}
 
       {/* Search and Sort Bar */}
-      <div className="px-3 sm:px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="px-3 sm:px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
         <div className="flex flex-col gap-2">
           {/* Search */}
           <div className="flex-1 relative">
@@ -277,9 +278,9 @@ export default function Market() {
               placeholder={`Search ${activeTab}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 pl-9 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="fx-input w-full pl-9 text-sm"
             />
-            <svg className="w-4 h-4 absolute left-2.5 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 absolute left-2.5 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -289,7 +290,7 @@ export default function Market() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="flex-1 px-2 py-2 text-xs sm:text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="fx-select flex-1 px-2 py-2 text-xs sm:text-sm"
             >
               <option value="name">Name</option>
               <option value="price">Price</option>
@@ -297,7 +298,7 @@ export default function Market() {
             </select>
             <button
               onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              className="p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition active:scale-95"
+              className="p-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95"
             >
               {sortOrder === 'asc' ? (
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -316,16 +317,16 @@ export default function Market() {
       {/* Market Data Table */}
       <main className="px-3 sm:px-4 py-3 sm:py-4">
         {/* Desktop Table View */}
-        <div className="hidden sm:block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div className="hidden sm:block fx-card overflow-hidden">
           {/* Table Header */}
-          <div className="grid grid-cols-4 gap-4 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 font-semibold text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+          <div className="grid grid-cols-4 gap-4 p-3 sm:p-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 font-semibold text-xs sm:text-sm text-slate-600 dark:text-slate-400">
             <div className="col-span-2">Name</div>
             <div className="text-right">Price</div>
             <div className="text-right">24h Change</div>
           </div>
 
           {/* Table Body */}
-          <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-[calc(100vh-300px)] overflow-y-auto">
+          <div className="divide-y divide-slate-200 dark:divide-slate-700 max-h-[calc(100vh-300px)] overflow-y-auto">
             {loading ? (
               <div className="flex justify-center items-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -341,12 +342,12 @@ export default function Market() {
                   })
                   return hasPopular
                 })() && (
-                  <div className="px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800">
+                  <div className="px-4 py-2 bg-cyan-50 dark:bg-cyan-900/20 border-b border-cyan-200 dark:border-cyan-800">
                     <div className="flex items-center space-x-2">
                       <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
-                      <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">Popular</span>
+                      <span className="text-xs font-semibold text-cyan-700 dark:text-cyan-300">Popular</span>
                     </div>
                   </div>
                 )}
@@ -366,9 +367,9 @@ export default function Market() {
                 return (
                   <div
                     key={index}
-                    className={`grid grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition cursor-pointer active:bg-gray-100 dark:active:bg-gray-600 ${
-                      isPopular ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
-                    } ${isLastPopular ? 'border-b-2 border-indigo-200 dark:border-indigo-800 mb-2' : ''}`}
+                    className={`grid grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer active:bg-slate-100 dark:active:bg-slate-700 ${
+                      isPopular ? 'bg-cyan-50 dark:bg-cyan-900/20' : ''
+                    } ${isLastPopular ? 'border-b-2 border-cyan-200 dark:border-cyan-800 mb-2' : ''}`}
                     onClick={() => {
                       navigate(`/trade/${activeTab}/${encodeURIComponent(activeTab === 'forex' ? item.pair : item.symbol || item.name)}`, {
                         state: { item, type: activeTab }
@@ -382,7 +383,7 @@ export default function Market() {
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold text-xs sm:text-sm truncate">{displayName}</div>
                         {displaySymbol && (
-                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
                             {displaySymbol}{displayUnit}
                           </div>
                         )}
@@ -399,8 +400,8 @@ export default function Market() {
                 })}
               </>
             ) : (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                {searchTerm ? 'No results found' : 'No data available'}
+              <div className="py-10">
+                <EmptyState title={searchTerm ? 'No results found' : 'No market data available'} icon="market" />
               </div>
             )}
           </div>
@@ -423,12 +424,12 @@ export default function Market() {
                 })
                 return hasPopular
               })() && (
-                <div className="px-3 py-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg mb-2">
+                <div className="px-3 py-2 bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg mb-2">
                   <div className="flex items-center space-x-2">
                     <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
-                    <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">Popular</span>
+                    <span className="text-xs font-semibold text-cyan-700 dark:text-cyan-300">Popular</span>
                   </div>
                 </div>
               )}
@@ -449,10 +450,10 @@ export default function Market() {
                         state: { item, type: activeTab }
                       })
                     }}
-                    className={`bg-white dark:bg-gray-800 rounded-lg border ${
+                    className={`bg-white dark:bg-slate-900 rounded-lg border ${
                       isPopular 
-                        ? 'border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20' 
-                        : 'border-gray-200 dark:border-gray-700'
+                        ? 'border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-900/20' 
+                        : 'border-slate-200 dark:border-slate-700'
                     } p-3 active:scale-[0.98] transition cursor-pointer`}
                   >
                     <div className="flex items-center justify-between">
@@ -463,7 +464,7 @@ export default function Market() {
                         <div className="min-w-0 flex-1">
                           <div className="font-semibold text-sm truncate">{displayName}</div>
                           {displaySymbol && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
                               {displaySymbol}{displayUnit}
                             </div>
                           )}
@@ -479,8 +480,8 @@ export default function Market() {
               })}
             </>
           ) : (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-              {searchTerm ? 'No results found' : 'No data available'}
+            <div className="py-10">
+              <EmptyState title={searchTerm ? 'No results found' : 'No market data available'} icon="market" />
             </div>
           )}
         </div>

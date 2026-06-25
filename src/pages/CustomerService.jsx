@@ -5,6 +5,8 @@ import toast from 'react-hot-toast'
 import useChatAutoScroll from '../hooks/useChatAutoScroll'
 import { formatRelativeDate, formatMessageTime, shouldShowDateSeparator } from '../utils/chatTime'
 import MessageAttachments from '../components/chat/MessageAttachments'
+import PageHeader from '../components/ui/PageHeader'
+import EmptyState from '../components/ui/EmptyState'
 
 export default function CustomerService() {
   const navigate = useNavigate()
@@ -197,24 +199,24 @@ export default function CustomerService() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+    <div className="fx-page pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-700 backdrop-blur">
         <div className="px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-300 transition"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300 transition"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Customer Service</h1>
+            <PageHeader title="Customer Service" description="Secure support chat with ticket tracking." />
           </div>
           <button
             onClick={() => setShowNewTicket(true)}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white rounded-lg font-semibold text-sm transition shadow-sm hover:shadow-md"
+            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 hover:to-indigo-600 text-white rounded-lg font-semibold text-sm transition shadow-sm hover:shadow-md"
           >
             New Ticket
           </button>
@@ -223,14 +225,14 @@ export default function CustomerService() {
 
       <div className="flex flex-col md:flex-row h-[calc(100vh-80px)]">
         {/* Tickets List */}
-        <div className="w-full md:w-80 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto">
+        <div className="w-full md:w-80 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-y-auto">
           <div className="p-4 space-y-2">
             {tickets.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <p>No tickets yet</p>
+              <div className="py-6">
+                <EmptyState title="No tickets yet" description="Create your first support request." icon="chat" />
                 <button
                   onClick={() => setShowNewTicket(true)}
-                  className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm"
+                  className="mt-4 w-full px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 hover:to-indigo-600 text-white rounded-lg text-sm"
                 >
                   Create First Ticket
                 </button>
@@ -242,8 +244,8 @@ export default function CustomerService() {
                   onClick={() => setSelectedTicket(ticket)}
                   className={`w-full text-left p-4 rounded-lg border transition ${
                     selectedTicket?._id === ticket._id
-                      ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500'
-                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-500'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-2">
@@ -267,11 +269,11 @@ export default function CustomerService() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col bg-white dark:bg-gray-800">
+        <div className="flex-1 flex flex-col bg-white dark:bg-slate-900">
           {selectedTicket && tickets.length > 0 ? (
             <>
               {/* Chat Header */}
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
                 <h2 className="font-semibold text-gray-900 dark:text-white">{selectedTicket.subject}</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Status: <span className={`px-2 py-0.5 rounded text-xs ${getStatusColor(selectedTicket.status)}`}>
@@ -284,7 +286,7 @@ export default function CustomerService() {
               <div
                 ref={messagesContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 min-h-0 overflow-y-auto p-4 space-y-1 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800"
+                className="flex-1 min-h-0 overflow-y-auto p-4 space-y-1 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900"
               >
                 {messages.map((message, index) => {
                   const showDateSeparator = shouldShowDateSeparator(message, messages[index - 1])
@@ -312,8 +314,8 @@ export default function CustomerService() {
                         )}
                         <div className={`max-w-[75%] sm:max-w-[65%] rounded-2xl px-4 py-2.5 shadow-sm ${
                           message.senderType === 'user'
-                            ? 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-br-sm'
-                            : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-sm border border-gray-200 dark:border-gray-600'
+                            ? 'bg-gradient-to-br from-cyan-500 to-indigo-500 text-white rounded-br-sm'
+                            : 'bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-bl-sm border border-slate-200 dark:border-slate-700'
                         }`}>
                           {message.senderType === 'admin' && (
                             <p className="text-xs font-semibold mb-1 opacity-90 text-gray-700 dark:text-gray-200">
@@ -341,15 +343,15 @@ export default function CustomerService() {
               </div>
 
               {/* Message Input */}
-              <div className="sticky bottom-0 z-10 p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <div className="sticky bottom-0 z-10 p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
                 {attachments.length > 0 && (
                   <div className="mb-3 flex flex-wrap gap-2">
                     {attachments.map((file, index) => (
                       <div
                         key={index}
-                        className="flex items-center space-x-2 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-800"
+                        className="flex items-center space-x-2 bg-cyan-50 dark:bg-cyan-900/20 px-3 py-2 rounded-lg border border-cyan-200 dark:border-cyan-800"
                       >
-                        <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                         </svg>
                         <span className="text-sm text-gray-700 dark:text-gray-300 truncate max-w-[150px]">{file.name}</span>
@@ -368,7 +370,7 @@ export default function CustomerService() {
                   <div className="flex items-end space-x-3">
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition flex-shrink-0 text-gray-600 dark:text-gray-400"
+                    className="p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition flex-shrink-0 text-slate-600 dark:text-slate-400"
                     title="Attach file"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -395,14 +397,14 @@ export default function CustomerService() {
                       }}
                       placeholder="Type your message..."
                       rows={1}
-                      className="w-full px-4 py-3 pr-12 border-2 border-gray-200 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-700 dark:text-white text-gray-900 resize-none focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 transition text-base placeholder-gray-500 dark:placeholder-gray-400"
+                      className="w-full px-4 py-3 pr-12 border-2 border-slate-200 dark:border-slate-700 rounded-full bg-slate-50 dark:bg-slate-800 dark:text-white text-slate-900 resize-none focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 transition text-base placeholder-slate-500 dark:placeholder-slate-400"
                       style={{ minHeight: '48px', maxHeight: '120px' }}
                     />
                   </div>
                   <button
                     onClick={sendMessage}
                     disabled={sending || (!newMessage.trim() && attachments.length === 0)}
-                    className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg hover:shadow-xl flex-shrink-0"
+                    className="p-3 bg-gradient-to-br from-cyan-500 to-indigo-500 hover:from-cyan-600 hover:to-indigo-600 text-white rounded-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg hover:shadow-xl flex-shrink-0"
                     title="Send message"
                   >
                     {sending ? (
@@ -422,7 +424,7 @@ export default function CustomerService() {
                     <button
                       type="button"
                       onClick={() => scrollToBottom('smooth')}
-                      className="px-3 py-1.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                      className="px-3 py-1.5 text-xs font-medium rounded-full bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300"
                     >
                       Jump to latest
                     </button>
@@ -431,36 +433,24 @@ export default function CustomerService() {
               </div>
             </>
           ) : tickets.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
-              <div className="text-center">
-                <div className="mb-4">
-                  <svg className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </div>
-                <p className="mb-4 text-lg font-semibold">No tickets yet</p>
-                <p className="mb-6 text-sm">Create your first support ticket to get started</p>
+            <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400 px-6">
+              <div className="w-full max-w-md">
+                <EmptyState title="No tickets yet" description="Create your first support ticket to get started." icon="chat" />
                 <button
                   onClick={() => setShowNewTicket(true)}
-                  className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition"
+                  className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 hover:to-indigo-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition"
                 >
                   Create New Ticket
                 </button>
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
-              <div className="text-center">
-                <div className="mb-4">
-                  <svg className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </div>
-                <p className="mb-4 text-lg font-semibold">Select a ticket to view messages</p>
-                <p className="mb-6 text-sm">Choose a ticket from the list to start chatting</p>
+            <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400 px-6">
+              <div className="w-full max-w-md">
+                <EmptyState title="Select a ticket" description="Choose a ticket from the left panel to start chatting." icon="chat" />
                 <button
                   onClick={() => setShowNewTicket(true)}
-                  className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition"
+                  className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 hover:to-indigo-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition"
                 >
                   Create New Ticket
                 </button>

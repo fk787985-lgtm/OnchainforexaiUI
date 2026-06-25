@@ -19,6 +19,8 @@ export default function UsersList() {
     can_deactivate_user: false,
     can_notify_users: false,
     can_customer_service: false,
+    can_manage_trade_access: false,
+    can_manage_coin_address: false,
     ...(currentUser?.subAdminPermissions || {})
   }
   const canViewUsers = !isSubAdmin || subAdminPermissions.can_view_users
@@ -26,6 +28,8 @@ export default function UsersList() {
   const canAddBalance = !isSubAdmin || subAdminPermissions.can_add_balance
   const canActivateUser = !isSubAdmin || subAdminPermissions.can_activate_user
   const canDeactivateUser = !isSubAdmin || subAdminPermissions.can_deactivate_user
+  const canManageTradeAccess = !isSubAdmin || subAdminPermissions.can_manage_trade_access
+  const canManageCoinAddress = !isSubAdmin || subAdminPermissions.can_manage_coin_address
   const [showLogsUser, setShowLogsUser] = useState(null)
   const [userLogs, setUserLogs] = useState([])
   const [logsLoading, setLogsLoading] = useState(false)
@@ -635,7 +639,7 @@ export default function UsersList() {
                             Edit
                           </button>
                         )}
-                        {(canEditUsers || !isSubAdmin) && (
+                        {(canManageCoinAddress || !isSubAdmin) && (
                           <button
                             onClick={() => setCoinAddressUser(user)}
                             className="px-2 py-1.5 text-xs bg-slate-700 hover:bg-slate-800 text-white rounded-lg transition whitespace-nowrap"
@@ -907,7 +911,7 @@ export default function UsersList() {
               {/* Right Column */}
               <div className="space-y-6">
                 {/* Sub-admin allowed actions */}
-                {isSubAdmin && (canEditUsers || canAddBalance || canActivateUser || canDeactivateUser) && (
+                {isSubAdmin && (canEditUsers || canAddBalance || canActivateUser || canDeactivateUser || canManageTradeAccess) && (
                   <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
                     <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Allowed User Actions</h4>
                     <div className="space-y-4">
@@ -977,6 +981,38 @@ export default function UsersList() {
                             }`}
                           >
                             {userDetails.isActive ? 'Deactivate' : 'Activate'}
+                          </button>
+                        </div>
+                      )}
+
+                      {canManageTradeAccess && (
+                        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                          <div>
+                            <p className="font-semibold text-gray-900 dark:text-white">Trading Access</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {userDetails.allowTrade !== false ? 'Trading is enabled' : 'Trading is blocked'}
+                            </p>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              const nextAllowTrade = !(userDetails.allowTrade !== false)
+                              try {
+                                const response = await api.put(`/api/admin/users/${userDetails._id}/settings`, {
+                                  allowTrade: nextAllowTrade
+                                })
+                                if (response.data.success) {
+                                  setUserDetails({ ...userDetails, allowTrade: nextAllowTrade })
+                                  await fetchUsers()
+                                }
+                              } catch (error) {
+                                alert(error.response?.data?.message || 'Failed to update trading permission')
+                              }
+                            }}
+                            className={`px-4 py-2 rounded-lg text-white ${
+                              userDetails.allowTrade !== false ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
+                            }`}
+                          >
+                            {userDetails.allowTrade !== false ? 'Block Trade' : 'Allow Trade'}
                           </button>
                         </div>
                       )}

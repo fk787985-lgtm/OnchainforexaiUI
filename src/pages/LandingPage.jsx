@@ -27,6 +27,13 @@ export default function LandingPage() {
   }, [])
 
   useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileMenuOpen])
+
+  useEffect(() => {
     fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false')
       .then(res => res.json())
       .then(data => {
@@ -195,7 +202,7 @@ export default function LandingPage() {
           : 'bg-transparent'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center space-x-2 sm:space-x-3">
               {siteSettings.site.logo ? (
                 <img
@@ -223,13 +230,13 @@ export default function LandingPage() {
               <ThemeToggle />
               <Link
                 to="/signin"
-                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-slate-300 hover:text-cyan-300 transition"
+                className="hidden sm:inline-flex px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-slate-300 hover:text-cyan-300 transition"
               >
                 Sign In
               </Link>
               <Link
                 to="/signup"
-                className="px-3 sm:px-4 sm:px-6 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-cyan-400 hover:to-indigo-500 transition shadow-lg text-xs sm:text-sm"
+                className="hidden sm:inline-flex px-3 sm:px-4 sm:px-6 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-cyan-400 hover:to-indigo-500 transition shadow-lg text-xs sm:text-sm"
               >
                 Get Started
               </Link>
@@ -253,29 +260,45 @@ export default function LandingPage() {
           
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden mt-4 pb-4 border-t border-slate-800">
+            <div className="md:hidden mt-2 pb-4 border-t border-slate-800 animate-fade-in">
               <div className="flex flex-col space-y-3 pt-4">
                 <a 
                   href="#markets" 
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-sm font-medium text-slate-300 hover:text-cyan-300 transition px-4"
+                  className="text-sm font-medium text-slate-300 hover:text-cyan-300 transition px-4 py-2 rounded-lg hover:bg-slate-900"
                 >
                   Markets
                 </a>
                 <a 
                   href="#features" 
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-sm font-medium text-slate-300 hover:text-cyan-300 transition px-4"
+                  className="text-sm font-medium text-slate-300 hover:text-cyan-300 transition px-4 py-2 rounded-lg hover:bg-slate-900"
                 >
                   Features
                 </a>
                 <a 
                   href="#security" 
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-sm font-medium text-slate-300 hover:text-cyan-300 transition px-4"
+                  className="text-sm font-medium text-slate-300 hover:text-cyan-300 transition px-4 py-2 rounded-lg hover:bg-slate-900"
                 >
                   Security
                 </a>
+                <div className="pt-2 grid grid-cols-2 gap-2 px-4">
+                  <Link
+                    to="/signin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-center px-4 py-2.5 border border-slate-700 text-slate-200 rounded-lg text-sm font-semibold"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-center px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-indigo-600 text-white rounded-lg text-sm font-semibold"
+                  >
+                    Get Started
+                  </Link>
+                </div>
               </div>
             </div>
           )}
@@ -283,28 +306,28 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-24 sm:pt-32 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.2),transparent_45%),radial-gradient(circle_at_bottom,rgba(99,102,241,0.22),transparent_35%)]">
+      <section className="pt-20 sm:pt-32 pb-12 sm:pb-24 px-4 sm:px-6 lg:px-8 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.2),transparent_45%),radial-gradient(circle_at_bottom,rgba(99,102,241,0.22),transparent_35%)]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-5xl mx-auto">
-            <p className="inline-flex px-4 py-1.5 rounded-full border border-cyan-400/40 bg-cyan-500/10 text-cyan-200 text-xs sm:text-sm font-semibold mb-6">
+            <p className="inline-flex px-3 sm:px-4 py-1.5 rounded-full border border-cyan-400/40 bg-cyan-500/10 text-cyan-200 text-[11px] sm:text-sm font-semibold mb-5 sm:mb-6">
               Built for serious traders, institutions, and growth-focused teams
             </p>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-cyan-300 via-indigo-300 to-cyan-200 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-4 sm:mb-6 bg-gradient-to-r from-cyan-300 via-indigo-300 to-cyan-200 bg-clip-text text-transparent">
               Professional Trading Infrastructure
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-slate-300 mb-8 sm:mb-12 max-w-3xl mx-auto px-4">
+            <p className="text-sm sm:text-lg md:text-xl text-slate-300 mb-6 sm:mb-12 max-w-3xl mx-auto px-2 sm:px-4">
               Access crypto, forex, and CFD markets from one platform with institution-grade reliability, transparent execution, and a modern portfolio experience.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
                 to="/signup"
-                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-cyan-500 to-indigo-600 text-white rounded-lg font-bold text-base sm:text-lg hover:from-cyan-400 hover:to-indigo-500 transition shadow-xl transform hover:scale-105 text-center"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-gradient-to-r from-cyan-500 to-indigo-600 text-white rounded-lg font-bold text-sm sm:text-lg hover:from-cyan-400 hover:to-indigo-500 transition shadow-xl transform hover:scale-105 text-center"
               >
                 Open Account
               </Link>
               <a
                 href="#features"
-                className="w-full sm:w-auto px-8 py-4 border-2 border-cyan-400/50 text-cyan-200 rounded-lg font-bold text-base sm:text-lg hover:bg-cyan-500/10 transition text-center"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 border-2 border-cyan-400/50 text-cyan-200 rounded-lg font-bold text-sm sm:text-lg hover:bg-cyan-500/10 transition text-center"
               >
                 Explore Platform
               </a>
@@ -312,46 +335,45 @@ export default function LandingPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 mt-12 sm:mt-20 max-w-5xl mx-auto px-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-8 mt-10 sm:mt-20 max-w-5xl mx-auto px-1 sm:px-4">
             <div className="text-center rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-cyan-300 mb-1 sm:mb-2">$2.4T+</div>
-              <div className="text-xs sm:text-sm text-slate-400">24h Market Volume Tracked</div>
+              <div className="text-xl sm:text-3xl md:text-4xl font-bold text-cyan-300 mb-1 sm:mb-2">$2.4T+</div>
+              <div className="text-[11px] sm:text-sm text-slate-400">24h Market Volume Tracked</div>
             </div>
             <div className="text-center rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-cyan-300 mb-1 sm:mb-2">200+</div>
-              <div className="text-xs sm:text-sm text-slate-400">Countries & Regions</div>
+              <div className="text-xl sm:text-3xl md:text-4xl font-bold text-cyan-300 mb-1 sm:mb-2">200+</div>
+              <div className="text-[11px] sm:text-sm text-slate-400">Countries & Regions</div>
             </div>
             <div className="text-center rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-cyan-300 mb-1 sm:mb-2">150M+</div>
-              <div className="text-xs sm:text-sm text-slate-400">Global Platform Users</div>
+              <div className="text-xl sm:text-3xl md:text-4xl font-bold text-cyan-300 mb-1 sm:mb-2">150M+</div>
+              <div className="text-[11px] sm:text-sm text-slate-400">Global Platform Users</div>
             </div>
             <div className="text-center rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-cyan-300 mb-1 sm:mb-2">350+</div>
-              <div className="text-xs sm:text-sm text-slate-400">Markets and Pairs</div>
+              <div className="text-xl sm:text-3xl md:text-4xl font-bold text-cyan-300 mb-1 sm:mb-2">350+</div>
+              <div className="text-[11px] sm:text-sm text-slate-400">Markets and Pairs</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Markets Section */}
-      <section id="markets" className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-950">
+      <section id="markets" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 bg-slate-950">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-3 text-white">Live Market Overview</h2>
-          <p className="text-center text-slate-400 mb-12 max-w-3xl mx-auto">
+          <h2 className="text-2xl sm:text-4xl font-bold text-center mb-3 text-white">Live Market Overview</h2>
+          <p className="text-center text-sm sm:text-base text-slate-400 mb-8 sm:mb-12 max-w-3xl mx-auto">
             Institutional-grade data feeds, deep market visibility, and real-time pricing across crypto, equities, and forex.
           </p>
           
           {/* TradingView Market Overview Widget */}
-          <div className="mb-12">
+          <div className="mb-8 sm:mb-12">
             <div 
               ref={marketWidgetRef}
-              className="tradingview-widget-container rounded-xl overflow-hidden shadow-lg border border-slate-800" 
-              style={{ height: '400px', width: '100%' }}
+              className="tradingview-widget-container h-[280px] sm:h-[400px] w-full rounded-xl overflow-hidden shadow-lg border border-slate-800" 
             ></div>
           </div>
 
-          {/* Coin List Table */}
-          <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-lg">
+          {/* Coin List Table Desktop */}
+          <div className="hidden md:block bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-lg">
             <table className="w-full">
               <thead className="bg-slate-900 border-b border-slate-800">
                 <tr>
@@ -416,20 +438,61 @@ export default function LandingPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Coin List Mobile */}
+          <div className="md:hidden space-y-3">
+            {loading ? (
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+                <div className="flex items-center justify-center space-x-2 text-slate-400">
+                  <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-sm">Loading markets...</span>
+                </div>
+              </div>
+            ) : coins.length === 0 ? (
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 text-center text-sm text-slate-400">
+                No data available
+              </div>
+            ) : (
+              coins.map((coin, index) => (
+                <div key={coin.id} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <div className="text-xs text-slate-500 w-4">{index + 1}</div>
+                      <img
+                        src={coin.image}
+                        alt={coin.name}
+                        className="w-8 h-8 rounded-full"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                        }}
+                      />
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-white">{coin.symbol.toUpperCase()}</div>
+                        <div className="text-xs text-slate-400 truncate">{coin.name}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-semibold text-white">${formatPrice(coin.current_price)}</div>
+                      <div className="text-xs">{formatChange(coin.price_change_percentage_24h)}</div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </section>
 
       {/* TradingView Chart Widget */}
       <section className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 bg-slate-950">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8 sm:mb-12 text-white">Cross-Asset Live Charts</h2>
+          <h2 className="text-2xl sm:text-4xl font-bold text-center mb-8 sm:mb-12 text-white">Cross-Asset Live Charts</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 shadow-lg">
               <h3 className="text-lg font-semibold text-white mb-3">Bitcoin (BTC)</h3>
               <div 
                 ref={cryptoChartRef}
-                className="tradingview-widget-container rounded-lg overflow-hidden" 
-                style={{ height: '300px', width: '100%' }}
+                className="tradingview-widget-container h-[240px] sm:h-[300px] w-full rounded-lg overflow-hidden" 
               ></div>
             </div>
             
@@ -437,8 +500,7 @@ export default function LandingPage() {
               <h3 className="text-lg font-semibold text-white mb-3">Apple (AAPL)</h3>
               <div 
                 ref={stockChartRef}
-                className="tradingview-widget-container rounded-lg overflow-hidden" 
-                style={{ height: '300px', width: '100%' }}
+                className="tradingview-widget-container h-[240px] sm:h-[300px] w-full rounded-lg overflow-hidden" 
               ></div>
             </div>
             
@@ -446,8 +508,7 @@ export default function LandingPage() {
               <h3 className="text-lg font-semibold text-white mb-3">EUR/USD</h3>
               <div 
                 ref={forexChartRef}
-                className="tradingview-widget-container rounded-lg overflow-hidden" 
-                style={{ height: '300px', width: '100%' }}
+                className="tradingview-widget-container h-[240px] sm:h-[300px] w-full rounded-lg overflow-hidden" 
               ></div>
             </div>
           </div>
@@ -461,8 +522,8 @@ export default function LandingPage() {
           <p className="text-center text-slate-400 mb-12 max-w-3xl mx-auto">
             Every workflow is designed for speed, trust, and operational clarity from first deposit to trade settlement.
           </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-slate-900/80 p-7 rounded-xl border border-slate-800 hover:border-cyan-500/40 hover:shadow-xl transition">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="bg-slate-900/80 p-5 sm:p-7 rounded-xl border border-slate-800 hover:border-cyan-500/40 hover:shadow-xl transition">
               <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-lg flex items-center justify-center mb-4 shadow-lg">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -473,7 +534,7 @@ export default function LandingPage() {
                 Multi-layer account protection, controlled withdrawal flows, and audit-friendly operations for safer user funds.
               </p>
             </div>
-            <div className="bg-slate-900/80 p-7 rounded-xl border border-slate-800 hover:border-cyan-500/40 hover:shadow-xl transition">
+            <div className="bg-slate-900/80 p-5 sm:p-7 rounded-xl border border-slate-800 hover:border-cyan-500/40 hover:shadow-xl transition">
               <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-lg flex items-center justify-center mb-4 shadow-lg">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -484,7 +545,7 @@ export default function LandingPage() {
                 Responsive interface and efficient order processing designed to keep up with fast-moving markets.
               </p>
             </div>
-            <div className="bg-slate-900/80 p-7 rounded-xl border border-slate-800 hover:border-cyan-500/40 hover:shadow-xl transition">
+            <div className="bg-slate-900/80 p-5 sm:p-7 rounded-xl border border-slate-800 hover:border-cyan-500/40 hover:shadow-xl transition">
               <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-lg flex items-center justify-center mb-4 shadow-lg">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -500,9 +561,9 @@ export default function LandingPage() {
       </section>
 
       <section id="security" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 bg-slate-950">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8">
-            <h3 className="text-2xl font-bold text-white mb-4">Built for Trust</h3>
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4 sm:gap-8">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-8">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">Built for Trust</h3>
             <ul className="space-y-3 text-slate-300 text-sm">
               <li>- Identity verification workflows with clear status tracking.</li>
               <li>- Controlled deposit and withdrawal paths with operational logs.</li>
@@ -510,8 +571,8 @@ export default function LandingPage() {
               <li>- Structured support and notification systems for account clarity.</li>
             </ul>
           </div>
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8">
-            <h3 className="text-2xl font-bold text-white mb-4">Built for Scale</h3>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-8">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">Built for Scale</h3>
             <ul className="space-y-3 text-slate-300 text-sm">
               <li>- Modular architecture with dedicated services for trading and funding.</li>
               <li>- Real-time market widgets for crypto, stocks, and forex visibility.</li>
@@ -525,8 +586,8 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-cyan-600 to-indigo-700">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6 text-white">Start Trading with Confidence</h2>
-          <p className="text-lg sm:text-xl text-cyan-100 mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6 text-white">Start Trading with Confidence</h2>
+          <p className="text-base sm:text-xl text-cyan-100 mb-6 sm:mb-8">
             Create your account and access a professional trading platform built for modern global markets.
           </p>
           <Link
@@ -539,9 +600,9 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 py-12 px-4 sm:px-6 lg:px-8 bg-slate-950">
+      <footer className="border-t border-slate-800 py-10 sm:py-12 px-4 sm:px-6 lg:px-8 bg-slate-950">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center space-x-3 mb-4">
                 {siteSettings.site.logo ? (

@@ -106,9 +106,9 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
@@ -129,7 +129,7 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <div className="lg:ml-64 pt-16 lg:pt-0">
         {/* Header */}
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-sm">
+        <header className="bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-700 shadow-sm backdrop-blur">
           <div className="px-4 sm:px-6 py-4 space-y-2">
             <Breadcrumbs items={[{ label: 'Admin' }, { label: getTabTitle() }]} />
             <div className="flex justify-between items-start gap-4">
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* Content */}
-        <main className="p-4 sm:p-6">
+        <main className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-950 min-h-[calc(100vh-4rem)]">
           {activeTab === 'dashboard' && (
             <DashboardContent stats={stats} recentLogins={recentLogins} />
           )}

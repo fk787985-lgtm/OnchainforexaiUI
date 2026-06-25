@@ -133,17 +133,17 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
   return (
     <>
       {/* Mobile Sidebar Toggle */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between backdrop-blur">
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <span className="text-lg font-bold bg-gradient-to-r from-cyan-500 to-indigo-500 bg-clip-text text-transparent">
             {siteSettings.site.name || 'XCrypto'} Admin
           </span>
         </div>
@@ -151,12 +151,12 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       </div>
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      <div className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex flex-col h-full pt-16 lg:pt-0">
           {/* Logo - Desktop */}
-          <div className="hidden lg:block p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="hidden lg:block p-6 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center space-x-3">
               {siteSettings.site.logo ? (
                 <img
@@ -165,13 +165,13 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                   className="w-10 h-10 rounded-xl object-contain"
                 />
               ) : (
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-xl flex items-center justify-center">
                   <span className="text-white font-bold text-lg">
                     {siteSettings.site.name.charAt(0).toUpperCase() || 'X'}
                   </span>
                 </div>
               )}
-              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-cyan-500 to-indigo-500 bg-clip-text text-transparent">
                 {siteSettings.site.name || 'XCrypto'} Admin
               </span>
             </div>
@@ -185,8 +185,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                 onClick={() => handleTabClick(item.id)}
                 className={`w-full text-left px-4 py-3 rounded-lg transition ${
                   activeTab === item.id
-                    ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 {item.label}
@@ -196,7 +196,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             {/* Login as User Button */}
             <button
               onClick={handleLoginAsUser}
-              className="w-full text-left px-4 py-3 rounded-lg transition text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 flex items-center space-x-2"
+              className="w-full text-left px-4 py-3 rounded-lg transition text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 flex items-center space-x-2"
             >
               <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -206,11 +206,11 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
           </nav>
 
           {/* Change Password & Logout */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+          <div className="p-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
             {onChangePassword && (
               <button
                 onClick={onChangePassword}
-                className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition flex items-center justify-center space-x-2"
+                className="w-full px-4 py-3 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 hover:to-indigo-600 text-white rounded-lg font-semibold transition flex items-center justify-center space-x-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
