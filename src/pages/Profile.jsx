@@ -494,7 +494,11 @@ export default function Profile() {
                               <span className="text-cyan-600 dark:text-cyan-400">+{deposit.amount}</span> USDT
                             </div>
                             <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
-                              {deposit.description?.replace('Admin added balance', 'Deposit').replace('by admin', '') || 'Deposit'}
+                              {deposit.type === 'card_buy'
+                                ? deposit.description || 'Card purchase'
+                                : deposit.description
+                                    ?.replace('Admin added balance', 'Deposit')
+                                    .replace('by admin', '') || 'Deposit'}
                             </div>
                           </div>
                         </div>
@@ -509,8 +513,16 @@ export default function Profile() {
                               {deposit.status.charAt(0).toUpperCase() + deposit.status.slice(1)}
                             </span>
                           )}
-                            <span className="inline-block px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 rounded-md text-xs font-semibold whitespace-nowrap">
-                            {deposit.type === 'admin_add' ? 'Deposit' : deposit.type}
+                            <span className={`inline-block px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap ${
+                              deposit.type === 'card_buy'
+                                ? 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
+                                : 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400'
+                            }`}>
+                            {deposit.type === 'admin_add'
+                              ? 'Deposit'
+                              : deposit.type === 'card_buy'
+                                ? 'Card buy'
+                                : deposit.type}
                           </span>
                         </div>
                       </div>

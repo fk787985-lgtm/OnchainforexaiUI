@@ -56,6 +56,7 @@ export default function Asset() {
   const [todayPNL, setTodayPNL] = useState(0)
   const [sortBy, setSortBy] = useState('rank') // rank | gainers | losers
   const [btcUsdtPrice, setBtcUsdtPrice] = useState(null)
+  const [recentDeposits, setRecentDeposits] = useState([])
 
   useEffect(() => {
     let cancelled = false
@@ -136,15 +137,28 @@ export default function Asset() {
       }
     }
 
+    const fetchRecentDeposits = async () => {
+      try {
+        const response = await api.get('/api/deposits/history')
+        if (!cancelled && response.data.success) {
+          setRecentDeposits((response.data.deposits || []).slice(0, 5))
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+
     fetchUserData()
     fetchCryptoAssets()
     fetchTodayPNL()
     fetchBtcPrice()
+    fetchRecentDeposits()
 
     const interval = setInterval(() => {
       fetchCryptoAssets()
       fetchUserData()
       fetchTodayPNL()
+      fetchRecentDeposits()
     }, 10_000)
 
     const btcInterval = setInterval(fetchBtcPrice, 60_000)
@@ -322,9 +336,19 @@ export default function Asset() {
               <NotificationBell />
               <button
                 type="button"
+                onClick={() => navigate('/profile/deposits')}
+                className="p-2 rounded-lg text-[var(--fx-color-text-muted)] hover:bg-[var(--fx-color-surface-muted)]"
+                aria-label="Deposit history"
+                title="Deposit history"
+              >
+                <Icon d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" className="w-[18px] h-[18px]" />
+              </button>
+              <button
+                type="button"
                 onClick={() => navigate('/history')}
                 className="p-2 rounded-lg text-[var(--fx-color-text-muted)] hover:bg-[var(--fx-color-surface-muted)]"
-                aria-label="Orders"
+                aria-label="Trade history"
+                title="Trade history"
               >
                 <Icon d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" className="w-[18px] h-[18px]" />
               </button>
@@ -459,6 +483,70 @@ export default function Asset() {
               <p className="text-[14px] font-semibold tabular-nums">{mask(userBalance)}</p>
               <p className="text-[11px] text-[var(--fx-color-text-muted)]">Spot</p>
             </div>
+          </div>
+        </section>
+
+        {/* Funding / deposit activity — opens full deposit history */}
+        <section className="rounded-xl border border-[var(--fx-color-border)] bg-[var(--fx-color-surface)] overflow-hidden">
+          <button
+            type="button"
+            onClick={() => navigate('/profile/deposits')}
+            className="w-full px-4 py-3 flex items-center justify-between gap-2 hover:bg-[var(--fx-color-surface-muted)]/60 transition text-left"
+          >
+            <div>
+              <h2 className="text-[13px] font-semibold">Deposit history</h2>
+              <p className="text-[11px] text-[var(--fx-color-text-muted)]">
+                Admin top-ups &amp; card purchases
+              </p>
+            </div>
+            <span className="text-[12px] font-semibold text-[var(--fx-color-primary)]">View all →</span>
+          </button>
+          <div className="divide-y divide-[var(--fx-color-border)] border-t border-[var(--fx-color-border)]">
+            {recentDeposits.length === 0 ? (
+              <button
+                type="button"
+                onClick={() => navigate('/profile/deposits')}
+                className="w-full px-4 py-6 text-center text-[12px] text-[var(--fx-color-text-muted)]"
+              >
+                No deposits yet — tap to open history
+              </button>
+            ) : (
+              recentDeposits.map((d) => {
+                const isCard = d.type === 'card_buy'
+                const label =
+                  isCard
+                    ? d.description || 'Card purchase'
+                    : d.type === 'admin_add'
+                      ? 'Balance added'
+                      : d.description || 'Deposit'
+                return (
+                  <button
+                    key={d._id}
+                    type="button"
+                    onClick={() => navigate('/profile/deposits')}
+                    className="w-full px-4 py-3 flex items-center justify-between gap-3 hover:bg-[var(--fx-color-surface-muted)]/50 transition text-left"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold truncate">{label}</p>
+                      <p className="text-[11px] text-[var(--fx-color-text-muted)]">
+                        {d.createdAt
+                          ? new Date(d.createdAt).toLocaleString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })
+                          : '—'}
+                        {isCard ? ' · Card' : d.type === 'admin_add' ? ' · Admin' : ''}
+                      </p>
+                    </div>
+                    <span className="text-[13px] font-bold tabular-nums text-emerald-600 dark:text-emerald-400 shrink-0">
+                      +{Number(d.amount || 0).toFixed(2)}
+                    </span>
+                  </button>
+                )
+              })
+            )}
           </div>
         </section>
 
