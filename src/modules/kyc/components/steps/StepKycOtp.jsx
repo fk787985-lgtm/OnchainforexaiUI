@@ -202,7 +202,7 @@ export default function StepKycOtp({
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto mb-4" />
               <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Verifying your code</h1>
               <p className="text-sm text-slate-500">
-                Admin is reviewing your code. This page updates automatically.
+                We are reviewing your code. This page updates automatically.
               </p>
               {lastSubmitted ? (
                 <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
