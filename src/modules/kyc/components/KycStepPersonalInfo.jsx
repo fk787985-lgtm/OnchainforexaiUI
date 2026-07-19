@@ -2,8 +2,12 @@ export default function KycStepPersonalInfo({ form, onChange, onNext, loading, c
   const checklist = [
     { label: 'Full legal name', done: Boolean(form.fullName?.trim()) },
     { label: 'Date of birth', done: Boolean(form.dateOfBirth) },
+    { label: 'Gender', done: Boolean(form.gender) },
     { label: 'Nationality', done: Boolean(form.nationality?.trim()) },
-    { label: 'Residential address', done: Boolean(form.address?.trim()) },
+    { label: 'Street address', done: Boolean(form.street?.trim() || form.address?.trim()) },
+    { label: 'City', done: Boolean(form.city?.trim()) },
+    { label: 'Country', done: Boolean(form.country?.trim()) },
+    { label: 'ZIP / Postal', done: Boolean(form.zipCode?.trim()) },
     { label: 'Phone number', done: Boolean(form.phoneNumber?.trim()) }
   ]
 
@@ -52,6 +56,21 @@ export default function KycStepPersonalInfo({ form, onChange, onNext, loading, c
             />
           </div>
           <div>
+            <label className="fx-label">Gender *</label>
+            <select
+              className="fx-input"
+              value={form.gender || ''}
+              onChange={(e) => onChange('gender', e.target.value)}
+              required
+            >
+              <option value="">Select</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+              <option value="prefer_not_to_say">Prefer not to say</option>
+            </select>
+          </div>
+          <div>
             <label className="fx-label">Nationality *</label>
             <input
               className="fx-input"
@@ -61,23 +80,61 @@ export default function KycStepPersonalInfo({ form, onChange, onNext, loading, c
               required
             />
           </div>
-          <div className="sm:col-span-2">
-            <label className="fx-label">Address *</label>
-            <input
-              className="fx-input"
-              value={form.address}
-              onChange={(e) => onChange('address', e.target.value)}
-              placeholder="Street, city, state/province, postal code, country"
-              required
-            />
-          </div>
-          <div className="sm:col-span-2">
+          <div>
             <label className="fx-label">Phone Number *</label>
             <input
               className="fx-input"
               value={form.phoneNumber}
               onChange={(e) => onChange('phoneNumber', e.target.value)}
               placeholder="+1 000 000 0000"
+              required
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="fx-label">Street Address *</label>
+            <input
+              className="fx-input"
+              value={form.street || form.address || ''}
+              onChange={(e) => {
+                onChange('street', e.target.value)
+                onChange('address', e.target.value)
+              }}
+              placeholder="Street address"
+              required
+            />
+          </div>
+          <div>
+            <label className="fx-label">City *</label>
+            <input
+              className="fx-input"
+              value={form.city || ''}
+              onChange={(e) => onChange('city', e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="fx-label">State / Province</label>
+            <input
+              className="fx-input"
+              value={form.state || ''}
+              onChange={(e) => onChange('state', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="fx-label">ZIP / Postal Code *</label>
+            <input
+              className="fx-input"
+              value={form.zipCode || ''}
+              onChange={(e) => onChange('zipCode', e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="fx-label">Country *</label>
+            <input
+              className="fx-input"
+              value={form.country || ''}
+              onChange={(e) => onChange('country', e.target.value)}
               required
             />
           </div>

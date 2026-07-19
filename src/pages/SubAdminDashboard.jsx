@@ -9,6 +9,8 @@ import UsersList from '../components/admin/UsersList'
 import SubAdminNotifyUsers from '../components/admin/SubAdminNotifyUsers'
 import ChatManagement from '../components/admin/ChatManagement'
 import ChangePasswordModal from '../components/admin/ChangePasswordModal'
+import { NotificationProvider } from '../context/NotificationContext'
+import NotificationBell from '../components/notifications/NotificationBell'
 
 export default function SubAdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -131,6 +133,7 @@ export default function SubAdminDashboard() {
   }
 
   return (
+    <NotificationProvider mode="admin">
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors">
       <SubAdminSidebar
         activeTab={activeTab}
@@ -149,7 +152,9 @@ export default function SubAdminDashboard() {
             <h1 className="text-xl sm:text-2xl font-bold">
               {getTabTitle()}
             </h1>
-            <div className="hidden lg:block">
+            {/* Desktop controls — mobile uses fixed top bar in SubAdminSidebar */}
+            <div className="hidden lg:flex items-center gap-2">
+              <NotificationBell />
               <ThemeToggle />
             </div>
           </div>
@@ -172,6 +177,7 @@ export default function SubAdminDashboard() {
         onClose={() => setShowChangePassword(false)}
       />
     </div>
+    </NotificationProvider>
   )
 }
 

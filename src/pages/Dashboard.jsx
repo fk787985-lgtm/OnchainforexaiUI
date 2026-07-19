@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useSiteSettings } from '../context/SiteSettingsContext'
@@ -12,86 +12,13 @@ import AddFundsModal from '../components/AddFundsModal'
 import TransferModal from '../components/TransferModal'
 import { getImageUrl } from '../utils/imageUrl.js'
 import { formatMarketPrice, getChangeMeta } from '../utils/formatters/marketFormatters'
-import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../api/modules/notificationsApi'
+import NotificationBell from '../components/notifications/NotificationBell'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
-
-// User Info Card Component
-function UserInfoCard() {
-  const [user, setUser] = useState(null)
-  const [kycStatus, setKycStatus] = useState(null)
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    fetchUserInfo()
-    fetchKYCStatus()
-  }, [])
-
-  const fetchUserInfo = async () => {
-    try {
-      const response = await api.get('/api/auth/me')
-      if (response.data.success) {
-        setUser(response.data.user)
-      }
-    } catch (error) {
-      console.error('Error fetching user info:', error)
-    }
-  }
-
-  const fetchKYCStatus = async () => {
-    try {
-      const response = await api.get('/api/kyc/status')
-      if (response.data.success) {
-        setKycStatus(response.data)
-      }
-    } catch (error) {
-      console.error('Error fetching KYC status:', error)
-    }
-  }
-
-  if (!user) {
-    return <div className="text-sm text-gray-500">Loading...</div>
-  }
-
-  return (
-    <div className="flex items-center space-x-2 sm:space-x-3">
-      <div className="w-10 h-10 sm:w-12 sm:h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0 border-2 border-white/30">
-        <span className="text-white font-bold text-base sm:text-lg md:text-xl">
-          {user.fullName?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
-        </span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center space-x-1.5 sm:space-x-2 mb-0.5 sm:mb-1">
-          <div className="text-xs sm:text-sm font-semibold text-white truncate">
-            {user.fullName || user.uniqueId || 'User'}
-          </div>
-          {kycStatus?.isVerified ? (
-            <Badge label="Verified" status="verified" className="bg-green-500/90 text-white dark:text-white" />
-          ) : (
-            <button
-              onClick={() => {
-                navigate('/kyc/verify')
-              }}
-              className="px-1.5 sm:px-2 py-0.5 bg-yellow-500/90 backdrop-blur-sm text-white text-[10px] sm:text-xs font-medium rounded-full hover:bg-yellow-400/90 transition"
-            >
-              Verify
-            </button>
-          )}
-        </div>
-        <div className="text-[10px] sm:text-xs text-white/80 truncate">
-          {user.email}
-        </div>
-        <div className="text-[10px] sm:text-xs text-white/60 mt-0.5 hidden sm:block">
-          ID: {user.uniqueId || 'N/A'}
-        </div>
-      </div>
-    </div>
-  )
-}
+import UserSidebar from '../components/UserSidebar'
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [balanceVisible, setBalanceVisible] = useState(true)
   const [activeCryptoTab, setActiveCryptoTab] = useState('hot')
   const [cryptoData, setCryptoData] = useState({})
@@ -100,12 +27,6 @@ export default function Dashboard() {
   const [news, setNews] = useState([])
   const [gold, setGold] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [notifications, setNotifications] = useState([])
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [showNotifications, setShowNotifications] = useState(false)
-  const [expandedNotifications, setExpandedNotifications] = useState(new Set())
-  const userInteractedRef = useRef(false)
-  const audioContextRef = useRef(null)
   const [cryptoLoading, setCryptoLoading] = useState(false)
   const [userBalance, setUserBalance] = useState(0)
   const [showAddFundsModal, setShowAddFundsModal] = useState(false)
@@ -239,185 +160,21 @@ export default function Dashboard() {
     const token = localStorage.getItem('token')
     if (!token) {
       navigate('/signin')
-    } else {
-      fetchNotifications()
-      // Poll for new notifications every 30 seconds
-      const interval = setInterval(fetchNotifications, 30000)
-      return () => clearInterval(interval)
-    }
-  }, [navigate])
-
-  // Track user interaction for audio playback
-  useEffect(() => {
-    const handleUserInteraction = () => {
-      userInteractedRef.current = true
-      // Initialize audio context on first interaction
-      if (!audioContextRef.current) {
-        try {
-          audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)()
-        } catch (e) {
-          console.log('Audio context initialization failed:', e)
-        }
-      }
-    }
-    
-    // Listen for any user interaction
-    document.addEventListener('click', handleUserInteraction, { once: true })
-    document.addEventListener('keydown', handleUserInteraction, { once: true })
-    document.addEventListener('touchstart', handleUserInteraction, { once: true })
-    
-    return () => {
-      document.removeEventListener('click', handleUserInteraction)
-      document.removeEventListener('keydown', handleUserInteraction)
-      document.removeEventListener('touchstart', handleUserInteraction)
-    }
-  }, [])
-
-  const playNotificationSound = () => {
-    // Only play sound if user has interacted with the page
-    if (!userInteractedRef.current) {
-      console.log('Sound playback skipped: user has not interacted with page yet')
       return
     }
-    
-    try {
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OSfTQ8MUKfj8LZjHAY4kdfyzHksBSR3x/DdkEAKFF606euoVRQKRp/g8r5sIQUrgc7y2Yk2CBtpvfDkn00PDFCn4/C2YxwGOJHX8sx5LAUkd8fw3ZBACg==')
-      audio.volume = 0.5
-      
-      // Resume audio context if suspended (required by some browsers)
-      if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-        audioContextRef.current.resume().catch(e => console.log('Audio context resume failed:', e))
-      }
-      
-      const playPromise = audio.play()
-      if (playPromise !== undefined) {
-        playPromise.catch(e => {
-          // Only log if it's not a user interaction error
-          if (e.name !== 'NotAllowedError') {
-            console.log('Sound play failed:', e)
-          }
-        })
-      }
-    } catch (error) {
-      console.log('Sound notification error:', error)
-    }
-  }
-
-  const fetchNotifications = async () => {
-    try {
-      const data = await getNotifications()
-      if (data.success) {
-        const newNotifications = data.notifications || []
-        const previousUnreadCount = unreadCount
-        setNotifications(newNotifications)
-        const newUnreadCount = newNotifications.filter(n => !n.read).length
-        setUnreadCount(newUnreadCount)
-        
-        // Play sound if new unread notifications
-        if (newUnreadCount > previousUnreadCount) {
-          const newUnread = newNotifications.filter(n => !n.read && (!notifications.find(old => old._id === n._id) || notifications.find(old => old._id === n._id)?.read))
-          if (newUnread.length > 0 && newUnread.some(n => n.playSound !== false)) {
-            playNotificationSound()
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching notifications:', error)
-    }
-  }
-
-  const markAsRead = async (notificationId) => {
-    try {
-      // Convert to string for comparison
-      const notificationIdStr = String(notificationId).trim()
-      console.log('🔔 [Frontend] Marking notification as read:', notificationIdStr)
-      
-      // Find the notification
-      const notification = notifications.find(n => String(n._id).trim() === notificationIdStr)
-      if (!notification) {
-        console.error('❌ [Frontend] Notification not found in local state:', notificationIdStr)
-        return
-      }
-      
-      // Optimistically update the UI first - mark as read (even if already read, to ensure sync)
-      const wasUnread = !notification.read
-      setNotifications(prev => {
-        const updated = prev.map(n => {
-          const nIdStr = String(n._id).trim()
-          if (nIdStr === notificationIdStr) {
-            console.log('🔔 [Frontend] Optimistically marking as read:', nIdStr)
-            return { ...n, read: true }
-          }
-          return n
-        })
-        return updated
-      })
-      
-      // Update unread count immediately if it was unread
-      if (wasUnread) {
-        setUnreadCount(prev => {
-          const newCount = Math.max(0, prev - 1)
-          console.log('🔔 [Frontend] Unread count updated immediately:', prev, '->', newCount)
-          return newCount
-        })
-      }
-      
-      // Make API call - ALWAYS call API to ensure server sync
+    // Google first-time users must complete name + phone before using the app
+    ;(async () => {
       try {
-        const data = await markNotificationRead(notificationIdStr)
-        console.log('🔔 [Frontend] API response:', data)
-        
-        if (data.success) {
-          console.log('✅ [Frontend] Notification marked as read successfully')
-          // Refresh notifications to get updated unread count from server
-          await fetchNotifications()
-        } else {
-          console.error('❌ [Frontend] API returned success: false')
-          await fetchNotifications()
+        const { data } = await api.get('/api/auth/me')
+        if (data.success && data.user?.profileComplete === false) {
+          navigate('/auth/complete-profile', { replace: true })
+          return
         }
-      } catch (apiError) {
-        console.error('❌ [Frontend] API call error:', apiError)
-        // Still refresh to sync with server
-        await fetchNotifications()
+      } catch {
+        /* ignore — other requests will 401 if needed */
       }
-    } catch (error) {
-      console.error('❌ [Frontend] Error marking notification as read:', error)
-      console.error('❌ [Frontend] Error details:', error.response?.data)
-      // Refresh on error to sync with server
-      await fetchNotifications()
-    }
-  }
-
-  const markAllAsRead = async () => {
-    try {
-      console.log('🔔 [Frontend] Marking all notifications as read')
-      
-      // Optimistically update the UI first
-      const currentUnreadCount = unreadCount
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-      setUnreadCount(0)
-      console.log('🔔 [Frontend] Optimistically marked all as read. Previous unread count:', currentUnreadCount)
-      
-      const data = await markAllNotificationsRead()
-      console.log('🔔 [Frontend] Mark all as read API response:', data)
-      
-      if (data.success) {
-        console.log('✅ [Frontend] All notifications marked as read successfully')
-        // Immediately refresh notifications to ensure sync with server
-        await fetchNotifications()
-      } else {
-        console.error('❌ [Frontend] API returned success: false')
-        // If API call failed, revert the optimistic update
-        await fetchNotifications()
-      }
-    } catch (error) {
-      console.error('❌ [Frontend] Error marking all as read:', error)
-      console.error('❌ [Frontend] Error details:', error.response?.data)
-      // Revert optimistic update on error
-      await fetchNotifications()
-      toast.error('Failed to mark all notifications as read. Please try again.')
-    }
-  }
+    })()
+  }, [navigate])
 
   const handleLogout = async () => {
     try {
@@ -503,382 +260,21 @@ export default function Dashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </button>
-            <div className="relative">
-              <button 
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition relative"
-                title="Notifications"
-              >
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
-              
-              {/* Notifications Dropdown */}
-              {showNotifications && (
-                <div className="absolute right-0 mt-2 w-[calc(100vw-1rem)] max-w-sm sm:w-96 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 max-h-[80vh] overflow-hidden flex flex-col">
-                  <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between flex-shrink-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-gray-900 dark:text-white">Notifications ({notifications.length})</h3>
-                      {unreadCount > 0 ? <Badge label={`${unreadCount} unread`} status="pending" /> : null}
-                    </div>
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation()
-                          await markAllAsRead()
-                        }}
-                        className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline font-medium"
-                      >
-                        Mark all as read
-                      </button>
-                    )}
-                  </div>
-                  <div className="overflow-y-auto flex-1" style={{ maxHeight: 'calc(80vh - 80px)' }}>
-                    {notifications.length > 0 ? (
-                      <div className="divide-y divide-slate-200 dark:divide-slate-700">
-                        {notifications.map((notification) => {
-                          const notifId = String(notification._id).trim()
-                          const isExpanded = expandedNotifications.has(notifId)
-                          const messageLength = notification.message?.length || 0
-                          const shouldTruncate = messageLength > 150
-                          const displayMessage = shouldTruncate && !isExpanded 
-                            ? notification.message.substring(0, 150) + '...'
-                            : notification.message
-
-                          return (
-                            <div
-                              key={notification._id}
-                              onClick={async (e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                // ALWAYS mark as read when clicked (even if already read, to ensure sync)
-                                console.log('🔔 [Frontend] Clicked notification, marking as read:', notifId)
-                                await markAsRead(notifId)
-                              }}
-                              className={`p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition ${
-                                !notification.read ? 'bg-cyan-50 dark:bg-cyan-900/20' : ''
-                              }`}
-                            >
-                              <div className="flex items-start space-x-3">
-                                <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                                  notification.type === 'success' ? 'bg-green-500' :
-                                  notification.type === 'warning' ? 'bg-yellow-500' :
-                                  notification.type === 'error' ? 'bg-red-500' :
-                                  'bg-blue-500'
-                                }`}></div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="font-semibold text-sm text-gray-900 dark:text-white mb-1">
-                                    {notification.title}
-                                  </div>
-                                  <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap break-words">
-                                    {displayMessage}
-                                  </div>
-                                  {shouldTruncate && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.preventDefault()
-                                        e.stopPropagation()
-                                        setExpandedNotifications(prev => {
-                                          const newSet = new Set(prev)
-                                          if (isExpanded) {
-                                            newSet.delete(notifId)
-                                          } else {
-                                            newSet.add(notifId)
-                                          }
-                                          return newSet
-                                        })
-                                      }}
-                                      className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline mt-1 font-medium"
-                                    >
-                                      {isExpanded ? 'Show less' : 'Show more'}
-                                    </button>
-                                  )}
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                    {new Date(notification.createdAt).toLocaleString()}
-                                  </div>
-                                </div>
-                                {!notification.read && (
-                                  <div className="w-2 h-2 bg-cyan-500 rounded-full flex-shrink-0 mt-2"></div>
-                                )}
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    ) : (
-                      <EmptyState title="No notifications" icon="bell" />
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            <NotificationBell />
           </div>
         </div>
       </header>
-      
-      {/* Click outside to close notifications */}
-      {showNotifications && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowNotifications(false)}
-        ></div>
-      )}
 
-      {/* Sidebar */}
-      <div
-        className={`fixed top-0 left-0 h-full w-56 sm:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 z-50 transform transition-transform duration-300 ease-in-out ${
-sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex flex-col h-full">
-          {/* Sidebar Header - Improved UI */}
-          <div className="bg-gradient-to-br from-cyan-500 to-indigo-600 p-3 sm:p-4 md:p-5 text-white">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                </div>
-                <span className="text-lg font-bold">{siteSettings.site.name || 'XCrypto'}</span>
-              </div>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-white/20 transition"
-              >
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <UserInfoCard />
-          </div>
+      <UserSidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        siteName={siteSettings.site.name || 'XCrypto'}
+        logo={siteSettings.site.logo}
+        onLogout={handleLogout}
+        onOpenTransfer={() => setShowTransferModal(true)}
+        onOpenLanguage={() => setShowLanguageModal(true)}
+      />
 
-          {/* Sidebar Navigation */}
-          <nav className="flex-1 p-3 sm:p-4 space-y-1 sm:space-y-2 overflow-y-auto">
-            <button 
-              onClick={() => {
-                navigate('/profile')
-                setSidebarOpen(false)
-              }}
-              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-gray-600 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">Personal Info</span>
-            </button>
-            <button 
-              onClick={() => {
-                navigate('/profile/deposits')
-                setSidebarOpen(false)
-              }}
-              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-green-50 dark:hover:bg-green-900/20 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-green-700 dark:group-hover:text-green-300">Deposits</span>
-            </button>
-            <button 
-              onClick={() => {
-                navigate('/profile/withdrawals')
-                setSidebarOpen(false)
-              }}
-              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-              </svg>
-              <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-red-700 dark:group-hover:text-red-300">Withdrawals</span>
-            </button>
-            <button 
-              onClick={() => {
-                navigate('/profile/transfers')
-                setSidebarOpen(false)
-              }}
-              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-              <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-purple-700 dark:group-hover:text-purple-300">Transfers</span>
-            </button>
-            <button 
-              onClick={() => {
-                setShowTransferModal(true)
-                setSidebarOpen(false)
-              }}
-              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-900/40 dark:hover:to-purple-900/40 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group border-2 border-indigo-200 dark:border-indigo-800 shadow-sm hover:shadow-md"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <span className="font-semibold text-indigo-700 dark:text-indigo-300">Internal Transfer</span>
-            </button>
-            {/* Settings with Submenu */}
-            <div>
-              <button 
-                onClick={() => setSettingsOpen(!settingsOpen)}
-                className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center justify-between text-sm sm:text-base group"
-              >
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-gray-600 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">Settings</span>
-                </div>
-                <svg 
-                  className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''} text-gray-500 dark:text-gray-400`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {/* Settings Submenu */}
-              {settingsOpen && (
-                <div className="ml-3 sm:ml-4 mt-1.5 space-y-1 border-l-2 border-indigo-200 dark:border-indigo-800 pl-3 sm:pl-4 animate-in slide-in-from-top-2 duration-200">
-                  <button 
-                    onClick={() => {
-                      navigate('/settings/change-password')
-                      setSidebarOpen(false)
-                    }}
-                    className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm group"
-                  >
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                    </svg>
-                    <span className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">Change Password</span>
-                  </button>
-                  <button 
-                    onClick={() => {
-                      navigate('/settings/2fa')
-                      setSidebarOpen(false)
-                    }}
-                    className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm group"
-                  >
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <span className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">Enable 2FA</span>
-                  </button>
-                  <button 
-                    onClick={() => {
-                      navigate('/privacy-policy')
-                      setSidebarOpen(false)
-                    }}
-                    className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm group"
-                  >
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                    <span className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">Privacy Policy</span>
-                  </button>
-                  <button 
-                    onClick={() => {
-                      navigate('/help-support')
-                      setSidebarOpen(false)
-                    }}
-                    className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm group"
-                  >
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    <span className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">Help & Support</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <button 
-              onClick={() => {
-                navigate('/trade')
-                setSidebarOpen(false)
-              }}
-              className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <span className="font-medium">Futures</span>
-            </button>
-
-            {/* <button className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Spot Trading</span>
-            </button>           
-            <button className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>P2P Trading</span>
-            </button>
-            <button className="w-full text-left px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Earn</span>
-            </button> */}
-          </nav>
-
-          {/* Sidebar Footer */}
-          <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-700 space-y-1.5 sm:space-y-2 bg-slate-50 dark:bg-slate-950/50">
-            <button 
-              onClick={() => setShowLanguageModal(true)}
-              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-gray-600 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-              </svg>
-              <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">Language</span>
-            </button>
-            <button 
-              onClick={() => {
-                navigate('/customer-service')
-                setSidebarOpen(false)
-              }}
-              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-700 dark:group-hover:text-blue-300">Customer Service</span>
-            </button>
-            <button 
-              onClick={async () => {
-                setSidebarOpen(false)
-                await handleLogout()
-              }}
-              className="w-full text-left px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 flex items-center space-x-2 sm:space-x-3 text-sm sm:text-base group border border-red-200 dark:border-red-800"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span className="font-semibold text-red-600 dark:text-red-400">Logout</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Sidebar Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
 
       {/* Main Content */}
       <main className="px-4 py-4 space-y-4 max-w-7xl mx-auto">
@@ -908,7 +304,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             </span>
             <button 
               onClick={() => setShowAddFundsModal(true)}
-              className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-500 text-white rounded-lg font-semibold text-sm hover:opacity-90 transition"
+              className="fx-btn fx-btn-primary fx-btn-sm"
             >
               Add Funds
             </button>
@@ -993,7 +389,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                   <h4 className="font-semibold text-sm mb-1">{item.title}</h4>
                   <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
                     <span>{item.source}</span>
-                    <span>•</span>
+                    <span>â€¢</span>
                     <span>{item.time}</span>
                   </div>
                 </div>
@@ -1120,7 +516,7 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                   <div className="grid grid-cols-3 gap-4 py-2 border-b border-slate-100 dark:border-slate-700">
                     <div className="flex-1">
                       <div className="font-semibold text-sm">{gold.name}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">{gold.symbol} • {gold.unit}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{gold.symbol} â€¢ {gold.unit}</div>
                     </div>
                     <div className="text-right">
                       <div className="font-semibold text-sm">${formatPrice(gold?.price)}</div>
@@ -1199,16 +595,16 @@ sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             </div>
             <div className="space-y-2">
               {[
-                { code: 'en', name: 'English', flag: '🇺🇸' },
-                { code: 'es', name: 'Español', flag: '🇪🇸' },
-                { code: 'fr', name: 'Français', flag: '🇫🇷' },
-                { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-                { code: 'zh', name: '中文', flag: '🇨🇳' },
-                { code: 'ja', name: '日本語', flag: '🇯🇵' },
-                { code: 'ko', name: '한국어', flag: '🇰🇷' },
-                { code: 'ar', name: 'العربية', flag: '🇸🇦' },
-                { code: 'pt', name: 'Português', flag: '🇵🇹' },
-                { code: 'ru', name: 'Русский', flag: '🇷🇺' }
+                { code: 'en', name: 'English', flag: 'ðŸ‡ºðŸ‡¸' },
+                { code: 'es', name: 'EspaÃ±ol', flag: 'ðŸ‡ªðŸ‡¸' },
+                { code: 'fr', name: 'FranÃ§ais', flag: 'ðŸ‡«ðŸ‡·' },
+                { code: 'de', name: 'Deutsch', flag: 'ðŸ‡©ðŸ‡ª' },
+                { code: 'zh', name: 'ä¸­æ–‡', flag: 'ðŸ‡¨ðŸ‡³' },
+                { code: 'ja', name: 'æ—¥æœ¬èªž', flag: 'ðŸ‡¯ðŸ‡µ' },
+                { code: 'ko', name: 'í•œêµ­ì–´', flag: 'ðŸ‡°ðŸ‡·' },
+                { code: 'ar', name: 'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©', flag: 'ðŸ‡¸ðŸ‡¦' },
+                { code: 'pt', name: 'PortuguÃªs', flag: 'ðŸ‡µðŸ‡¹' },
+                { code: 'ru', name: 'Ð ÑƒÑÑÐºÐ¸Ð¹', flag: 'ðŸ‡·ðŸ‡º' }
               ].map((lang) => (
                 <button
                   key={lang.code}

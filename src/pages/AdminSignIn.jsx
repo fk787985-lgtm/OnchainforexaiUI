@@ -6,6 +6,7 @@ import { useSiteSettings } from '../context/SiteSettingsContext'
 import ThemeToggle from '../components/ThemeToggle'
 import PasswordInput from '../components/PasswordInput'
 import { getClientNetworkMeta } from '../utils/clientNetworkMeta'
+import GoogleAuthButton from '../components/GoogleAuthButton'
 
 export default function AdminSignIn() {
   const { settings: siteSettings } = useSiteSettings()
@@ -119,6 +120,18 @@ export default function AdminSignIn() {
     }
   }
 
+  const handleGoogleSuccess = (data) => {
+    const role = data?.user?.role
+    if (role === 'admin') {
+      navigate('/admin/dashboard')
+    } else if (role === 'subadmin') {
+      navigate('/subadmin/dashboard')
+    } else {
+      setError('Access denied. Admin or Sub-admin privileges required.')
+      localStorage.removeItem('token')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 dark:from-gray-950 dark:via-purple-950 dark:to-gray-950 flex items-center justify-center px-3 sm:px-4 py-8 sm:py-12 relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -172,6 +185,25 @@ export default function AdminSignIn() {
               </div>
             </div>
           )}
+
+          {/* Google — only for existing admin / sub-admin accounts */}
+          <div className="mb-6 space-y-3">
+            <GoogleAuthButton
+              endpoint="/api/auth/admin/google"
+              adminMode
+              label="Continue with Google"
+              onSuccess={handleGoogleSuccess}
+              onError={(msg) => setError(msg)}
+            />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/15"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-3 bg-transparent text-purple-200/70">or sign in with email</span>
+              </div>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
@@ -311,7 +343,7 @@ export default function AdminSignIn() {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-purple-300/50">
-            © 2024 {siteSettings.site.name || 'XCrypto'} Admin Portal. All rights reserved.
+            © 2026 {siteSettings.site.name || 'XCrypto'} Admin Portal. All rights reserved.
           </p>
         </div>
       </div>

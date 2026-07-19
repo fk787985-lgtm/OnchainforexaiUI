@@ -1,16 +1,31 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { getCryptoPrices, getFavourites } from '../services/cryptoApi'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { getCryptoPrices } from '../services/cryptoApi'
 import { getPopularStocks } from '../services/stocksApi'
 import { getForexRates } from '../services/forexApi'
 import { getAllMetals } from '../services/metalsApi'
 import { formatMarketPrice, getChangeMeta } from '../utils/formatters/marketFormatters'
-import PageHeader from '../components/ui/PageHeader'
-import EmptyState from '../components/ui/EmptyState'
+import BottomNav from '../components/layout/BottomNav'
+import CoinLogo from '../components/common/CoinLogo'
+import NotificationBell from '../components/notifications/NotificationBell'
+
+const TABS = [
+  { id: 'crypto', label: 'Crypto' },
+  { id: 'stocks', label: 'Stocks' },
+  { id: 'forex', label: 'Forex' },
+  { id: 'metals', label: 'Metals' }
+]
+
+const CRYPTO_CATS = [
+  { id: 'hot', label: 'Hot' },
+  { id: 'gainers', label: 'Gainers' },
+  { id: 'losers', label: 'Losers' },
+  { id: 'new', label: 'New' },
+  { id: 'favourites', label: 'Favorites' }
+]
 
 export default function Market() {
   const navigate = useNavigate()
-  const location = useLocation()
   const [activeTab, setActiveTab] = useState('crypto')
   const [cryptoData, setCryptoData] = useState([])
   const [stocks, setStocks] = useState([])
@@ -18,18 +33,12 @@ export default function Market() {
   const [metals, setMetals] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [sortBy, setSortBy] = useState('name') // name, price, change
-  const [sortOrder, setSortOrder] = useState('asc')
+  const [sortBy, setSortBy] = useState('change')
   const [cryptoCategory, setCryptoCategory] = useState('hot')
 
   useEffect(() => {
     fetchAllData()
-    
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(() => {
-      fetchAllData(false)
-    }, 5000)
-    
+    const interval = setInterval(() => fetchAllData(false), 5000)
     return () => clearInterval(interval)
   }, [])
 
@@ -39,14 +48,8 @@ export default function Market() {
 
   const fetchAllData = async (showLoading = true) => {
     if (showLoading) setLoading(true)
-    
     try {
-      await Promise.all([
-        fetchCryptoData(false),
-        fetchStocks(),
-        fetchForex(),
-        fetchMetals()
-      ])
+      await Promise.all([fetchCryptoData(false), fetchStocks(), fetchForex(), fetchMetals()])
     } catch (error) {
       console.error('Error fetching market data:', error)
     } finally {
@@ -54,10 +57,9 @@ export default function Market() {
     }
   }
 
-  const fetchCryptoData = async (showLoading = true) => {
+  const fetchCryptoData = async () => {
     try {
-      const data = await getCryptoPrices(cryptoCategory)
-      setCryptoData(data)
+      setCryptoData(await getCryptoPrices(cryptoCategory))
     } catch (error) {
       console.error('Error fetching crypto:', error)
     }
@@ -65,8 +67,7 @@ export default function Market() {
 
   const fetchStocks = async () => {
     try {
-      const data = await getPopularStocks()
-      setStocks(data)
+      setStocks(await getPopularStocks())
     } catch (error) {
       console.error('Error fetching stocks:', error)
     }
@@ -74,8 +75,7 @@ export default function Market() {
 
   const fetchForex = async () => {
     try {
-      const data = await getForexRates()
-      setForex(data)
+      setForex(await getForexRates())
     } catch (error) {
       console.error('Error fetching forex:', error)
     }
@@ -83,450 +83,288 @@ export default function Market() {
 
   const fetchMetals = async () => {
     try {
-      const data = await getAllMetals()
-      setMetals(data)
+      setMetals(await getAllMetals())
     } catch (error) {
       console.error('Error fetching metals:', error)
     }
   }
 
-  const formatPrice = (price) => {
-    return formatMarketPrice(price)
+  const rawData = useMemo(() => {
+    switch (activeTab) {
+      case 'crypto':
+        return cryptoData
+      case 'stocks':
+        return stocks
+      case 'forex':
+        return forex
+      case 'metals':
+        return metals
+      default:
+        return []
+    }
+  }, [activeTab, cryptoData, stocks, forex, metals])
+
+  const filteredData = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase()
+    let data = rawData.filter((item) => {
+      if (!q) return true
+      if (activeTab === 'forex') return item.pair?.toLowerCase().includes(q)
+      return (
+        item.name?.toLowerCase().includes(q) || item.symbol?.toLowerCase().includes(q)
+      )
+    })
+
+    data = [...data].sort((a, b) => {
+      if (sortBy === 'price') return (b.price || 0) - (a.price || 0)
+      if (sortBy === 'name') {
+        const an = activeTab === 'forex' ? a.pair : a.symbol || a.name
+        const bn = activeTab === 'forex' ? b.pair : b.symbol || b.name
+        return String(an || '').localeCompare(String(bn || ''))
+      }
+      return (b.change24h || 0) - (a.change24h || 0)
+    })
+    return data
+  }, [rawData, searchTerm, sortBy, activeTab])
+
+  // Top movers strip (view only / quick jump)
+  const topMovers = useMemo(() => {
+    return [...rawData]
+      .filter((i) => i.change24h != null)
+      .sort((a, b) => Math.abs(b.change24h || 0) - Math.abs(a.change24h || 0))
+      .slice(0, 8)
+  }, [rawData])
+
+  const openTrade = (item) => {
+    const symbol = activeTab === 'forex' ? item.pair : item.symbol || item.name
+    navigate(`/trade/${activeTab}/${encodeURIComponent(symbol)}`, {
+      state: { item, type: activeTab }
+    })
   }
 
-  const formatChange = (change) => {
-    const changeMeta = getChangeMeta(change)
-    if (!changeMeta) return <span className="text-gray-500">--</span>
+  const changePill = (change) => {
+    const meta = getChangeMeta(change)
+    if (!meta) return <span className="text-[var(--fx-color-text-muted)] text-[11px]">—</span>
     return (
-      <span className={changeMeta.isPositive ? 'text-green-500' : 'text-red-500'}>
-        {changeMeta.label}
+      <span
+        className={`inline-flex min-w-[62px] justify-center px-1.5 py-1 rounded text-[11px] font-semibold tabular-nums ${
+          meta.isPositive
+            ? 'bg-emerald-500/12 text-emerald-600 dark:text-emerald-400'
+            : 'bg-rose-500/12 text-rose-600 dark:text-rose-400'
+        }`}
+      >
+        {meta.label}
       </span>
     )
   }
 
-  // Popular coins/items to show at top
-  const getPopularItems = () => {
-    if (activeTab === 'crypto') {
-      return ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'MATIC', 'LINK']
-    } else if (activeTab === 'stocks') {
-      return ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX']
-    } else if (activeTab === 'forex') {
-      return ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD']
-    } else if (activeTab === 'metals') {
-      return ['Gold', 'Silver', 'Platinum', 'Palladium']
-    }
-    return []
-  }
-
-  // Filter and sort data
-  const getFilteredAndSortedData = () => {
-    let data = []
-    
-    switch (activeTab) {
-      case 'crypto':
-        data = cryptoData
-        break
-      case 'stocks':
-        data = stocks
-        break
-      case 'forex':
-        data = forex
-        break
-      case 'metals':
-        data = metals
-        break
-      default:
-        data = []
-    }
-
-    // Filter by search term
-    let filtered = data.filter(item => {
-      if (activeTab === 'forex') {
-        return item.pair?.toLowerCase().includes(searchTerm.toLowerCase())
-      }
-      return (
-        item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.symbol?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    })
-
-    // Separate popular and other items
-    const popularSymbols = getPopularItems()
-    const popularItems = []
-    const otherItems = []
-
-    filtered.forEach(item => {
-      const identifier = activeTab === 'forex' ? item.pair : (item.symbol || item.name)
-      if (popularSymbols.some(pop => identifier?.toUpperCase().includes(pop.toUpperCase()))) {
-        popularItems.push(item)
-      } else {
-        otherItems.push(item)
-      }
-    })
-
-    // Sort both groups
-    const sortItems = (items) => {
-      return items.sort((a, b) => {
-        let aVal, bVal
-        
-        switch (sortBy) {
-          case 'price':
-            aVal = a.price || 0
-            bVal = b.price || 0
-            break
-          case 'change':
-            aVal = a.change24h || 0
-            bVal = b.change24h || 0
-            break
-          default: // name
-            aVal = activeTab === 'forex' ? a.pair : a.name || a.symbol
-            bVal = activeTab === 'forex' ? b.pair : b.name || b.symbol
-        }
-        
-        if (typeof aVal === 'string') {
-          return sortOrder === 'asc' 
-            ? aVal.localeCompare(bVal)
-            : bVal.localeCompare(aVal)
-        }
-        
-        return sortOrder === 'asc' ? aVal - bVal : bVal - aVal
-      })
-    }
-
-    // Return popular items first, then others
-    return [...sortItems(popularItems), ...sortItems(otherItems)]
-  }
-
-  const filteredData = getFilteredAndSortedData()
-
   return (
-    <div className="fx-page text-gray-900 dark:text-white transition-colors pb-20">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-700 shadow-sm backdrop-blur">
-        <div className="px-4 py-3 flex items-center space-x-3">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div className="flex-1">
-            <PageHeader title="Market" description="Live prices across crypto, forex, stocks, and metals." />
+    <div className="fx-page min-h-screen pb-24">
+      {/* Binance-style sticky top */}
+      <header className="sticky top-0 z-40 bg-[var(--fx-color-surface)] border-b border-[var(--fx-color-border)]">
+        <div className="max-w-3xl mx-auto">
+          {/* Title row */}
+          <div className="h-12 px-4 flex items-center justify-between">
+            <h1 className="text-[16px] font-semibold tracking-tight">Markets</h1>
+            <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => fetchAllData(false)}
+                className="p-2 rounded-lg text-[var(--fx-color-text-muted)] hover:bg-[var(--fx-color-surface-muted)]"
+                aria-label="Refresh"
+              >
+                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+              <NotificationBell />
+            </div>
           </div>
+
+          {/* Search — always prominent */}
+          <div className="px-4 pb-2.5">
+            <div className="relative">
+              <svg
+                className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fx-color-text-muted)]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search coin / pair"
+                className="w-full h-10 pl-9 pr-3 rounded-lg bg-[var(--fx-color-bg)] border border-[var(--fx-color-border)] text-[13px] placeholder:text-[var(--fx-color-text-muted)] focus:outline-none focus:border-[var(--fx-color-primary)]"
+              />
+            </div>
+          </div>
+
+          {/* Market type tabs */}
+          <div className="px-4 flex gap-5 border-b border-[var(--fx-color-border)] overflow-x-auto scrollbar-hide">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  setActiveTab(tab.id)
+                  setSearchTerm('')
+                }}
+                className={`relative pb-2.5 text-[13px] whitespace-nowrap transition ${
+                  activeTab === tab.id
+                    ? 'text-[var(--fx-color-text)] font-semibold'
+                    : 'text-[var(--fx-color-text-muted)] font-medium'
+                }`}
+              >
+                {tab.label}
+                {activeTab === tab.id && (
+                  <span className="absolute left-0 right-0 bottom-0 h-0.5 rounded-full bg-[var(--fx-color-primary)]" />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Crypto sub-categories */}
+          {activeTab === 'crypto' && (
+            <div className="px-4 py-2 flex gap-1.5 overflow-x-auto scrollbar-hide">
+              {CRYPTO_CATS.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setCryptoCategory(c.id)}
+                  className={`h-7 px-3 rounded-full text-[11px] font-medium whitespace-nowrap transition ${
+                    cryptoCategory === c.id
+                      ? 'bg-[var(--fx-color-primary)] text-white'
+                      : 'bg-[var(--fx-color-surface-muted)] text-[var(--fx-color-text-muted)]'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Tabs */}
-      <div className="sticky top-[89px] z-30 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-700 backdrop-blur">
-        <div className="px-2 sm:px-4">
-          <div className="flex space-x-1 overflow-x-auto scrollbar-hide -mb-px">
-            {[
-              { id: 'crypto', label: 'Crypto', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-              { id: 'stocks', label: 'Stocks', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
-              { id: 'forex', label: 'Forex', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-              { id: 'metals', label: 'Metals', icon: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-t-lg text-xs sm:text-sm font-medium whitespace-nowrap transition active:scale-95 ${
-                  activeTab === tab.id
-                    ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 border-b-2 border-cyan-500'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
-                </svg>
-                <span>{tab.label}</span>
-              </button>
-            ))}
+      <main className="max-w-3xl mx-auto">
+        {/* Top movers strip */}
+        {!searchTerm && topMovers.length > 0 && (
+          <div className="px-4 py-3 border-b border-[var(--fx-color-border)]">
+            <p className="text-[11px] font-medium text-[var(--fx-color-text-muted)] mb-2 uppercase tracking-wide">
+              Top movers
+            </p>
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5">
+              {topMovers.map((item, i) => {
+                const label = activeTab === 'forex' ? item.pair : item.symbol || item.name
+                const up = (item.change24h || 0) >= 0
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => openTrade(item)}
+                    className="shrink-0 min-w-[108px] rounded-xl border border-[var(--fx-color-border)] bg-[var(--fx-color-surface)] px-3 py-2.5 text-left hover:border-[var(--fx-color-primary)] transition"
+                  >
+                    <p className="text-[12px] font-semibold truncate">{label}</p>
+                    <p className="text-[12px] font-medium tabular-nums mt-0.5">
+                      {activeTab === 'forex' ? item.price : `$${formatMarketPrice(item.price)}`}
+                    </p>
+                    <p
+                      className={`text-[11px] font-semibold tabular-nums mt-0.5 ${
+                        up ? 'text-emerald-500' : 'text-rose-500'
+                      }`}
+                    >
+                      {up ? '+' : ''}
+                      {(item.change24h || 0).toFixed(2)}%
+                    </p>
+                  </button>
+                )
+              })}
+            </div>
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* Crypto Category Filter (only for crypto tab) */}
-      {activeTab === 'crypto' && (
-        <div className="px-3 sm:px-4 py-2 sm:py-3 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
-          <div className="flex space-x-1.5 sm:space-x-2 overflow-x-auto scrollbar-hide">
-            {['hot', 'gainers', 'losers', 'new', 'alpha', 'favourites'].map((category) => (
-              <button
-                key={category}
-                onClick={() => setCryptoCategory(category)}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition active:scale-95 ${
-                  cryptoCategory === category
-                    ? 'bg-gradient-to-r from-cyan-500 to-indigo-500 text-white'
-                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                }`}
-              >
-                {category.charAt(0).toUpperCase() + category.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Search and Sort Bar */}
-      <div className="px-3 sm:px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
-        <div className="flex flex-col gap-2">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              placeholder={`Search ${activeTab}...`}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="fx-input w-full pl-9 text-sm"
-            />
-            <svg className="w-4 h-4 absolute left-2.5 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-
-          {/* Sort - Mobile optimized */}
-          <div className="flex items-center gap-2">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="fx-select flex-1 px-2 py-2 text-xs sm:text-sm"
-            >
-              <option value="name">Name</option>
-              <option value="price">Price</option>
-              <option value="change">Change</option>
-            </select>
+        {/* Column headers + sort */}
+        <div className="px-4 py-2 flex items-center justify-between text-[10px] font-medium uppercase tracking-wide text-[var(--fx-color-text-muted)]">
+          <button
+            type="button"
+            onClick={() => setSortBy('name')}
+            className={sortBy === 'name' ? 'text-[var(--fx-color-primary)]' : ''}
+          >
+            Name
+          </button>
+          <div className="flex gap-4">
             <button
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              className="p-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95"
+              type="button"
+              onClick={() => setSortBy('price')}
+              className={sortBy === 'price' ? 'text-[var(--fx-color-primary)]' : ''}
             >
-              {sortOrder === 'asc' ? (
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              )}
+              Last price
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortBy('change')}
+              className={`w-[68px] text-right ${sortBy === 'change' ? 'text-[var(--fx-color-primary)]' : ''}`}
+            >
+              24h %
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Market Data Table */}
-      <main className="px-3 sm:px-4 py-3 sm:py-4">
-        {/* Desktop Table View */}
-        <div className="hidden sm:block fx-card overflow-hidden">
-          {/* Table Header */}
-          <div className="grid grid-cols-4 gap-4 p-3 sm:p-4 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 font-semibold text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-            <div className="col-span-2">Name</div>
-            <div className="text-right">Price</div>
-            <div className="text-right">24h Change</div>
-          </div>
-
-          {/* Table Body */}
-          <div className="divide-y divide-slate-200 dark:divide-slate-700 max-h-[calc(100vh-300px)] overflow-y-auto">
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
-              </div>
-            ) : filteredData.length > 0 ? (
-              <>
-                {/* Popular Section Header */}
-                {!searchTerm && (() => {
-                  const popularSymbols = getPopularItems()
-                  const hasPopular = filteredData.some(item => {
-                    const identifier = activeTab === 'forex' ? item.pair : (item.symbol || item.name)
-                    return popularSymbols.some(pop => identifier?.toUpperCase().includes(pop.toUpperCase()))
-                  })
-                  return hasPopular
-                })() && (
-                  <div className="px-4 py-2 bg-cyan-50 dark:bg-cyan-900/20 border-b border-cyan-200 dark:border-cyan-800">
-                    <div className="flex items-center space-x-2">
-                      <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <span className="text-xs font-semibold text-cyan-700 dark:text-cyan-300">Popular</span>
-                    </div>
-                  </div>
-                )}
-                {filteredData.map((item, index) => {
-                  const displayName = activeTab === 'forex' ? item.pair : item.name
-                  const displaySymbol = activeTab === 'forex' ? '' : item.symbol
-                  const displayPrice = activeTab === 'forex' ? item.price : `$${formatPrice(item.price)}`
-                  const displayUnit = activeTab === 'metals' ? ` • ${item.unit}` : ''
-                  const identifier = activeTab === 'forex' ? item.pair : (item.symbol || item.name)
-                  const popularSymbols = getPopularItems()
-                  const isPopular = !searchTerm && popularSymbols.some(pop => identifier?.toUpperCase().includes(pop.toUpperCase()))
-                  const isLastPopular = isPopular && filteredData[index + 1] && (() => {
-                    const nextIdentifier = activeTab === 'forex' ? filteredData[index + 1].pair : (filteredData[index + 1].symbol || filteredData[index + 1].name)
-                    return !popularSymbols.some(pop => nextIdentifier?.toUpperCase().includes(pop.toUpperCase()))
-                  })()
-                  
-                return (
-                  <div
-                    key={index}
-                    className={`grid grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer active:bg-slate-100 dark:active:bg-slate-700 ${
-                      isPopular ? 'bg-cyan-50 dark:bg-cyan-900/20' : ''
-                    } ${isLastPopular ? 'border-b-2 border-cyan-200 dark:border-cyan-800 mb-2' : ''}`}
-                    onClick={() => {
-                      navigate(`/trade/${activeTab}/${encodeURIComponent(activeTab === 'forex' ? item.pair : item.symbol || item.name)}`, {
-                        state: { item, type: activeTab }
-                      })
-                    }}
-                  >
-                    <div className="col-span-2 flex items-center space-x-2 sm:space-x-3 min-w-0">
-                      {item.image && activeTab !== 'crypto' && (
-                        <img src={item.image} alt={displayName} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex-shrink-0" />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-xs sm:text-sm truncate">{displayName}</div>
-                        {displaySymbol && (
-                          <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                            {displaySymbol}{displayUnit}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right flex flex-col justify-center">
-                      <div className="font-semibold text-xs sm:text-sm">{displayPrice}</div>
-                    </div>
-                    <div className="text-right flex flex-col justify-center">
-                      <div className="text-xs sm:text-sm">{formatChange(item.change24h)}</div>
-                    </div>
-                  </div>
-                  )
-                })}
-              </>
-            ) : (
-              <div className="py-10">
-                <EmptyState title={searchTerm ? 'No results found' : 'No market data available'} icon="market" />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Card View */}
-        <div className="sm:hidden space-y-2">
+        {/* List */}
+        <div className="divide-y divide-[var(--fx-color-border)] pb-4">
           {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+            <div className="py-16 flex justify-center">
+              <div className="w-7 h-7 rounded-full border-2 border-[var(--fx-color-primary)] border-t-transparent animate-spin" />
             </div>
-          ) : filteredData.length > 0 ? (
-            <>
-              {/* Popular Section Header for Mobile */}
-              {!searchTerm && (() => {
-                const popularSymbols = getPopularItems()
-                const hasPopular = filteredData.some(item => {
-                  const identifier = activeTab === 'forex' ? item.pair : (item.symbol || item.name)
-                  return popularSymbols.some(pop => identifier?.toUpperCase().includes(pop.toUpperCase()))
-                })
-                return hasPopular
-              })() && (
-                <div className="px-3 py-2 bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg mb-2">
-                  <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    <span className="text-xs font-semibold text-cyan-700 dark:text-cyan-300">Popular</span>
-                  </div>
-                </div>
-              )}
-              {filteredData.map((item, index) => {
-                const displayName = activeTab === 'forex' ? item.pair : item.name
-                const displaySymbol = activeTab === 'forex' ? '' : item.symbol
-                const displayPrice = activeTab === 'forex' ? item.price : `$${formatPrice(item.price)}`
-                const displayUnit = activeTab === 'metals' ? ` • ${item.unit}` : ''
-                const identifier = activeTab === 'forex' ? item.pair : (item.symbol || item.name)
-                const popularSymbols = getPopularItems()
-                const isPopular = !searchTerm && popularSymbols.some(pop => identifier?.toUpperCase().includes(pop.toUpperCase()))
-                
-                return (
-                  <div
-                    key={index}
-                    onClick={() => {
-                      navigate(`/trade/${activeTab}/${encodeURIComponent(activeTab === 'forex' ? item.pair : item.symbol || item.name)}`, {
-                        state: { item, type: activeTab }
-                      })
-                    }}
-                    className={`bg-white dark:bg-slate-900 rounded-lg border ${
-                      isPopular 
-                        ? 'border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-900/20' 
-                        : 'border-slate-200 dark:border-slate-700'
-                    } p-3 active:scale-[0.98] transition cursor-pointer`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        {item.image && activeTab !== 'crypto' && (
-                          <img src={item.image} alt={displayName} className="w-10 h-10 rounded-full flex-shrink-0" />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="font-semibold text-sm truncate">{displayName}</div>
-                          {displaySymbol && (
-                            <div className="text-xs text-slate-500 dark:text-slate-400">
-                              {displaySymbol}{displayUnit}
-                            </div>
-                          )}
-                        </div>
+          ) : filteredData.length === 0 ? (
+            <div className="py-16 text-center">
+              <p className="text-[13px] font-medium">No results</p>
+              <p className="text-[12px] text-[var(--fx-color-text-muted)] mt-1">Try another search</p>
+            </div>
+          ) : (
+            filteredData.map((item, index) => {
+              const name = activeTab === 'forex' ? item.pair : item.symbol || item.name
+              const sub = activeTab === 'forex' ? 'FX' : item.name
+              const price =
+                activeTab === 'forex' ? item.price : `$${formatMarketPrice(item.price)}`
+
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => openTrade(item)}
+                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--fx-color-surface-muted)]/60 transition text-left"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    {activeTab === 'crypto' ? (
+                      <CoinLogo symbol={item.symbol} image={item.image} name={item.name} size="sm" />
+                    ) : item.image ? (
+                      <img src={item.image} alt="" className="w-8 h-8 rounded-full shrink-0 object-cover" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-[var(--fx-color-surface-muted)] flex items-center justify-center text-[10px] font-bold shrink-0">
+                        {String(name || '?').slice(0, 2)}
                       </div>
-                      <div className="flex flex-col items-end space-y-1 flex-shrink-0 ml-2">
-                        <div className="font-semibold text-sm">{displayPrice}</div>
-                        <div className="text-xs">{formatChange(item.change24h)}</div>
-                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold truncate">{name}</p>
+                      {sub && sub !== name && (
+                        <p className="text-[11px] text-[var(--fx-color-text-muted)] truncate">{sub}</p>
+                      )}
                     </div>
                   </div>
-                )
-              })}
-            </>
-          ) : (
-            <div className="py-10">
-              <EmptyState title={searchTerm ? 'No results found' : 'No market data available'} icon="market" />
-            </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-[13px] font-semibold tabular-nums">{price}</p>
+                  </div>
+                  <div className="w-[68px] flex justify-end shrink-0">{changePill(item.change24h)}</div>
+                </button>
+              )
+            })
           )}
         </div>
       </main>
 
-      {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-700 z-30 safe-area-bottom backdrop-blur">
-        <div className="flex items-center justify-around px-2 py-2">
-          {[
-            { name: 'Home', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', route: '/dashboard' },
-            { name: 'Market', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', route: '/market' },
-            { name: 'Trade', icon: 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z', route: '/trade' },
-            { name: 'History', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', route: '/history' },
-            { name: 'Asset', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', route: '/asset' },
-            // { 
-            //   name: 'Profile', 
-            //   icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', 
-            //   route: '/profile',
-            //   isAction: false
-            // },
-            // { 
-            //   name: 'Logout', 
-            //   icon: 'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1', 
-            //   route: null,
-            //   isAction: true
-            // }
-          ].map((item, index) => (
-            <button
-              key={index}
-              onClick={() => item.route && navigate(item.route)}
-              className={`flex flex-col items-center space-y-1 px-2 py-1.5 rounded-lg transition flex-1 ${
-                location.pathname === item.route
-                  ? 'text-cyan-600 dark:text-cyan-400'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-              </svg>
-              <span className="text-xs font-medium">{item.name}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
+      <BottomNav />
     </div>
   )
 }
-

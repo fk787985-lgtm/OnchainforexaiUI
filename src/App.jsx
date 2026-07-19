@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { ThemeProvider } from './context/ThemeContext'
 import { SiteSettingsProvider } from './context/SiteSettingsContext'
+import { NotificationProvider } from './context/NotificationContext'
 import MetaTags from './components/MetaTags'
 import PageLoader from './components/common/PageLoader'
 
@@ -24,6 +25,7 @@ const Market = lazy(() => import('./pages/Market'))
 const Trade = lazy(() => import('./pages/Trade'))
 const TradeDetail = lazy(() => import('./pages/TradeDetail'))
 const Asset = lazy(() => import('./pages/Asset'))
+const BuyCrypto = lazy(() => import('./pages/BuyCrypto'))
 const History = lazy(() => import('./pages/History'))
 const OrderDetail = lazy(() => import('./pages/OrderDetail'))
 const WithdrawalDetail = lazy(() => import('./pages/WithdrawalDetail'))
@@ -35,11 +37,14 @@ const Enable2FA = lazy(() => import('./pages/Enable2FA'))
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
 const HelpSupport = lazy(() => import('./pages/HelpSupport'))
 const CustomerService = lazy(() => import('./pages/CustomerService'))
+const Notifications = lazy(() => import('./pages/Notifications'))
+const GoogleCompleteProfile = lazy(() => import('./pages/GoogleCompleteProfile'))
 
 function App() {
   return (
     <ThemeProvider>
       <SiteSettingsProvider>
+        <NotificationProvider mode="user">
         <MetaTags />
         <Toaster
         position="top-right"
@@ -79,6 +84,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/confirm-email" element={<ConfirmEmail />} />
+            <Route path="/auth/complete-profile" element={<GoogleCompleteProfile />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/subadmin/dashboard" element={<SubAdminDashboard />} />
@@ -90,6 +96,7 @@ function App() {
             <Route path="/trade" element={<Trade />} />
             <Route path="/trade/:type/:symbol" element={<TradeDetail />} />
             <Route path="/asset" element={<Asset />} />
+            <Route path="/buy" element={<BuyCrypto />} />
             <Route path="/history" element={<History />} />
             <Route path="/order/:tradeId" element={<OrderDetail />} />
             <Route path="/withdrawal/:id" element={<WithdrawalDetail />} />
@@ -103,10 +110,12 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/help-support" element={<HelpSupport />} />
             <Route path="/customer-service" element={<CustomerService />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/kyc/verify" element={<KYCVerify />} />
           </Routes>
         </Suspense>
       </Router>
+        </NotificationProvider>
       </SiteSettingsProvider>
     </ThemeProvider>
   )

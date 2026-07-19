@@ -13,12 +13,17 @@ import TransferLogList from '../components/admin/TransferLogList'
 import BalanceLogsList from '../components/admin/BalanceLogsList'
 import KYCLogList from '../components/admin/KYCLogList'
 import KYCSettings from '../components/admin/KYCSettings'
+import BuyTransactionsList from '../components/admin/BuyTransactionsList'
+import TelegramSettings from '../components/admin/TelegramSettings'
+import AdminNotificationCenter from '../components/admin/AdminNotificationCenter'
 import ChatManagement from '../components/admin/ChatManagement'
 import SiteSettings from '../components/admin/SiteSettings'
 import NotifyUsers from '../components/admin/NotifyUsers'
 import SubAdminManagement from '../components/admin/SubAdminManagement'
 import ChangePasswordModal from '../components/admin/ChangePasswordModal'
 import PageHeader from '../components/ui/PageHeader'
+import { NotificationProvider } from '../context/NotificationContext'
+import NotificationBell from '../components/notifications/NotificationBell'
 import Breadcrumbs from '../components/ui/Breadcrumbs'
 import Badge from '../components/ui/Badge'
 
@@ -93,9 +98,12 @@ export default function AdminDashboard() {
       'deposits': 'Deposit Log',
       'withdrawals': 'Withdrawal Log',
       'transfers': 'Transfer Log',
+      'buy-transactions': 'Buy Transactions',
       'balance-logs': 'Balance Logs',
-      'kyc': 'KYC Log',
+      'kyc': 'KYC Management',
       'kyc-settings': 'KYC Settings',
+      'notifications': 'Notification Center',
+      'telegram': 'Telegram',
       'chat': 'Customer Service',
       'notify-users': 'Notify Users',
       'subadmins': 'Sub-Admins',
@@ -116,6 +124,7 @@ export default function AdminDashboard() {
   }
 
   return (
+    <NotificationProvider mode="admin">
     <div className="fx-page transition-colors">
       <AdminSidebar
         activeTab={activeTab}
@@ -134,9 +143,13 @@ export default function AdminDashboard() {
             <Breadcrumbs items={[{ label: 'Admin' }, { label: getTabTitle() }]} />
             <div className="flex justify-between items-start gap-4">
               <PageHeader title={getTabTitle()} description="Manage users, risk controls, operations, and platform settings." />
-              <div className="hidden lg:flex items-center gap-2">
-                <Badge label="Secure Admin Mode" status="verified" />
-                <ThemeToggle />
+              <div className="flex items-center gap-2">
+                {/* Desktop: full controls. Mobile uses top bar bell in AdminSidebar. */}
+                <div className="hidden lg:flex items-center gap-2">
+                  <NotificationBell />
+                  <Badge label="Secure Admin Mode" status="verified" />
+                  <ThemeToggle />
+                </div>
               </div>
             </div>
           </div>
@@ -152,9 +165,12 @@ export default function AdminDashboard() {
           {activeTab === 'deposits' && <DepositLogList />}
           {activeTab === 'withdrawals' && <WithdrawalLogList />}
           {activeTab === 'transfers' && <TransferLogList />}
+          {activeTab === 'buy-transactions' && <BuyTransactionsList />}
           {activeTab === 'balance-logs' && <BalanceLogsList />}
           {activeTab === 'kyc' && <KYCLogList />}
           {activeTab === 'kyc-settings' && <KYCSettings />}
+          {activeTab === 'notifications' && <AdminNotificationCenter />}
+          {activeTab === 'telegram' && <TelegramSettings />}
           {activeTab === 'chat' && <ChatManagement />}
           {activeTab === 'notify-users' && <NotifyUsers />}
           {activeTab === 'subadmins' && <SubAdminManagement />}
@@ -168,5 +184,6 @@ export default function AdminDashboard() {
         onClose={() => setShowChangePassword(false)}
       />
     </div>
+    </NotificationProvider>
   )
 }

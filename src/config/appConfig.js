@@ -51,14 +51,14 @@ export const config = {
   // Additional config can be added here
 }
 
-// Log configuration in development
+// Log configuration in development only
 if (import.meta.env.DEV) {
   console.log('🔧 Frontend Configuration:', {
     environment: import.meta.env.VITE_APP_ENV || 'development',
     mode: import.meta.env.MODE,
     apiUrl: API_URL || '(empty - using Vite proxy)',
     frontendUrl: FRONTEND_URL,
-    viteApiUrl: import.meta.env.VITE_API_URL || '(not set)',
+    viteApiUrl: import.meta.env.VITE_API_URL || '(not set)'
   })
 }
 

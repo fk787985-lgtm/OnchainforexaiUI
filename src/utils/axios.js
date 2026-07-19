@@ -61,8 +61,18 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      window.location.href = '/signin'
+      const url = String(error.config?.url || '')
+      // Don't force-logout on background notification polls (avoids loop/noise)
+      const isBackgroundPoll =
+        url.includes('/notifications/unread-count') ||
+        url.includes('/api/notifications/unread-count')
+      if (!isBackgroundPoll) {
+        localStorage.removeItem('token')
+        const path = window.location.pathname || ''
+        if (!path.startsWith('/signin') && !path.startsWith('/admin/signin')) {
+          window.location.href = path.startsWith('/admin') ? '/admin/signin' : '/signin'
+        }
+      }
     }
     return Promise.reject(error)
   }

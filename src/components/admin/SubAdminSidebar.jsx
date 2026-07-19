@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import ThemeToggle from '../ThemeToggle'
+import NotificationBell from '../notifications/NotificationBell'
 import { useSiteSettings } from '../../context/SiteSettingsContext'
 import api from '../../utils/axios'
 import { getImageUrl } from '../../utils/imageUrl.js'
@@ -157,7 +158,7 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
                     className="w-8 h-8 rounded-lg object-contain"
                   />
                 ) : (
-                  <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#0b1426] to-[#1199fa] rounded-lg flex items-center justify-center">
                     <span className="text-white font-bold text-sm">
                       {siteSettings.site.name.charAt(0).toUpperCase()}
                     </span>
@@ -185,7 +186,7 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
           {currentUser && (
           <div className="p-4 border-b border-slate-200 dark:border-slate-700">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#0b1426] to-[#1199fa] rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold text-sm">
                     {currentUser.fullName?.charAt(0).toUpperCase() || 'S'}
                   </span>
@@ -209,10 +210,10 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
                 <li key={item.id}>
                   <button
                     onClick={() => handleTabClick(item.id)}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors border ${
                       activeTab === item.id
-                        ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'bg-[#1199fa]/12 text-[#0b7dd4] dark:text-sky-300 border-[#1199fa]/30'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border-transparent'
                     }`}
                   >
                     <span className="text-lg">{item.icon}</span>
@@ -244,7 +245,7 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
             {onChangePassword && (
               <button
                 onClick={onChangePassword}
-                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white transition-colors font-semibold"
+                className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-gradient-to-r from-[#1199fa] to-[#0b7dd4] hover:brightness-110 text-white transition font-semibold shadow-md shadow-blue-500/20"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -265,16 +266,29 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
         </div>
       </aside>
 
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setSidebarOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700"
-      >
-        <svg className="w-6 h-6 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-
+      {/* Mobile top bar — menu + notifications */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-700 px-3 py-2.5 flex items-center justify-between gap-2 backdrop-blur">
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
+            aria-label="Open menu"
+          >
+            <svg className="w-6 h-6 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <span className="text-base font-extrabold tracking-tight text-[#0b1426] dark:text-white truncate">
+            {siteSettings.site.name || 'XCrypto'}{' '}
+            <span className="text-[#1199fa]">Staff</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-0.5 shrink-0">
+          <NotificationBell />
+          <ThemeToggle />
+        </div>
+      </div>
     </>
   )
 }

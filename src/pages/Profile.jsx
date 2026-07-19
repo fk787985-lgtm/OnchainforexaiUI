@@ -117,8 +117,8 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+      <div className="fx-page flex items-center justify-center">
+        <div className="h-11 w-11 rounded-full border-4 border-blue-200 dark:border-blue-900 border-t-[#1199fa] animate-spin" />
       </div>
     )
   }
@@ -169,93 +169,194 @@ export default function Profile() {
     }
   }
 
+  const tabs = [
+    { id: 'personal', label: 'Overview', path: '/profile' },
+    { id: 'deposits', label: 'Deposits', path: '/profile/deposits' },
+    { id: 'withdrawals', label: 'Withdrawals', path: '/profile/withdrawals' },
+    { id: 'transfers', label: 'Transfers', path: '/profile/transfers' }
+  ]
+
   return (
-    <div className="fx-page bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pb-20">
-      {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-700/60 shadow-lg">
-        <div className="px-4 py-4 flex items-center space-x-3">
+    <div className="fx-page pb-24">
+      <header className="sticky top-0 z-50 bg-[var(--fx-color-surface)]/90 backdrop-blur-xl border-b border-[var(--fx-color-border)]">
+        <div className="max-w-2xl mx-auto px-4 py-3.5 flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition flex items-center justify-center group"
+            className="p-2 -ml-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             aria-label="Go back"
           >
-            <svg className="w-6 h-6 text-gray-900 dark:text-white transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.25} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
-            {getSectionIcon()}
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">{getSectionTitle()}</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-extrabold tracking-tight truncate">{getSectionTitle()}</h1>
+            <p className="text-xs text-[var(--fx-color-text-muted)]">Account · Wallet · History</p>
           </div>
+          <button
+            type="button"
+            onClick={() => navigate('/settings')}
+            className="fx-btn fx-btn-ghost fx-btn-sm !px-3"
+          >
+            Settings
+          </button>
+        </div>
+        <div className="max-w-2xl mx-auto px-4 pb-3 flex gap-1.5 overflow-x-auto scrollbar-hide">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => navigate(t.path)}
+              className={`px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition ${
+                activeSection === t.id
+                  ? 'bg-[#1199fa] text-white shadow-md shadow-blue-500/25'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       </header>
 
-      {/* Content */}
-      <main className="px-4 py-6 pt-24 space-y-4">
-        <Breadcrumbs items={[{ label: 'Account' }, { label: getSectionTitle() }]} />
-        <PageHeader title={getSectionTitle()} description="Review profile, KYC status, and account transaction history." />
+      <main className="max-w-2xl mx-auto px-4 py-5 space-y-4">
         {activeSection === 'personal' && (
-          <div className="space-y-6">
-            {/* User Info Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-2xl">
+          <div className="space-y-4">
+            {/* Crypto.com-style wallet hero */}
+            <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-[#0b1426] via-[#0f1c33] to-[#1199fa] p-5 sm:p-6 text-white shadow-xl">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-2xl font-extrabold shrink-0">
                     {user?.fullName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
-                  </span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-white/70 font-medium">Total balance</p>
+                    <p className="text-2xl sm:text-3xl font-extrabold tracking-tight truncate">
+                      {Number(user?.balance || 0).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })}{' '}
+                      <span className="text-base font-semibold text-white/80">USDT</span>
+                    </p>
+                    <p className="text-sm text-white/80 truncate mt-0.5">{user?.fullName || 'Trader'}</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">{user?.fullName || 'N/A'}</h2>
-                  <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500">ID: {user?.uniqueId || 'N/A'}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                  <span className="text-gray-600 dark:text-gray-400">Phone</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{user?.phone || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                  <span className="text-gray-600 dark:text-gray-400">Balance</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{user?.balance?.toFixed(2) || '0.00'} USDT</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                  <span className="text-gray-600 dark:text-gray-400">Email Verified</span>
-                  <span className={`font-semibold ${user?.isEmailVerified ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {user?.isEmailVerified ? 'Yes' : 'No'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* KYC Status Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">KYC Verification</h3>
                 {kycStatus?.isVerified ? (
-                  <Badge label="Verified" status="verified" />
-                ) : kycStatus?.kyc?.status === 'pending' ? (
-                  <Badge label="Under Review" status="pending" />
-                ) : kycStatus?.kyc?.status === 'rejected' ? (
-                  <Badge label="Rejected" status="rejected" />
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">
+                    Verified
+                  </span>
                 ) : (
-                  <button
-                    onClick={() => navigate('/kyc/verify')}
-                    className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-semibold"
-                  >
-                    Verify Now
-                  </button>
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400/20 text-amber-100 border border-amber-300/30">
+                    Unverified
+                  </span>
                 )}
               </div>
-              {kycStatus?.kyc?.rejectionReason && (
-                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                  <p className="text-sm text-red-700 dark:text-red-400">
-                    <strong>Rejection Reason:</strong> {kycStatus.kyc.rejectionReason}
+              <div className="mt-5 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigate('/buy')}
+                  className="fx-btn fx-btn-sm !bg-white !text-[#0b1426] !font-bold"
+                >
+                  Buy crypto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard')}
+                  className="fx-btn fx-btn-sm !bg-white/12 !text-white !border !border-white/20"
+                >
+                  Trade
+                </button>
+              </div>
+            </div>
+
+            <div className="fx-card p-5">
+              <h2 className="fx-section-title mb-4">Personal details</h2>
+              <dl className="space-y-0 divide-y divide-[var(--fx-color-border)]">
+                {[
+                  { l: 'Full name', v: user?.fullName || '—' },
+                  { l: 'Email', v: user?.email || '—' },
+                  { l: 'User ID', v: user?.uniqueId || '—' },
+                  { l: 'Phone', v: user?.phone || '—' },
+                  {
+                    l: 'Email verified',
+                    v: user?.isEmailVerified ? 'Yes' : 'No',
+                    ok: user?.isEmailVerified
+                  }
+                ].map((row) => (
+                  <div key={row.l} className="flex justify-between gap-3 py-3 text-sm">
+                    <dt className="text-[var(--fx-color-text-muted)]">{row.l}</dt>
+                    <dd
+                      className={`font-semibold text-right break-all ${
+                        row.ok === true
+                          ? 'text-emerald-600'
+                          : row.ok === false
+                            ? 'text-red-500'
+                            : ''
+                      }`}
+                    >
+                      {row.v}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            <div className="fx-card p-5">
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <div>
+                  <h2 className="fx-section-title">Identity verification</h2>
+                  <p className="text-xs text-[var(--fx-color-text-muted)] mt-1">
+                    Complete KYC to unlock higher limits
                   </p>
                 </div>
+                {kycStatus?.isVerified ? (
+                  <Badge label="Verified" status="verified" />
+                ) : kycStatus?.kyc?.status === 'pending' || kycStatus?.kyc?.status === 'under_review' ? (
+                  <Badge label="Under review" status="pending" />
+                ) : kycStatus?.kyc?.status === 'rejected' ? (
+                  <Badge label="Rejected" status="rejected" />
+                ) : null}
+              </div>
+              {kycStatus?.kyc?.rejectionReason && (
+                <div className="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/30 text-sm text-red-600 dark:text-red-300">
+                  {kycStatus.kyc.rejectionReason}
+                </div>
+              )}
+              {!kycStatus?.isVerified && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/kyc/verify')}
+                  className="fx-btn fx-btn-primary fx-btn-block mt-4"
+                >
+                  {kycStatus?.kyc?.status === 'rejected' ? 'Resubmit KYC' : 'Verify identity'}
+                </button>
               )}
             </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { l: 'Deposits', p: '/profile/deposits', c: 'from-emerald-500 to-teal-600' },
+                { l: 'Withdraw', p: '/profile/withdrawals', c: 'from-rose-500 to-red-600' },
+                { l: 'Transfers', p: '/profile/transfers', c: 'from-blue-500 to-indigo-600' }
+              ].map((x) => (
+                <button
+                  key={x.l}
+                  type="button"
+                  onClick={() => navigate(x.p)}
+                  className={`rounded-2xl bg-gradient-to-br ${x.c} text-white p-3 text-center shadow-md active:scale-[0.98] transition`}
+                >
+                  <p className="text-xs font-bold">{x.l}</p>
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate('/settings')}
+              className="fx-btn fx-btn-secondary fx-btn-block"
+            >
+              Open settings
+            </button>
           </div>
         )}
 
@@ -271,7 +372,7 @@ export default function Profile() {
                     placeholder="Search deposits..."
                     value={depositsSearchQuery}
                     onChange={(e) => setDepositsSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
+                    className="fx-input"
                   />
                 </div>
                 
@@ -295,7 +396,7 @@ export default function Profile() {
                       }}
                       className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap ${
                         depositsDateFilter === filter.value
-                          ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white'
+                          ? 'bg-[#1199fa] text-white shadow-md shadow-blue-500/20'
                           : 'bg-slate-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
@@ -313,7 +414,7 @@ export default function Profile() {
                         type="date"
                         value={depositsStartDate}
                         onChange={(e) => setDepositsStartDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
+                        className="fx-input"
                       />
                     </div>
                     <div className="flex-1">
@@ -322,7 +423,7 @@ export default function Profile() {
                         type="date"
                         value={depositsEndDate}
                         onChange={(e) => setDepositsEndDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
+                        className="fx-input"
                       />
                     </div>
                   </div>
@@ -457,7 +558,7 @@ export default function Profile() {
                     placeholder="Search withdrawals..."
                     value={withdrawalsSearchQuery}
                     onChange={(e) => setWithdrawalsSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
+                    className="fx-input"
                   />
                 </div>
                 
@@ -481,7 +582,7 @@ export default function Profile() {
                       }}
                       className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap ${
                         withdrawalsDateFilter === filter.value
-                          ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white'
+                          ? 'bg-[#1199fa] text-white shadow-md shadow-blue-500/20'
                           : 'bg-slate-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
@@ -499,7 +600,7 @@ export default function Profile() {
                         type="date"
                         value={withdrawalsStartDate}
                         onChange={(e) => setWithdrawalsStartDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
+                        className="fx-input"
                       />
                     </div>
                     <div className="flex-1">
@@ -508,7 +609,7 @@ export default function Profile() {
                         type="date"
                         value={withdrawalsEndDate}
                         onChange={(e) => setWithdrawalsEndDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
+                        className="fx-input"
                       />
                     </div>
                   </div>
@@ -639,7 +740,7 @@ export default function Profile() {
                     placeholder="Search transfers..."
                     value={transfersSearchQuery}
                     onChange={(e) => setTransfersSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
+                    className="fx-input"
                   />
                 </div>
                 
@@ -663,7 +764,7 @@ export default function Profile() {
                       }}
                       className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap ${
                         transfersDateFilter === filter.value
-                          ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white'
+                          ? 'bg-[#1199fa] text-white shadow-md shadow-blue-500/20'
                           : 'bg-slate-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
@@ -681,7 +782,7 @@ export default function Profile() {
                         type="date"
                         value={transfersStartDate}
                         onChange={(e) => setTransfersStartDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
+                        className="fx-input"
                       />
                     </div>
                     <div className="flex-1">
@@ -690,7 +791,7 @@ export default function Profile() {
                         type="date"
                         value={transfersEndDate}
                         onChange={(e) => setTransfersEndDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 text-sm"
+                        className="fx-input"
                       />
                     </div>
                   </div>
@@ -827,7 +928,7 @@ export default function Profile() {
       {selectedDeposit && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-cyan-500 to-indigo-600">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-[#0b1426] to-[#1199fa]">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold text-white">Deposit Details</h3>
                 <button
@@ -929,7 +1030,7 @@ export default function Profile() {
       {selectedWithdrawal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-cyan-500 to-indigo-600">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-[#0b1426] to-[#1199fa]">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold text-white">Withdrawal Details</h3>
                 <button
@@ -1001,7 +1102,7 @@ export default function Profile() {
       {selectedTransfer && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-cyan-500 to-indigo-600">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-[#0b1426] to-[#1199fa]">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold text-white">Transfer Details</h3>
                 <button

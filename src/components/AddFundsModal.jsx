@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext'
 import { QRCodeSVG } from 'qrcode.react'
 import { getImageUrl } from '../utils/imageUrl.js'
 import toast from 'react-hot-toast'
+import CoinLogo from './common/CoinLogo'
 
 // Module-level cache for coins (persists across component unmounts)
 let coinsCache = null
@@ -412,17 +413,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                         className="p-2 sm:p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 hover:border-cyan-500 dark:hover:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition text-left"
                       >
                         <div className="flex flex-col items-center space-y-1 sm:space-y-2">
-                          {coin.image ? (
-                            <img
-                              src={getImageUrl(coin.image)}
-                              alt={coin.symbol}
-                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{coin.symbol.charAt(0)}</span>
-                            </div>
-                          )}
+                          <CoinLogo symbol={coin.symbol} image={coin.image} name={coin.name} size="sm" />
                           <div className="text-center w-full">
                             <div className="font-semibold text-xs sm:text-sm truncate text-gray-900 dark:text-white">{coin.symbol}</div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">${coin.price.toFixed(2)}</div>
@@ -448,17 +439,7 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                         className="w-full p-2.5 sm:p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 hover:border-cyan-500 dark:hover:border-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition flex items-center justify-between"
                       >
                         <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-                          {coin.image ? (
-                            <img
-                              src={getImageUrl(coin.image)}
-                              alt={coin.symbol}
-                              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex-shrink-0"
-                            />
-                          ) : (
-                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
-                              <span className="text-xs font-bold text-gray-900 dark:text-white">{coin.symbol.charAt(0)}</span>
-                            </div>
-                          )}
+                          <CoinLogo symbol={coin.symbol} image={coin.image} name={coin.name} size="sm" />
                           <div className="min-w-0 flex-1">
                             <div className="font-semibold text-xs sm:text-sm truncate text-gray-900 dark:text-white">{coin.symbol}</div>
                             <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{coin.name}</div>
@@ -485,17 +466,12 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
                 <div className="flex-shrink-0 pb-3 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      {selectedPaymentCoin.image ? (
-                        <img
-                          src={getImageUrl(selectedPaymentCoin.image)}
-                          alt={selectedPaymentCoin.symbol}
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-                          <span className="text-base sm:text-lg font-bold text-gray-700 dark:text-gray-300">{selectedPaymentCoin.symbol.charAt(0)}</span>
-                        </div>
-                      )}
+                      <CoinLogo
+                        symbol={selectedPaymentCoin.symbol}
+                        image={selectedPaymentCoin.image}
+                        name={selectedPaymentCoin.name}
+                        size="lg"
+                      />
                       <div>
                         <div className="font-bold text-base sm:text-lg text-gray-900 dark:text-white">{selectedPaymentCoin.name}</div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">{selectedPaymentCoin.symbol}</div>
@@ -700,17 +676,12 @@ export default function AddFundsModal({ isOpen, onClose, selectedCoin, onSuccess
               {selectedPaymentCoin && (
                 <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                   <div className="flex items-center space-x-3 mb-2">
-                    {selectedPaymentCoin.image ? (
-                      <img
-                        src={getImageUrl(selectedPaymentCoin.image)}
-                        alt={selectedPaymentCoin.symbol}
-                        className="w-12 h-12 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-700 dark:text-gray-300">{selectedPaymentCoin.symbol.charAt(0)}</span>
-                      </div>
-                    )}
+                    <CoinLogo
+                      symbol={selectedPaymentCoin.symbol}
+                      image={selectedPaymentCoin.image}
+                      name={selectedPaymentCoin.name}
+                      size="lg"
+                    />
                     <div>
                       <div className="font-bold text-lg text-gray-900 dark:text-white">{selectedPaymentCoin.symbol}</div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">{selectedPaymentCoin.name}</div>

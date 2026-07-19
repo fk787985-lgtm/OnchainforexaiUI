@@ -3,6 +3,7 @@ import api from '../../utils/axios'
 import { getImageUrl } from '../../utils/imageUrl.js'
 import PageHeader from '../ui/PageHeader'
 import EmptyState from '../ui/EmptyState'
+import CoinLogo from '../common/CoinLogo'
 
 export default function CoinsList() {
   const [coins, setCoins] = useState([])
@@ -219,20 +220,7 @@ export default function CoinsList() {
                 coins.map((coin) => (
                   <tr key={coin._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                      {coin.image ? (
-                        <img
-                          src={getImageUrl(coin.image)}
-                          alt={coin.symbol}
-                          className="w-10 h-10 rounded-full"
-                          onError={(e) => {
-                            e.target.style.display = 'none'
-                          }}
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                          <span className="text-xs font-bold">{coin.symbol.charAt(0)}</span>
-                        </div>
-                      )}
+                      <CoinLogo symbol={coin.symbol} image={coin.image} name={coin.name} />
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-semibold">{coin.symbol}</td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm">{coin.name}</td>
@@ -286,13 +274,7 @@ export default function CoinsList() {
               <div key={coin._id} className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    {coin.image ? (
-                      <img src={getImageUrl(coin.image)} alt={coin.symbol} className="w-10 h-10 rounded-full" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-slate-300 dark:bg-slate-700 flex items-center justify-center text-xs font-bold">
-                        {coin.symbol.charAt(0)}
-                      </div>
-                    )}
+                    <CoinLogo symbol={coin.symbol} image={coin.image} name={coin.name} />
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{coin.symbol}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{coin.name}</p>

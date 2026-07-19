@@ -1,817 +1,836 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import SelfieCapture from '../components/SelfieCapture'
-import VideoVerification from '../components/VideoVerification'
 import {
   getMyKyc,
-  getKycSettings,
   submitKycStep1,
-  submitKycStep2,
-  submitKycStep3
+  submitKycSsn,
+  submitKycDocuments,
+  submitKycIdentityDetails,
+  sendKycOtp,
+  verifyKycOtp
 } from '../api/modules/kycApi'
-import KycWizardProgress from '../modules/kyc/components/KycWizardProgress'
-import KycStepPersonalInfo from '../modules/kyc/components/KycStepPersonalInfo'
-import KycStepDocumentUpload from '../modules/kyc/components/KycStepDocumentUpload'
-import KycStepSelfie from '../modules/kyc/components/KycStepSelfie'
-import KycStepLiveness from '../modules/kyc/components/KycStepLiveness'
-import KycStepReviewSubmit from '../modules/kyc/components/KycStepReviewSubmit'
+import { emptyKycForm, getIdentityProfile, KYC_DRAFT_KEY } from '../modules/kyc/config/steps'
+import {
+  validateAddress,
+  validateContact,
+  validateDocuments,
+  validateGovId,
+  validatePersonal,
+  validateProof,
+  validateResidencyChoice,
+  validateResidencyPhoto,
+  validateSelfie,
+  validateSinStep
+} from '../modules/kyc/validation/kycValidation'
+import KycShell from '../modules/kyc/components/KycShell'
+import StepWelcome from '../modules/kyc/components/steps/StepWelcome'
+import StepPersonal from '../modules/kyc/components/steps/StepPersonal'
+import StepAddress from '../modules/kyc/components/steps/StepAddress'
+import StepSin from '../modules/kyc/components/steps/StepSin'
+import StepGovIdCapture from '../modules/kyc/components/steps/StepGovIdCapture'
+import StepResidencyChoice from '../modules/kyc/components/steps/StepResidencyChoice'
+import StepResidencyCapture from '../modules/kyc/components/steps/StepResidencyCapture'
+import StepSelfieCapture from '../modules/kyc/components/steps/StepSelfieCapture'
+import StepProofAddress from '../modules/kyc/components/steps/StepProofAddress'
+import StepReview from '../modules/kyc/components/steps/StepReview'
+import StepSubmission from '../modules/kyc/components/steps/StepSubmission'
+import StepKycOtp from '../modules/kyc/components/steps/StepKycOtp'
 
-const DOC_OPTIONS = [
-  { value: 'passport', label: 'Passport', requiresBack: false },
-  { value: 'national_id', label: 'National ID', requiresBack: true },
-  { value: 'drivers_license', label: "Driver's License", requiresBack: true }
-]
-
-const normalize = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '')
-const FILE_TYPE_ERROR = 'Only images (JPEG, PNG), PDF, and video files are allowed'
-const ALLOWED_DOCUMENT_MIME_TYPES = new Set([
-  'image/jpeg',
-  'image/jpg',
-  'image/pjpeg',
-  'image/png',
-  'image/x-png',
-  'image/heic',
-  'image/heif',
-  'application/pdf'
-])
-const ALLOWED_DOCUMENT_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'pdf', 'jfif', 'heic', 'heif'])
-
-const getFileExtension = (fileName) => {
-  const parts = String(fileName || '').toLowerCase().split('.')
-  return parts.length > 1 ? parts.pop() : ''
-}
-
-const isAllowedDocumentFile = (file) => {
-  if (!file) return false
-  const mime = String(file.type || '').toLowerCase()
-  const extension = getFileExtension(file.name)
-  return ALLOWED_DOCUMENT_MIME_TYPES.has(mime) || ALLOWED_DOCUMENT_EXTENSIONS.has(extension)
-}
-
-const MAX_IMAGE_WIDTH = 1280
-const MAX_IMAGE_HEIGHT = 1280
-const IMAGE_QUALITY = 0.78
-const MAX_TOTAL_UPLOAD_BYTES = 8 * 1024 * 1024
-const KYC_DRAFT_STORAGE_KEY = 'kyc_wizard_draft_v3'
-
-const loadImageElement = (file) => new Promise((resolve, reject) => {
-  const objectUrl = URL.createObjectURL(file)
-  const image = new Image()
-  image.onload = () => {
-    URL.revokeObjectURL(objectUrl)
-    resolve(image)
-  }
-  image.onerror = () => {
-    URL.revokeObjectURL(objectUrl)
-    reject(new Error('Failed to read image'))
-  }
-  image.src = objectUrl
-})
-
-const compressImageFile = async (file, fallbackName = 'document.jpg') => {
-  const mime = String(file?.type || '').toLowerCase()
-  if (!mime.startsWith('image/')) return file
-  if (mime.includes('gif')) return file
-  const extension = getFileExtension(file?.name)
-  const isHeicFamily = mime.includes('heic') || mime.includes('heif') || extension === 'heic' || extension === 'heif'
-
-  try {
-    const image = await loadImageElement(file)
-    const ratio = Math.min(1, MAX_IMAGE_WIDTH / image.width, MAX_IMAGE_HEIGHT / image.height)
-    const width = Math.max(1, Math.floor(image.width * ratio))
-    const height = Math.max(1, Math.floor(image.height * ratio))
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return file
-    ctx.drawImage(image, 0, 0, width, height)
-
-    const blob = await new Promise((resolve) => {
-      canvas.toBlob(resolve, 'image/jpeg', IMAGE_QUALITY)
-    })
-
-    if (!blob) return file
-    if (!isHeicFamily && blob.size >= file.size) return file
-
-    const baseName = String(file.name || fallbackName).replace(/\.[^.]+$/, '')
-    const newName = `${baseName || 'document'}-compressed.jpg`
-    return new File([blob], newName, { type: 'image/jpeg' })
-  } catch {
-    return file
+function mapExistingUrls(kyc) {
+  if (!kyc) return { front: '', back: '', selfie: '', passport: '', proof: '' }
+  const docs = kyc.documents instanceof Map ? Object.fromEntries(kyc.documents) : kyc.documents || {}
+  return {
+    front: kyc.documentFront || docs.documentFront || docs.drivers_license || '',
+    back: kyc.documentBack || docs.documentBack || docs.drivers_licenseBack || '',
+    selfie: kyc.selfie || docs.liveSelfie || kyc.legacyDocuments?.liveSelfie || '',
+    passport:
+      docs.passport ||
+      docs.permanent_resident_card ||
+      kyc.legacyDocuments?.passport ||
+      '',
+    proof: docs.proofOfAddress || kyc.legacyDocuments?.proofOfAddress || ''
   }
 }
 
 export default function KYCVerify() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
-  const [loading, setLoading] = useState(false)
   const [bootLoading, setBootLoading] = useState(true)
-  const [showSelfieCapture, setShowSelfieCapture] = useState(false)
-  const [showVideoCapture, setShowVideoCapture] = useState(false)
-
-  const [kycSettings, setKycSettings] = useState(null)
-  const [existingKYC, setExistingKYC] = useState(null)
-
-  const [personalInfo, setPersonalInfo] = useState({
-    fullName: '',
-    dateOfBirth: '',
-    nationality: '',
-    address: '',
-    phoneNumber: ''
+  const [loading, setLoading] = useState(false)
+  const [form, setForm] = useState(emptyKycForm)
+  const [errors, setErrors] = useState({})
+  const [touched, setTouched] = useState({})
+  const [files, setFiles] = useState({
+    front: null,
+    back: null,
+    selfie: null,
+    passport: null,
+    proof: null
   })
+  const [previews, setPreviews] = useState({
+    front: '',
+    back: '',
+    selfie: '',
+    passport: '',
+    proof: ''
+  })
+  const [existing, setExisting] = useState({
+    front: '',
+    back: '',
+    selfie: '',
+    passport: '',
+    proof: ''
+  })
+  const [kycMeta, setKycMeta] = useState(null)
+  const [completion, setCompletion] = useState(null)
+  const [otpPage, setOtpPage] = useState(null)
+  const [otpError, setOtpError] = useState('')
 
-  const [docType, setDocType] = useState('passport')
-  const [frontFile, setFrontFile] = useState(null)
-  const [backFile, setBackFile] = useState(null)
-  const [frontPreviewUrl, setFrontPreviewUrl] = useState('')
-  const [backPreviewUrl, setBackPreviewUrl] = useState('')
+  const isReadOnly =
+    kycMeta &&
+    ['pending', 'under_review', 'approved'].includes(kycMeta.status) &&
+    !kycMeta.resubmissionRequested
 
-  const [selfieFile, setSelfieFile] = useState(null)
-  const [selfiePreviewUrl, setSelfiePreviewUrl] = useState('')
-  const [videoFile, setVideoFile] = useState(null)
-  const [videoPreviewUrl, setVideoPreviewUrl] = useState('')
-  const [declarationChecked, setDeclarationChecked] = useState(false)
-  const [showSubmitSuccess, setShowSubmitSuccess] = useState(false)
-  const [lastAutoSavedAt, setLastAutoSavedAt] = useState(null)
-  const [isProcessingMedia, setIsProcessingMedia] = useState(false)
-
-  const selectedDocMeta = useMemo(
-    () => DOC_OPTIONS.find((item) => item.value === docType) || DOC_OPTIONS[0],
-    [docType]
-  )
-
-  const isReadOnlyStatus = existingKYC && ['pending', 'under_review', 'approved'].includes(existingKYC.status)
-  const personalInfoComplete = Boolean(
-    personalInfo.fullName.trim() &&
-    personalInfo.dateOfBirth &&
-    personalInfo.nationality.trim() &&
-    personalInfo.address.trim() &&
-    personalInfo.phoneNumber.trim()
-  )
-  const documentStepComplete = Boolean(frontFile && (!selectedDocMeta.requiresBack || backFile))
-  const selfieStepComplete = Boolean(selfieFile)
-  const livenessStepComplete = Boolean(videoFile)
-  const canSubmitReview = Boolean(
-    personalInfoComplete &&
-    documentStepComplete &&
-    selfieStepComplete &&
-    livenessStepComplete &&
-    declarationChecked
-  )
-
-  useEffect(() => {
-    const load = async () => {
-      setBootLoading(true)
-      try {
-        let savedDraft = null
-        try {
-          const rawDraft = localStorage.getItem(KYC_DRAFT_STORAGE_KEY)
-          savedDraft = rawDraft ? JSON.parse(rawDraft) : null
-        } catch {
-          savedDraft = null
-        }
-
-        const [settingsData, kycData] = await Promise.all([getKycSettings(), getMyKyc()])
-        if (settingsData?.success) setKycSettings(settingsData.settings || null)
-
-        if (kycData?.success && kycData.kyc) {
-          const kyc = kycData.kyc
-          setExistingKYC(kyc)
-          if (['pending', 'under_review', 'approved'].includes(kyc.status)) {
-            setStep(5)
-            localStorage.removeItem(KYC_DRAFT_STORAGE_KEY)
-          }
-
-          if (kyc.status !== 'approved') {
-            setPersonalInfo({
-              fullName: [kyc.firstName, kyc.lastName].filter(Boolean).join(' ').trim(),
-              dateOfBirth: kyc.dateOfBirth ? new Date(kyc.dateOfBirth).toISOString().split('T')[0] : '',
-              nationality: kyc.nationality || '',
-              address: [
-                kyc.address?.street,
-                kyc.address?.city,
-                kyc.address?.state,
-                kyc.address?.zipCode,
-                kyc.address?.country
-              ].filter(Boolean).join(', '),
-              phoneNumber: kyc.phoneNumber || ''
-            })
-          }
-        }
-
-        const canRestoreDraft = !kycData?.kyc || ['rejected'].includes(kycData?.kyc?.status)
-        if (savedDraft && canRestoreDraft) {
-          if (savedDraft.personalInfo) {
-            setPersonalInfo((prev) => ({ ...prev, ...savedDraft.personalInfo }))
-          }
-          if (savedDraft.docType && DOC_OPTIONS.some((option) => option.value === savedDraft.docType)) {
-            setDocType(savedDraft.docType)
-          }
-          if (savedDraft.declarationChecked) {
-            setDeclarationChecked(Boolean(savedDraft.declarationChecked))
-          }
-          if (Number.isInteger(savedDraft.step) && savedDraft.step >= 1 && savedDraft.step <= 5) {
-            setStep(savedDraft.step)
-          }
-          if (savedDraft.savedAt) {
-            setLastAutoSavedAt(savedDraft.savedAt)
-          }
-        }
-      } catch (error) {
-        console.error('Failed to initialize KYC flow:', error)
-        toast.error('Failed to load KYC information')
-      } finally {
-        setBootLoading(false)
-      }
-    }
-
-    load()
+  const setField = useCallback((key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }))
+    setErrors((prev) => {
+      if (!prev[key]) return prev
+      const next = { ...prev }
+      delete next[key]
+      return next
+    })
   }, [])
 
-  const setPersonalField = (field, value) => {
-    setPersonalInfo((prev) => ({ ...prev, [field]: value }))
-    if (declarationChecked) setDeclarationChecked(false)
+  const markTouched = (keys) => {
+    setTouched((prev) => {
+      const next = { ...prev }
+      keys.forEach((k) => {
+        next[k] = true
+      })
+      return next
+    })
   }
 
-  const handleDocTypeChange = (nextDocType) => {
-    setDocType(nextDocType)
-    if (declarationChecked) setDeclarationChecked(false)
+  const handleFile = (key, file) => {
+    setFiles((prev) => ({ ...prev, [key]: file }))
+    if (file?.type?.startsWith('image/')) {
+      setPreviews((prev) => {
+        if (prev[key]) URL.revokeObjectURL(prev[key])
+        return { ...prev, [key]: URL.createObjectURL(file) }
+      })
+    } else {
+      setPreviews((prev) => ({ ...prev, [key]: '' }))
+    }
+    setErrors((prev) => {
+      const next = { ...prev }
+      delete next[key]
+      delete next.file
+      return next
+    })
+  }
+
+  const clearFile = (key) => {
+    setFiles((prev) => ({ ...prev, [key]: null }))
+    setPreviews((prev) => {
+      if (prev[key]) URL.revokeObjectURL(prev[key])
+      return { ...prev, [key]: '' }
+    })
+    setExisting((prev) => ({ ...prev, [key]: '' }))
   }
 
   useEffect(() => {
-    if (bootLoading || isReadOnlyStatus) return
-    const draft = {
-      step,
-      docType,
-      declarationChecked,
-      personalInfo,
-      mediaState: {
-        hasFront: Boolean(frontFile),
-        hasBack: Boolean(backFile),
-        hasSelfie: Boolean(selfieFile),
-        hasVideo: Boolean(videoFile)
-      },
-      savedAt: new Date().toISOString()
-    }
-    try {
-      localStorage.setItem(KYC_DRAFT_STORAGE_KEY, JSON.stringify(draft))
-      setLastAutoSavedAt(draft.savedAt)
-    } catch {
-      // Ignore localStorage write failures to avoid blocking the flow.
-    }
-  }, [
-    step,
-    docType,
-    declarationChecked,
-    personalInfo,
-    frontFile,
-    backFile,
-    selfieFile,
-    videoFile,
-    bootLoading,
-    isReadOnlyStatus
-  ])
-
-  useEffect(() => {
-    if (bootLoading || isReadOnlyStatus) return
-    const shouldSyncPersonalInfo = personalInfoComplete
-    if (!shouldSyncPersonalInfo) return
-
-    const timeoutId = setTimeout(async () => {
+    let cancelled = false
+    ;(async () => {
+      setBootLoading(true)
       try {
-        const { firstName, lastName } = splitName(personalInfo.fullName)
-        const address = splitAddress(personalInfo.address, personalInfo.nationality)
-        await submitKycStep1({
-        firstName,
-        lastName,
-          dateOfBirth: personalInfo.dateOfBirth,
-          nationality: personalInfo.nationality,
-          phoneNumber: personalInfo.phoneNumber
+        let draft = null
+        try {
+          const raw = localStorage.getItem(KYC_DRAFT_KEY)
+          draft = raw ? JSON.parse(raw) : null
+        } catch {
+          draft = null
+        }
+
+        const data = await getMyKyc()
+        if (cancelled) return
+
+        if (data?.success && data.kyc) {
+          const kyc = data.kyc
+          setKycMeta(kyc)
+          setExisting(mapExistingUrls(kyc))
+
+          if (
+            ['approved', 'pending', 'under_review'].includes(kyc.status) &&
+            !kyc.resubmissionRequested
+          ) {
+            setCompletion({
+              status: kyc.status,
+              referenceNumber: kyc.referenceNumber,
+              expectedReviewHours: kyc.expectedReviewHours || 48
+            })
+            setStep(11)
+            localStorage.removeItem(KYC_DRAFT_KEY)
+            setBootLoading(false)
+            return
+          }
+
+          setForm((prev) => ({
+            ...prev,
+            firstName: kyc.firstName || prev.firstName,
+            lastName: kyc.lastName || prev.lastName,
+            dateOfBirth: kyc.dateOfBirth
+              ? (() => {
+                  // Avoid UTC day-shift for calendar dates
+                  const raw = String(kyc.dateOfBirth)
+                  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10)
+                  const d = new Date(kyc.dateOfBirth)
+                  if (Number.isNaN(d.getTime())) return prev.dateOfBirth
+                  const y = d.getFullYear()
+                  const m = String(d.getMonth() + 1).padStart(2, '0')
+                  const day = String(d.getDate()).padStart(2, '0')
+                  return `${y}-${m}-${day}`
+                })()
+              : prev.dateOfBirth,
+            gender: kyc.gender || prev.gender,
+            nationality: kyc.nationality || prev.nationality,
+            countryOfResidence: kyc.address?.country || prev.countryOfResidence,
+            street: kyc.address?.street || prev.street,
+            city: kyc.address?.city || prev.city,
+            state: kyc.address?.state || prev.state,
+            postalCode: kyc.address?.zipCode || prev.postalCode,
+            phone: kyc.phoneNumber || prev.phone,
+            documentType: kyc.documentType || prev.documentType,
+            governmentIdType: kyc.documentType || prev.governmentIdType
+          }))
+        }
+
+        if (draft?.form) setForm((prev) => ({ ...prev, ...draft.form }))
+        if (Number.isInteger(draft?.step) && draft.step >= 1 && draft.step <= 10) {
+          setStep(draft.step)
+        }
+      } catch (err) {
+        console.error(err)
+        toast.error('Failed to load KYC')
+      } finally {
+        if (!cancelled) setBootLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const api = (await import('../utils/axios')).default
+        const { data } = await api.get('/api/auth/me')
+        if (data?.user?.email) {
+          setForm((prev) => ({
+            ...prev,
+            email: prev.email || data.user.email,
+            phone: prev.phone || data.user.phone || '',
+            firstName:
+              prev.firstName ||
+              (data.user.fullName ? data.user.fullName.split(/\s+/)[0] : '') ||
+              '',
+            lastName:
+              prev.lastName ||
+              (data.user.fullName
+                ? data.user.fullName.split(/\s+/).slice(1).join(' ')
+                : '') ||
+              ''
+          }))
+        }
+      } catch {
+        /* ignore */
+      }
+    })()
+  }, [])
+
+  useEffect(() => {
+    if (bootLoading || isReadOnly || step >= 11) return
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(
+          KYC_DRAFT_KEY,
+          JSON.stringify({ step, form, savedAt: new Date().toISOString() })
+        )
+      } catch {
+        /* ignore */
+      }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [step, form, bootLoading, isReadOnly])
+
+  const saveExit = () => {
+    try {
+      localStorage.setItem(
+        KYC_DRAFT_KEY,
+        JSON.stringify({ step, form, savedAt: new Date().toISOString() })
+      )
+      toast.success('Progress saved')
+    } catch {
+      /* ignore */
+    }
+    navigate('/dashboard')
+  }
+
+  const persistPersonalBlock = async () => {
+    const street = [form.street, form.apartment].filter(Boolean).join(', ')
+    return submitKycStep1({
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      fullName: [form.firstName, form.middleName, form.lastName]
+        .filter(Boolean)
+        .map((s) => s.trim())
+        .join(' '),
+      dateOfBirth: form.dateOfBirth,
+      gender: form.gender,
+      nationality: form.nationality,
+      phoneNumber: form.phone,
+      street,
+      city: form.city,
+      state: form.state,
+      zipCode: form.postalCode,
+      country: form.countryOfResidence
+    })
+  }
+
+  const uploadAllDocuments = async () => {
+    const profile = getIdentityProfile(form.countryOfResidence || form.nationality)
+    const docType = form.documentType || profile.govIdType || 'drivers_license'
+    const fd = new FormData()
+    fd.append('documentType', docType)
+    if (files.front) fd.append('front', files.front)
+    if (files.back) fd.append('back', files.back)
+    if (files.selfie) fd.append('selfie', files.selfie)
+    if (files.passport) fd.append('passport', files.passport)
+    return submitKycDocuments(fd)
+  }
+
+  const goNext = async () => {
+    if (step === 1) {
+      setStep(2)
+      return
+    }
+
+    if (step === 2) {
+      const e = { ...validatePersonal(form), ...validateContact(form) }
+      setErrors(e)
+      markTouched([
+        'firstName',
+        'lastName',
+        'dateOfBirth',
+        'gender',
+        'nationality',
+        'countryOfResidence',
+        'email',
+        'phone'
+      ])
+      if (Object.keys(e).length) {
+        toast.error('Please fix the highlighted fields')
+        return
+      }
+      setStep(3)
+      return
+    }
+
+    // 3 — Address → save personal block → SIN (no separate contact page)
+    if (step === 3) {
+      const e = validateAddress(form)
+      setErrors(e)
+      markTouched(['street', 'city', 'state', 'postalCode'])
+      if (Object.keys(e).length) {
+        toast.error('Please complete your address')
+        return
+      }
+      // Contact already collected on personal step
+      const contactErr = validateContact(form)
+      if (Object.keys(contactErr).length) {
+        setErrors(contactErr)
+        markTouched(['email', 'phone'])
+        toast.error('Add email and phone on the personal step')
+        setStep(2)
+        return
+      }
+      setLoading(true)
+      try {
+        const data = await persistPersonalBlock()
+        if (!data.success) throw new Error(data.message || 'Save failed')
+        if (data.kyc) setKycMeta(data.kyc)
+        setStep(4)
+      } catch (err) {
+        toast.error(err.response?.data?.message || err.message || 'Failed to save')
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
+    // 4 — SIN / SSN
+    if (step === 4) {
+      const e = validateSinStep(form)
+      setErrors(e)
+      markTouched(['taxId', 'taxIdConfirm'])
+      if (Object.keys(e).length) {
+        toast.error(`Please complete your ${getIdentityProfile(form.countryOfResidence || form.nationality).shortLabel} correctly`)
+        return
+      }
+      setLoading(true)
+      try {
+        await persistPersonalBlock().catch(() => null)
+        const profile = getIdentityProfile(form.countryOfResidence || form.nationality)
+        setField('documentType', '')
+        setField('governmentIdType', '')
+        setFiles((prev) => ({ ...prev, front: null, back: null }))
+        setPreviews((prev) => {
+          if (prev.front) URL.revokeObjectURL(prev.front)
+          if (prev.back) URL.revokeObjectURL(prev.back)
+          return { ...prev, front: '', back: '' }
         })
-        await submitKycStep2(address)
-      } catch (error) {
-        console.error('Silent autosave failed:', error)
-      }
-    }, 900)
 
-    return () => clearTimeout(timeoutId)
-  }, [personalInfo, personalInfoComplete, bootLoading, isReadOnlyStatus])
+        const rawId = String(form.taxId || '')
+        const rawConfirm = String(form.taxIdConfirm || '')
+        const digits = (v) => v.replace(/\D/g, '')
+        const compact = (v) => v.toUpperCase().replace(/[^A-Z0-9]/g, '')
 
-  const splitName = (fullName) => {
-    const trimmed = fullName.trim()
-    if (!trimmed) return { firstName: '', lastName: '' }
-    const parts = trimmed.split(/\s+/)
-    return {
-      firstName: parts[0],
-      lastName: parts.slice(1).join(' ') || parts[0]
-    }
-  }
+        const payload =
+          profile.taxKey === 'ssn'
+            ? {
+                taxIdType: 'ssn',
+                ssn: digits(rawId),
+                ssnConfirm: digits(rawConfirm)
+              }
+            : profile.taxKey === 'sin'
+              ? {
+                  taxIdType: 'sin',
+                  sin: digits(rawId),
+                  sinConfirm: digits(rawConfirm)
+                }
+              : {
+                  taxIdType: profile.taxKey || 'national_id',
+                  nationalId: profile.digitsOnly ? digits(rawId) : compact(rawId),
+                  nationalIdConfirm: profile.digitsOnly ? digits(rawConfirm) : compact(rawConfirm),
+                  countryCode: form.countryOfResidence || form.nationality || ''
+                }
 
-  const splitAddress = (address, nationality) => {
-    const parts = String(address || '').split(',').map((part) => part.trim()).filter(Boolean)
-    const fallbackCountry = (nationality || '').trim() || 'N/A'
-
-    if (!parts.length) {
-      return {
-        street: 'N/A',
-        city: 'N/A',
-        state: '',
-        zipCode: '',
-        country: fallbackCountry
-      }
-    }
-
-    if (parts.length === 1) {
-      return {
-        street: parts[0],
-        city: 'N/A',
-        state: '',
-        zipCode: '',
-        country: fallbackCountry
-      }
-    }
-
-    if (parts.length === 2) {
-      return {
-        street: parts[0],
-        city: parts[1],
-        state: '',
-        zipCode: '',
-        country: fallbackCountry
-      }
-    }
-
-    return {
-      street: parts[0] || '',
-      city: parts[1] || '',
-      state: parts[2] || '',
-      zipCode: parts[3] || '',
-      country: parts[4] || fallbackCountry
-    }
-  }
-
-  const inferDocFieldNames = () => {
-    const dynamicDocs = Array.isArray(kycSettings?.documents) ? kycSettings.documents : []
-    const requiredDynamic = dynamicDocs.filter((doc) => doc.required)
-
-    if (!requiredDynamic.length) {
-      if (docType === 'passport') return { frontField: 'passport', backField: null }
-      if (docType === 'national_id') return { frontField: 'nationalId', backField: 'nationalIdBack' }
-      return { frontField: 'driverLicense', backField: 'driverLicenseBack' }
-    }
-
-    const keys = requiredDynamic.map((doc) => doc.name)
-    const desired = normalize(docType)
-    const frontMatch = keys.find((key) => {
-      const k = normalize(key)
-      const isTypeMatch = desired === 'passport'
-        ? k.includes('passport')
-        : desired === 'nationalid'
-        ? (k.includes('national') || (k.includes('id') && !k.includes('driver')))
-        : (k.includes('driver') || k.includes('license'))
-      return isTypeMatch && !k.includes('back')
-    }) || keys[0]
-
-    const backMatch = keys.find((key) => {
-      const k = normalize(key)
-      return k.includes('back') && normalize(frontMatch) !== k
-    }) || keys[1] || null
-
-    return { frontField: frontMatch, backField: selectedDocMeta.requiresBack ? backMatch : null }
-  }
-
-  const appendKycDocuments = (formData) => {
-    const dynamicDocs = Array.isArray(kycSettings?.documents) ? kycSettings.documents : []
-    const configuredDocs = dynamicDocs.filter((doc) => doc?.name)
-
-    if (!configuredDocs.length) {
-      const { frontField, backField } = inferDocFieldNames()
-      formData.append(frontField, frontFile, frontFile?.name || 'document-front.jpg')
-      if (selectedDocMeta.requiresBack && backField && backFile) {
-        formData.append(backField, backFile, backFile?.name || 'document-back.jpg')
+        const data = await submitKycSsn(payload)
+        if (!data.success) throw new Error(data.message || 'Failed')
+        setStep(5)
+      } catch (err) {
+        toast.error(err.response?.data?.message || err.message || 'Failed to save')
+      } finally {
+        setLoading(false)
       }
       return
     }
 
-    const desired = normalize(docType)
-    const matchScore = (docName) => {
-      const key = normalize(docName)
-      let score = 0
+    // 5 gov id camera · 6 residency choice · 7 residency photo · 8 selfie
 
-      if (desired === 'passport' && key.includes('passport')) score += 5
-      if (desired === 'nationalid' && (key.includes('national') || (key.includes('id') && !key.includes('driver')))) score += 5
-      if (desired === 'driverslicense' && (key.includes('driver') || key.includes('license'))) score += 5
-
-      if (key.includes('front')) score += 2
-      if (key.includes('back')) score -= 1
-
-      return score
-    }
-
-    const sortedDocs = [...configuredDocs].sort((a, b) => matchScore(b.name) - matchScore(a.name))
-    const frontTarget = sortedDocs.find((doc) => !normalize(doc.name).includes('back')) || sortedDocs[0]
-    const backTarget = sortedDocs.find((doc) => normalize(doc.name).includes('back') && doc.name !== frontTarget?.name)
-
-    // Always submit at least one configured document field name from platform settings.
-    if (frontTarget && frontFile) {
-      formData.append(frontTarget.name, frontFile, frontFile?.name || 'document-front.jpg')
-    }
-
-    if (selectedDocMeta.requiresBack && backFile) {
-      if (backTarget) {
-        formData.append(backTarget.name, backFile, backFile?.name || 'document-back.jpg')
-      } else if (frontTarget && frontTarget.name !== backTarget?.name) {
-        // Some admins configure only one doc field. Reuse it so at least one valid key is populated.
-        formData.append(frontTarget.name, backFile, backFile?.name || 'document-back.jpg')
+    if (step === 9) {
+      const e = validateProof({ file: files.proof, existing: existing.proof })
+      setErrors(e)
+      if (Object.keys(e).length) {
+        toast.error('Upload proof of address')
+        return
       }
-    }
-
-    // Safety fallback if nothing was appended for any reason.
-    if (!frontTarget && frontFile) {
-      const { frontField, backField } = inferDocFieldNames()
-      formData.append(frontField, frontFile, frontFile?.name || 'document-front.jpg')
-      if (selectedDocMeta.requiresBack && backField && backFile) {
-        formData.append(backField, backFile, backFile?.name || 'document-back.jpg')
+      if (files.proof) {
+        setLoading(true)
+        try {
+          const fd = new FormData()
+          fd.append('mode', 'proof_of_address')
+          fd.append('documentType', form.documentType || 'drivers_license')
+          fd.append('proofOfAddress', files.proof)
+          const data = await submitKycDocuments(fd)
+          if (!data.success) throw new Error(data.message || 'Upload failed')
+          if (data.kyc) {
+            setKycMeta(data.kyc)
+            setExisting(mapExistingUrls(data.kyc))
+          }
+          setStep(10)
+        } catch (err) {
+          toast.error(err.response?.data?.message || err.message || 'Upload failed')
+        } finally {
+          setLoading(false)
+        }
+      } else {
+        setStep(10)
       }
-    }
-
-    // Always include canonical legacy keys to keep admin display stable across setting changes.
-    if (docType === 'drivers_license') {
-      if (frontFile) formData.append('driverLicense', frontFile, frontFile?.name || 'driver-license-front.jpg')
-      if (backFile) formData.append('driverLicenseBack', backFile, backFile?.name || 'driver-license-back.jpg')
-    } else if (docType === 'national_id') {
-      if (frontFile) formData.append('nationalId', frontFile, frontFile?.name || 'national-id-front.jpg')
-      if (backFile) formData.append('nationalIdBack', backFile, backFile?.name || 'national-id-back.jpg')
-    } else if (docType === 'passport') {
-      if (frontFile) formData.append('passport', frontFile, frontFile?.name || 'passport.jpg')
-    }
-  }
-
-  const handleFrontUpload = async (file) => {
-    if (!file) return
-    if (!isAllowedDocumentFile(file)) {
-      toast.error(FILE_TYPE_ERROR)
-      return
-    }
-    setIsProcessingMedia(true)
-    try {
-      const optimizedFile = await compressImageFile(file, 'document-front.jpg')
-      if (frontPreviewUrl) URL.revokeObjectURL(frontPreviewUrl)
-      setFrontFile(optimizedFile)
-      setFrontPreviewUrl(URL.createObjectURL(optimizedFile))
-      if (declarationChecked) setDeclarationChecked(false)
-    } finally {
-      setIsProcessingMedia(false)
-    }
-  }
-
-  const handleBackUpload = async (file) => {
-    if (!file) return
-    if (!isAllowedDocumentFile(file)) {
-      toast.error(FILE_TYPE_ERROR)
-      return
-    }
-    setIsProcessingMedia(true)
-    try {
-      const optimizedFile = await compressImageFile(file, 'document-back.jpg')
-      if (backPreviewUrl) URL.revokeObjectURL(backPreviewUrl)
-      setBackFile(optimizedFile)
-      setBackPreviewUrl(URL.createObjectURL(optimizedFile))
-      if (declarationChecked) setDeclarationChecked(false)
-    } finally {
-      setIsProcessingMedia(false)
-    }
-  }
-
-  const handleSelfieCaptured = (blob) => {
-    if (selfiePreviewUrl) URL.revokeObjectURL(selfiePreviewUrl)
-    setSelfieFile(blob)
-    setSelfiePreviewUrl(URL.createObjectURL(blob))
-    setShowSelfieCapture(false)
-    if (declarationChecked) setDeclarationChecked(false)
-  }
-
-  const handleVideoCaptured = (blob) => {
-    if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl)
-    setVideoFile(blob)
-    setVideoPreviewUrl(URL.createObjectURL(blob))
-    setShowVideoCapture(false)
-    if (declarationChecked) setDeclarationChecked(false)
-  }
-
-  const validateStep = (targetStep) => {
-    if (targetStep === 2) {
-      if (
-        !personalInfo.fullName.trim() ||
-        !personalInfo.dateOfBirth ||
-        !personalInfo.nationality.trim() ||
-        !personalInfo.address.trim() ||
-        !personalInfo.phoneNumber.trim()
-      ) {
-        toast.error('Please complete all personal information fields')
-        return false
-      }
-    }
-
-    if (targetStep === 3) {
-      if (!frontFile) {
-        toast.error('Please upload document front side')
-        return false
-      }
-      if (selectedDocMeta.requiresBack && !backFile) {
-        toast.error('Please upload document back side')
-        return false
-      }
-    }
-
-    if (targetStep === 4 && !selfieFile) {
-      toast.error('Please capture a selfie')
-      return false
-    }
-
-    if (targetStep === 5 && !videoFile) {
-      toast.error('Please record liveness video')
-      return false
-    }
-
-    return true
-  }
-
-  const goNext = () => {
-    const next = Math.min(5, step + 1)
-    if (!validateStep(next)) return
-    setStep(next)
-  }
-
-  const submitAll = async () => {
-    if (loading) return
-    if (!declarationChecked) {
-      toast.error('Please confirm your declaration before submitting')
-      return
-    }
-    
-    if (isReadOnlyStatus) {
-      toast.error('KYC is already under review or approved')
       return
     }
 
-    if (!frontFile || (selectedDocMeta.requiresBack && !backFile) || !selfieFile || !videoFile) {
-      toast.error('Please complete all steps before submission')
-      return
-    }
-    if (isProcessingMedia) {
-      toast.error('Please wait until files finish processing')
-      return
-    }
-
-    const totalUploadBytes = [
-      frontFile,
-      selectedDocMeta.requiresBack ? backFile : null,
-      selfieFile,
-      videoFile
-    ].filter(Boolean).reduce((sum, file) => sum + (file.size || 0), 0)
-
-    if (totalUploadBytes > MAX_TOTAL_UPLOAD_BYTES) {
-      toast.error('Uploads are too large. Use lower-size images/video and try again.')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const latest = await getMyKyc()
-      if (latest?.success && latest?.kyc && ['pending', 'under_review', 'approved'].includes(latest.kyc.status)) {
-        setExistingKYC(latest.kyc)
-        toast.error('Your KYC is already pending review')
+    if (step === 10) {
+      const profile = getIdentityProfile(form.countryOfResidence || form.nationality)
+      const e = validateDocuments({
+        documentType: form.documentType || profile.govIdType,
+        frontFile: files.front,
+        backFile: files.back,
+        selfieFile: files.selfie,
+        passportFile: files.passport,
+        existing
+      })
+      if (Object.keys(e).length) {
+        toast.error('Missing required documents — go back and complete photos')
+        setErrors(e)
         return
       }
 
-      const { firstName, lastName } = splitName(personalInfo.fullName)
-      const address = splitAddress(personalInfo.address, personalInfo.nationality)
+      setLoading(true)
+      setOtpError('')
+      try {
+        if (files.front || files.back || files.selfie || files.passport) {
+          const up = await uploadAllDocuments()
+          if (!up.success) throw new Error(up.message || 'Upload failed')
+          if (up.kyc) {
+            setKycMeta(up.kyc)
+            setExisting(mapExistingUrls(up.kyc))
+          }
+        }
 
-      const step1 = await submitKycStep1({
-        firstName,
-        lastName,
-        dateOfBirth: personalInfo.dateOfBirth,
-        nationality: personalInfo.nationality,
-        phoneNumber: personalInfo.phoneNumber
-      })
-      if (!step1.success) throw new Error(step1.message || 'Step 1 failed')
+        await submitKycIdentityDetails({
+          occupation: 'Individual investor',
+          sourceOfFunds: 'employment',
+          taxResidency: form.countryOfResidence || form.nationality || 'US',
+          purposeOfAccount: 'trading',
+          additionalNotes: `email=${form.email}; residency=${form.residencyType}; poa=${form.poaType}`
+        })
 
-      const step2 = await submitKycStep2(address)
-      if (!step2.success) throw new Error(step2.message || 'Step 2 failed')
+        const otpSend = await sendKycOtp()
+        if (!otpSend.success) throw new Error(otpSend.message || 'Failed to start verification')
 
-      const formData = new FormData()
-      appendKycDocuments(formData)
-      formData.append('selectedDocumentType', docType)
-      formData.append('selfie', selfieFile, 'selfie.jpg')
-      formData.append('verificationVideo', videoFile, 'verification-video.webm')
+        // Full-page OTP — code sent to blended phone (never shown to user)
+        setOtpPage({
+          sentTo: otpSend.otpSentTo || 'your phone',
+          otpExpiresInSec: otpSend.otpExpiresInSec || 900
+        })
+        setOtpError('')
+        toast.success(otpSend.message || 'Verification code sent')
+      } catch (err) {
+        toast.error(err.response?.data?.message || err.message || 'Submission failed')
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
 
-      const step3 = await submitKycStep3(formData)
-      if (!step3.success) throw new Error(step3.message || 'Step 3 failed')
+  const afterGovId = () => {
+    setStep(6)
+  }
 
-      toast.success('KYC submitted successfully. Your verification is under review.')
-      localStorage.removeItem(KYC_DRAFT_STORAGE_KEY)
-      setLastAutoSavedAt(null)
-      setShowSubmitSuccess(true)
-      setTimeout(() => {
-        setShowSubmitSuccess(false)
-        setExistingKYC((prev) => ({ ...(prev || {}), status: 'pending' }))
-        setStep(5)
-      }, 1700)
-    } catch (error) {
-      console.error('KYC submission error:', error)
-      toast.error(error.response?.data?.message || error.message || 'Failed to submit KYC')
+  const afterResidencyPhoto = () => {
+    setStep(8)
+  }
+
+  const afterSelfie = async (selfieFile) => {
+    setLoading(true)
+    try {
+      const profile = getIdentityProfile(form.countryOfResidence || form.nationality)
+      const docType = form.documentType || profile.govIdType || 'drivers_license'
+      const fd = new FormData()
+      fd.append('documentType', docType)
+      if (files.front) fd.append('front', files.front)
+      if (files.back) fd.append('back', files.back)
+      if (selfieFile) fd.append('selfie', selfieFile)
+      else if (files.selfie) fd.append('selfie', files.selfie)
+      if (files.passport) fd.append('passport', files.passport)
+      const data = await submitKycDocuments(fd)
+      if (!data.success) throw new Error(data.message || 'Upload failed')
+      if (data.kyc) {
+        setKycMeta(data.kyc)
+        setExisting(mapExistingUrls(data.kyc))
+      }
+      toast.success('Photos uploaded')
+      setStep(9)
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Upload failed')
+      setStep(9)
     } finally {
       setLoading(false)
     }
   }
 
+  const confirmOtp = async (code) => {
+    const clean = String(code || '').replace(/\D/g, '')
+    if (!clean || clean.length < 6) {
+      setOtpError('Enter the 6-digit code')
+      return false
+    }
+    setLoading(true)
+    setOtpError('')
+    try {
+      const data = await verifyKycOtp({ otp: clean })
+      if (!data.success) throw new Error(data.message || 'Submit failed')
+      // Buy-style: waiting for admin unless already completed
+      if (data.completed || data.kyc?.otpVerified) {
+        localStorage.removeItem(KYC_DRAFT_KEY)
+        setOtpPage(null)
+        setCompletion({
+          status: data.kyc?.status || 'pending',
+          referenceNumber: data.referenceNumber || data.kyc?.referenceNumber,
+          expectedReviewHours: data.expectedReviewHours || 48
+        })
+        setKycMeta(data.kyc || { status: 'pending' })
+        setStep(11)
+        toast.success('KYC submitted successfully')
+      }
+      return true
+    } catch (err) {
+      const payload = err.response?.data || {}
+      const msg = payload.message || err.message || 'Could not submit code'
+      // Auto-resend when session expired / missing
+      if (payload.canResend || payload.code === 'OTP_EXPIRED' || payload.code === 'NO_SESSION') {
+        try {
+          const otpSend = await sendKycOtp()
+          if (otpSend?.success) {
+            setOtpPage({
+              sentTo: otpSend.otpSentTo || 'your phone',
+              otpExpiresInSec: otpSend.otpExpiresInSec || 1800
+            })
+            setOtpError('Previous code expired. A new code was sent — enter the new one.')
+            toast.success(otpSend.message || 'New code sent')
+            return false
+          }
+        } catch {
+          /* fall through */
+        }
+      }
+      setOtpError(msg)
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const onKycOtpCompleted = (data) => {
+    localStorage.removeItem(KYC_DRAFT_KEY)
+    setOtpPage(null)
+    setCompletion({
+      status: data?.kyc?.status || data?.status || 'pending',
+      referenceNumber: data?.referenceNumber || data?.kyc?.referenceNumber,
+      expectedReviewHours: data?.expectedReviewHours || 48
+    })
+    setKycMeta(data?.kyc || { status: data?.status || 'pending' })
+    setStep(11)
+    toast.success('OTP approved — KYC submitted for review')
+  }
+
+  const onKycOtpRejected = () => {
+    setOtpError('Incorrect code. Please try again.')
+  }
+
+  const resendKycOtpCode = async () => {
+    try {
+      const otpSend = await sendKycOtp()
+      if (!otpSend.success) throw new Error(otpSend.message || 'Resend failed')
+      setOtpPage((p) => ({
+        sentTo: otpSend.otpSentTo || p?.sentTo || 'your phone',
+        otpExpiresInSec: otpSend.otpExpiresInSec || p?.otpExpiresInSec || 900
+      }))
+      setOtpError('')
+      toast.success(otpSend.message || 'New code sent')
+      return otpSend
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Resend failed')
+      return false
+    }
+  }
+
+  const goBack = () => {
+    if (step <= 1) {
+      navigate(-1)
+      return
+    }
+    if (step === 11) return
+    setStep((s) => Math.max(1, s - 1))
+    setErrors({})
+  }
+
+  const stepMeta = useMemo(() => {
+    const idProfile = getIdentityProfile(form.countryOfResidence || form.nationality)
+    const map = {
+      1: {
+        title: 'Verify your identity',
+        description: 'A secure, guided process — usually under 10 minutes.'
+      },
+      2: {
+        title: 'Personal information',
+        description: 'Legal name, date of birth, email, and phone.'
+      },
+      3: {
+        title: 'Residential address',
+        description: 'Where you currently live — must match your proof of address.'
+      },
+      4: {
+        title: idProfile.shortLabel || idProfile.taxLabel,
+        description: `Enter your ${idProfile.shortLabel} for ${idProfile.countryName || 'your country'}.`
+      },
+      5: { title: '', description: '' },
+      6: {
+        title: 'PR or Passport',
+        description: 'Choose the residency document you will photograph next.'
+      },
+      7: { title: '', description: '' },
+      8: { title: '', description: '' },
+      9: {
+        title: 'Proof of address',
+        description: 'A recent bill or statement showing your name and address.'
+      },
+      10: {
+        title: 'Review & submit',
+        description: 'Double-check your details before sending for review.'
+      },
+      11: { title: '', description: '' }
+    }
+    return map[step] || map[1]
+  }, [step, form.countryOfResidence, form.nationality])
+
   if (bootLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-500" />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-950">
+        <div className="w-10 h-10 rounded-full border-2 border-[#1199fa] border-t-transparent animate-spin" />
+        <p className="text-sm text-slate-500">Loading verification…</p>
       </div>
     )
   }
 
+  // Full-page OTP after review submit
+  if (otpPage) {
+    return (
+      <StepKycOtp
+        sentTo={otpPage.sentTo}
+        expiresInSec={otpPage.otpExpiresInSec || 900}
+        loading={loading}
+        error={otpError}
+        onVerify={confirmOtp}
+        onResend={resendKycOtpCode}
+        onCompleted={onKycOtpCompleted}
+        onRejected={onKycOtpRejected}
+        onBack={() => {
+          setOtpPage(null)
+          setOtpError('')
+        }}
+      />
+    )
+  }
+
+  if (step === 11 || isReadOnly) {
+    return (
+      <KycShell step={11} hideProgress showNav={false} title="" onSaveExit={null}>
+        <StepSubmission
+          status={completion?.status || kycMeta?.status || 'pending'}
+          referenceNumber={completion?.referenceNumber || kycMeta?.referenceNumber}
+          expectedReviewHours={completion?.expectedReviewHours || 48}
+          onDone={() => navigate('/dashboard')}
+        />
+      </KycShell>
+    )
+  }
+
+  // Full-page camera steps (Background Search style)
+  // 5 = gov ID · 7 = residency photo · 8 = selfie
+  if (step === 5) {
+    return (
+      <StepGovIdCapture
+        form={form}
+        files={files}
+        previews={previews}
+        existing={existing}
+        onChange={setField}
+        onFile={handleFile}
+        onBack={goBack}
+        onComplete={afterGovId}
+      />
+    )
+  }
+
+  if (step === 7) {
+    return (
+      <StepResidencyCapture
+        form={form}
+        onFile={handleFile}
+        onBack={goBack}
+        onComplete={afterResidencyPhoto}
+      />
+    )
+  }
+
+  if (step === 8) {
+    return (
+      <StepSelfieCapture
+        onFile={handleFile}
+        onBack={goBack}
+        onComplete={afterSelfie}
+      />
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-cyan-50/40 to-slate-100 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 text-gray-900 dark:text-gray-100 pb-20">
-      <header className="sticky top-0 z-20 bg-white/90 dark:bg-slate-950/90 backdrop-blur border-b border-slate-200 dark:border-slate-800">
-        <div className="px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">KYC Verification</h1>
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-              Secure identity verification wizard
-              {lastAutoSavedAt ? ` • Auto-saved ${new Date(lastAutoSavedAt).toLocaleTimeString()}` : ''}
-            </p>
-          </div>
-          <div className="ml-auto hidden sm:block">
-            <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300">
-              Compliance Protected
-            </span>
-          </div>
+    <KycShell
+      step={step}
+      title={stepMeta.title}
+      description={stepMeta.description}
+      onBack={goBack}
+      onContinue={goNext}
+      onSaveExit={saveExit}
+      continueLabel={
+        step === 1 ? 'Get started' : step === 10 ? 'Submit verification' : 'Continue'
+      }
+      loading={loading}
+      continueDisabled={loading}
+      showNav={step !== 6}
+    >
+      {kycMeta?.status === 'rejected' && step < 11 ? (
+        <div className="mb-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+          Previous submission rejected
+          {kycMeta.rejectionReason ? `: ${kycMeta.rejectionReason}` : '.'} Please update and resubmit.
         </div>
-      </header>
-
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-4">
-        {!showSubmitSuccess && !isReadOnlyStatus ? (
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Verify Your Identity</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Complete the steps below to unlock full account capabilities and improve account security.
-                </p>
-              </div>
-        ) : null}
-
-        {!showSubmitSuccess && !isReadOnlyStatus && isProcessingMedia ? (
-          <div className="rounded-xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50/90 dark:bg-cyan-950/30 p-3">
-            <p className="text-xs sm:text-sm text-cyan-700 dark:text-cyan-300 font-medium">
-              Optimizing your upload for faster approval. Please wait before moving to final submit.
-            </p>
-          </div>
-        ) : null}
-
-        {showSubmitSuccess ? (
-          <div className="rounded-2xl border border-green-200 dark:border-green-800 bg-white dark:bg-slate-900 p-8 text-center animate-pulse">
-            <div className="mx-auto mb-3 w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <svg className="w-7 h-7 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold text-green-600 dark:text-green-400 mb-1">Submission Successful</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Your documents are being prepared for compliance review.</p>
-          </div>
-        ) : null}
-
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 sm:p-6">
-          <KycWizardProgress step={step} />
-        </div>
-        {!showSubmitSuccess && !isReadOnlyStatus ? (
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
-            <p className="text-sm font-semibold mb-2">Completion status</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <span className={`text-xs px-2 py-1 rounded-full ${personalInfoComplete ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}`}>
-                Personal
-              </span>
-              <span className={`text-xs px-2 py-1 rounded-full ${documentStepComplete ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}`}>
-                Documents
-              </span>
-              <span className={`text-xs px-2 py-1 rounded-full ${selfieStepComplete ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}`}>
-                Selfie
-              </span>
-              <span className={`text-xs px-2 py-1 rounded-full ${livenessStepComplete ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}`}>
-                Liveness
-              </span>
-            </div>
-        </div>
-        ) : null}
-
-        {!showSubmitSuccess && (
-          existingKYC?.status === 'approved' ? (
-            <div className="rounded-2xl border border-green-200 dark:border-green-800 bg-white dark:bg-slate-900 p-6 text-center">
-              <h2 className="text-xl font-bold text-green-600 dark:text-green-400 mb-2">Verification Approved</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Your identity has been verified successfully.</p>
-              <button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold">Go to Dashboard</button>
-            </div>
-          ) : existingKYC && ['pending', 'under_review'].includes(existingKYC.status) ? (
-            <div className="rounded-2xl border border-yellow-200 dark:border-yellow-800 bg-white dark:bg-slate-900 p-6 text-center">
-              <h2 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">Verification Under Review</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Your KYC has been submitted. Please wait for review completion.</p>
-              <button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold">Go to Dashboard</button>
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 sm:p-6">
-              {step === 1 ? (
-                <KycStepPersonalInfo
-                  form={personalInfo}
-                  onChange={setPersonalField}
-                  onNext={goNext}
-                  loading={loading}
-                  canProceed={personalInfoComplete}
-                />
-              ) : null}
-
-              {step === 2 ? (
-                <KycStepDocumentUpload
-                  docType={docType}
-                  onDocTypeChange={handleDocTypeChange}
-                  frontFile={frontFile}
-                  backFile={backFile}
-                  frontPreviewUrl={frontPreviewUrl}
-                  backPreviewUrl={backPreviewUrl}
-                  onFrontUpload={handleFrontUpload}
-                  onBackUpload={handleBackUpload}
-                  onBack={() => setStep(1)}
-                  onNext={goNext}
-                  canProceed={documentStepComplete}
-                />
-              ) : null}
-
-              {step === 3 ? (
-                <KycStepSelfie
-                  selfiePreviewUrl={selfiePreviewUrl}
-                  onOpenCapture={() => setShowSelfieCapture(true)}
-                  onBack={() => setStep(2)}
-                  onNext={goNext}
-                  canProceed={selfieStepComplete}
-                />
-              ) : null}
-
-              {step === 4 ? (
-                <KycStepLiveness
-                  videoPreviewUrl={videoPreviewUrl}
-                  onOpenRecorder={() => setShowVideoCapture(true)}
-                  onBack={() => setStep(3)}
-                  onNext={goNext}
-                  canProceed={livenessStepComplete}
-                />
-              ) : null}
-
-              {step === 5 ? (
-                <KycStepReviewSubmit
-                  personalInfo={personalInfo}
-                  docTypeLabel={selectedDocMeta.label}
-                  frontFile={frontFile}
-                  backFile={backFile}
-                  frontPreviewUrl={frontPreviewUrl}
-                  backPreviewUrl={backPreviewUrl}
-                  selfiePreviewUrl={selfiePreviewUrl}
-                  videoPreviewUrl={videoPreviewUrl}
-                  requiresBack={selectedDocMeta.requiresBack}
-                  loading={loading}
-                  canSubmit={canSubmitReview}
-                  declarationChecked={declarationChecked}
-                  onDeclarationChange={setDeclarationChecked}
-                  onEditStep={setStep}
-                  onBack={() => setStep(4)}
-                  onSubmit={submitAll}
-                />
-              ) : null}
-            </div>
-          )
-        )}
-      </main>
-
-      {showSelfieCapture ? (
-        <SelfieCapture
-          onCapture={handleSelfieCaptured}
-          onCancel={() => setShowSelfieCapture(false)}
-        />
       ) : null}
 
-      {showVideoCapture ? (
-        <VideoVerification
-          onComplete={handleVideoCaptured}
-          onCancel={() => setShowVideoCapture(false)}
+      {step === 1 && <StepWelcome />}
+      {step === 2 && (
+        <StepPersonal form={form} errors={errors} onChange={setField} touched={touched} />
+      )}
+      {step === 3 && (
+        <StepAddress form={form} errors={errors} onChange={setField} touched={touched} />
+      )}
+      {step === 4 && (
+        <StepSin form={form} errors={errors} onChange={setField} touched={touched} />
+      )}
+      {step === 6 && (
+        <StepResidencyChoice
+          form={form}
+          errors={errors}
+          onChange={setField}
+          touched={touched}
+          onPicked={() => setStep(7)}
         />
-      ) : null}
-    </div>
+      )}
+      {step === 9 && (
+        <StepProofAddress
+          form={form}
+          onChange={setField}
+          file={files.proof}
+          preview={previews.proof}
+          existing={existing.proof}
+          error={errors.file}
+          onFile={(f) => handleFile('proof', f)}
+          onClear={() => clearFile('proof')}
+        />
+      )}
+      {step === 10 && (
+        <StepReview
+          form={form}
+          files={files}
+          existing={existing}
+          onEdit={(s) => {
+            setStep(s)
+            setErrors({})
+          }}
+        />
+      )}
+
+    </KycShell>
   )
 }

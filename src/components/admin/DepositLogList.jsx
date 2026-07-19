@@ -173,6 +173,22 @@ export default function DepositLogList() {
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">{deposit.userId?.fullName || deposit.userId?.email}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">{deposit.userId?.email}</div>
+                    {(deposit.adminId || deposit.metadata?.performedByEmail) && (
+                      <div className="text-[11px] text-indigo-600 dark:text-indigo-400 mt-0.5">
+                        By:{' '}
+                        {deposit.adminId?.nickname ||
+                          deposit.adminId?.fullName ||
+                          deposit.metadata?.performedByNickname ||
+                          deposit.metadata?.performedByName ||
+                          deposit.adminId?.email ||
+                          deposit.metadata?.performedByEmail}
+                        {deposit.adminId?.email
+                          ? ` · ${deposit.adminId.email}`
+                          : deposit.metadata?.performedByEmail
+                            ? ` · ${deposit.metadata.performedByEmail}`
+                            : ''}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-green-600 dark:text-green-400">+{deposit.amount} USDT</td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -261,10 +277,79 @@ export default function DepositLogList() {
               </div>
             </div>
             <div className="p-6 space-y-4">
-              <div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">User</div>
+              {/* Top: who performed the deposit (especially sub-admin adds) */}
+              {(selectedDeposit.adminId || selectedDeposit.metadata?.performedByEmail) && (
+                <div className="rounded-xl border-2 border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 p-4 space-y-1.5">
+                  <p className="text-xs font-bold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+                    {selectedDeposit.adminId?.role === 'subadmin' ||
+                    selectedDeposit.metadata?.performedByRole === 'subadmin'
+                      ? 'Deposited by Sub-admin'
+                      : 'Deposited by Admin'}
+                  </p>
+                  <p className="text-sm text-slate-800 dark:text-slate-100">
+                    <span className="text-slate-500 dark:text-slate-400">Name: </span>
+                    <span className="font-semibold">
+                      {selectedDeposit.adminId?.fullName ||
+                        selectedDeposit.metadata?.performedByName ||
+                        '—'}
+                    </span>
+                  </p>
+                  <p className="text-sm text-slate-800 dark:text-slate-100">
+                    <span className="text-slate-500 dark:text-slate-400">Nickname: </span>
+                    <span className="font-semibold">
+                      {selectedDeposit.adminId?.nickname ||
+                        selectedDeposit.metadata?.performedByNickname ||
+                        '—'}
+                    </span>
+                  </p>
+                  <p className="text-sm text-slate-800 dark:text-slate-100">
+                    <span className="text-slate-500 dark:text-slate-400">Email: </span>
+                    <span className="font-semibold break-all">
+                      {selectedDeposit.adminId?.email ||
+                        selectedDeposit.metadata?.performedByEmail ||
+                        '—'}
+                    </span>
+                  </p>
+                  {(selectedDeposit.adminId?.uniqueId || selectedDeposit.adminId?.role) && (
+                    <p className="text-xs text-slate-500">
+                      {selectedDeposit.adminId?.uniqueId
+                        ? `ID: ${selectedDeposit.adminId.uniqueId}`
+                        : ''}
+                      {selectedDeposit.adminId?.role
+                        ? ` · Role: ${selectedDeposit.adminId.role}`
+                        : ''}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 space-y-1">
+                <p className="text-xs font-semibold uppercase text-slate-500">Customer</p>
                 <div className="font-semibold text-gray-900 dark:text-white">{selectedDeposit.userId?.fullName || selectedDeposit.userId?.email}</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{selectedDeposit.userId?.email}</div>
+                <div className="text-xs text-gray-500">Email: {selectedDeposit.userId?.email}</div>
+                <div className="text-xs text-gray-500">Customer ID: {selectedDeposit.userId?.uniqueId || selectedDeposit.userId?._id}</div>
+                <div className="text-xs text-gray-500">Phone: {selectedDeposit.userId?.phone || '—'}</div>
+              </div>
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 space-y-1 text-sm">
+                <p className="text-xs font-semibold uppercase text-slate-500">Management</p>
+                <p>
+                  <span className="text-slate-500">Assigned sub-admin: </span>
+                  {selectedDeposit.managedBy?.fullName || selectedDeposit.managedBy?.email || '—'}
+                  {selectedDeposit.managedBy?.uniqueId ? ` (${selectedDeposit.managedBy.uniqueId})` : ''}
+                </p>
+                <p>
+                  <span className="text-slate-500">Customer created by: </span>
+                  {selectedDeposit.customerCreatedBy?.fullName ||
+                    selectedDeposit.customerCreatedBy?.email ||
+                    '—'}
+                  {selectedDeposit.customerCreatedBy?.role
+                    ? ` [${selectedDeposit.customerCreatedBy.role}]`
+                    : ''}
+                </p>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Deposit ID</div>
+                <div className="font-mono text-xs break-all">{selectedDeposit._id}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Amount</div>
@@ -362,6 +447,41 @@ export default function DepositLogList() {
                   <div className="text-sm text-gray-900 dark:text-white">{new Date(selectedDeposit.approvedAt).toLocaleString()}</div>
                 </div>
               )}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 space-y-1 text-xs">
+                <p className="text-xs font-semibold uppercase text-slate-500 mb-1">Security / device</p>
+                <p>IP: {selectedDeposit.clientMeta?.ip || '—'}</p>
+                <p>
+                  Location:{' '}
+                  {[selectedDeposit.clientMeta?.city, selectedDeposit.clientMeta?.country]
+                    .filter(Boolean)
+                    .join(', ') || '—'}
+                </p>
+                <p>
+                  Device: {selectedDeposit.clientMeta?.deviceType || '—'} /{' '}
+                  {selectedDeposit.clientMeta?.os || '—'}
+                </p>
+                <p>Browser: {selectedDeposit.clientMeta?.browser || '—'}</p>
+                <p>
+                  Registration:{' '}
+                  {selectedDeposit.userId?.accountCreatedAt || selectedDeposit.userId?.createdAt
+                    ? new Date(
+                        selectedDeposit.userId.accountCreatedAt || selectedDeposit.userId.createdAt
+                      ).toLocaleString()
+                    : '—'}
+                </p>
+                <p>
+                  Deposit date:{' '}
+                  {selectedDeposit.createdAt
+                    ? new Date(selectedDeposit.createdAt).toLocaleString()
+                    : '—'}
+                </p>
+                {selectedDeposit.registrationToDepositHours != null && (
+                  <p>
+                    Time from registration → deposit:{' '}
+                    <strong>{selectedDeposit.registrationToDepositHours}h</strong>
+                  </p>
+                )}
+              </div>
               {selectedDeposit.rejectedAt && (
                 <div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Rejected At</div>

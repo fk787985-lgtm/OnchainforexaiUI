@@ -1,24 +1,22 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { useTheme } from '../context/ThemeContext'
+import { useNavigate } from 'react-router-dom'
 import api from '../utils/axios'
 import { getTradeNetProfit, getTradeRoiPercent } from '../utils/tradeMath'
+import BottomNav from '../components/layout/BottomNav'
+import NotificationBell from '../components/notifications/NotificationBell'
 
 export default function History() {
   const [tradeHistory, setTradeHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterResult, setFilterResult] = useState('all') // all, win, loss
-  const [filterSide, setFilterSide] = useState('all') // all, buy, sell
-  const [sortBy, setSortBy] = useState('date') // date, profit, symbol
-  const { theme } = useTheme()
+  const [filterResult, setFilterResult] = useState('all')
+  const [filterSide, setFilterSide] = useState('all')
+  const [sortBy, setSortBy] = useState('date')
+  const [statusTab, setStatusTab] = useState('all') // all | open | closed
   const navigate = useNavigate()
-  const location = useLocation()
 
   useEffect(() => {
     fetchTradeHistory()
-    
-    // Refresh every 5 seconds
     const interval = setInterval(fetchTradeHistory, 5000)
     return () => clearInterval(interval)
   }, [])
@@ -26,9 +24,7 @@ export default function History() {
   const fetchTradeHistory = async () => {
     try {
       const response = await api.get('/api/trades/history')
-      if (response.data.success) {
-        setTradeHistory(response.data.trades || [])
-      }
+      if (response.data.success) setTradeHistory(response.data.trades || [])
     } catch (error) {
       console.error('Error fetching trade history:', error)
     } finally {
@@ -36,520 +32,334 @@ export default function History() {
     }
   }
 
-  // Calculate statistics
   const statistics = useMemo(() => {
-    const closedTrades = tradeHistory.filter(t => t.status === 'closed')
-    const wins = closedTrades.filter(t => t.result === 'win')
-    const losses = closedTrades.filter(t => t.result === 'loss')
-    
+    const closedTrades = tradeHistory.filter((t) => t.status === 'closed')
+    const openTrades = tradeHistory.filter((t) => t.status === 'open' || t.status === 'active')
+    const wins = closedTrades.filter((t) => t.result === 'win')
+    const losses = closedTrades.filter((t) => t.result === 'loss')
     const totalProfit = closedTrades.reduce((sum, t) => sum + (t.profit || 0), 0)
-    const winProfit = wins.reduce((sum, t) => sum + (t.profit || 0), 0)
-    const lossAmount = losses.reduce((sum, t) => sum + Math.abs(t.profit || 0), 0)
-    
     const winRate = closedTrades.length > 0 ? (wins.length / closedTrades.length) * 100 : 0
-    const avgProfit = wins.length > 0 ? winProfit / wins.length : 0
-    const avgLoss = losses.length > 0 ? lossAmount / losses.length : 0
-    
+
     return {
-      totalTrades: closedTrades.length,
+      totalTrades: tradeHistory.length,
+      closed: closedTrades.length,
+      open: openTrades.length,
       wins: wins.length,
       losses: losses.length,
       winRate: winRate.toFixed(1),
-      totalProfit: totalProfit.toFixed(2),
-      winProfit: winProfit.toFixed(2),
-      lossAmount: lossAmount.toFixed(2),
-      avgProfit: avgProfit.toFixed(2),
-      avgLoss: avgLoss.toFixed(2)
+      totalProfit: totalProfit.toFixed(2)
     }
   }, [tradeHistory])
 
-  // Filter and sort trades
   const filteredAndSortedTrades = useMemo(() => {
-    let filtered = tradeHistory.filter(trade => {
-      // Search filter
+    let filtered = tradeHistory.filter((trade) => {
+      if (statusTab === 'open' && !(trade.status === 'open' || trade.status === 'active')) return false
+      if (statusTab === 'closed' && trade.status !== 'closed') return false
+
       if (searchQuery) {
-        const query = searchQuery.toLowerCase()
-        if (!trade.symbol?.toLowerCase().includes(query)) {
-          return false
-        }
+        const q = searchQuery.toLowerCase()
+        if (!trade.symbol?.toLowerCase().includes(q)) return false
       }
-      
-      // Result filter
-      if (filterResult !== 'all') {
-        if (filterResult === 'win' && trade.result !== 'win') return false
-        if (filterResult === 'loss' && trade.result !== 'loss') return false
-      }
-      
-      // Side filter
-      if (filterSide !== 'all') {
-        if (filterSide === 'buy' && trade.side !== 'buy') return false
-        if (filterSide === 'sell' && trade.side !== 'sell') return false
-      }
-      
+      if (filterResult === 'win' && trade.result !== 'win') return false
+      if (filterResult === 'loss' && trade.result !== 'loss') return false
+      if (filterSide === 'buy' && trade.side !== 'buy') return false
+      if (filterSide === 'sell' && trade.side !== 'sell') return false
       return true
     })
-    
-    // Sort
+
     filtered.sort((a, b) => {
-      if (sortBy === 'date') {
-        return new Date(b.closedAt || b.createdAt) - new Date(a.closedAt || a.createdAt)
-      } else if (sortBy === 'profit') {
-        return (b.profit || 0) - (a.profit || 0)
-      } else if (sortBy === 'symbol') {
-        return (a.symbol || '').localeCompare(b.symbol || '')
-      }
-      return 0
+      if (sortBy === 'profit') return (b.profit || 0) - (a.profit || 0)
+      if (sortBy === 'symbol') return (a.symbol || '').localeCompare(b.symbol || '')
+      return new Date(b.closedAt || b.createdAt) - new Date(a.closedAt || a.createdAt)
     })
-    
     return filtered
-  }, [tradeHistory, searchQuery, filterResult, filterSide, sortBy])
+  }, [tradeHistory, searchQuery, filterResult, filterSide, sortBy, statusTab])
 
   const formatPrice = (price) => {
-    if (!price) return '0.00'
+    if (price == null || price === '') return '0.00'
     return parseFloat(price).toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     })
   }
 
-  const formatDate = (date) => {
-    if (!date) return 'N/A'
-    return new Date(date).toLocaleDateString('en-US', { 
-      month: 'short', 
+  const formatDateTime = (date) => {
+    if (!date) return '—'
+    const d = new Date(date)
+    return d.toLocaleString('en-US', {
+      month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      hour: '2-digit',
+      minute: '2-digit'
     })
   }
 
-  const formatTime = (date) => {
-    if (!date) return 'N/A'
-    return new Date(date).toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    })
-  }
+  const totalPnl = parseFloat(statistics.totalProfit)
+  const pnlUp = totalPnl >= 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pb-20">
-      {/* Header - Mobile First */}
-      <div className="sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="px-3 py-3 sm:px-4 sm:py-4">
-          {/* Title Section */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-2">
+    <div className="fx-page min-h-screen pb-24">
+      {/* Top — Binance Orders style */}
+      <header className="sticky top-0 z-40 bg-[var(--fx-color-surface)] border-b border-[var(--fx-color-border)]">
+        <div className="max-w-3xl mx-auto">
+          <div className="h-12 px-4 flex items-center justify-between">
+            <h1 className="text-[16px] font-semibold tracking-tight">Orders</h1>
+            <div className="flex items-center gap-2">
+              <NotificationBell />
               <button
-                onClick={() => navigate(-1)}
-                className="p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                type="button"
+                onClick={() => navigate('/trade')}
+                className="text-[12px] font-semibold text-[var(--fx-color-primary)]"
               >
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
+                Trade
               </button>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Trade History</h1>
-                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">{statistics.totalTrades} Trades</p>
-              </div>
             </div>
           </div>
 
-          {/* Search and Filters - Mobile Optimized */}
-          <div className="space-y-2">
-            {/* Search */}
+          {/* Summary strip */}
+          <div className="px-4 pb-3 grid grid-cols-3 gap-2">
+            <div className="rounded-xl border border-[var(--fx-color-border)] bg-[var(--fx-color-bg)] px-3 py-2.5">
+              <p className="text-[10px] text-[var(--fx-color-text-muted)] font-medium">Total P&L</p>
+              <p
+                className={`text-[14px] font-bold tabular-nums mt-0.5 ${
+                  pnlUp ? 'text-emerald-500' : 'text-rose-500'
+                }`}
+              >
+                {pnlUp ? '+' : ''}
+                {formatPrice(statistics.totalProfit)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-[var(--fx-color-border)] bg-[var(--fx-color-bg)] px-3 py-2.5">
+              <p className="text-[10px] text-[var(--fx-color-text-muted)] font-medium">Win rate</p>
+              <p className="text-[14px] font-bold tabular-nums mt-0.5">
+                {statistics.winRate}%
+              </p>
+            </div>
+            <div className="rounded-xl border border-[var(--fx-color-border)] bg-[var(--fx-color-bg)] px-3 py-2.5">
+              <p className="text-[10px] text-[var(--fx-color-text-muted)] font-medium">Trades</p>
+              <p className="text-[14px] font-bold tabular-nums mt-0.5">
+                {statistics.closed}
+                <span className="text-[10px] font-medium text-[var(--fx-color-text-muted)] ml-1">
+                  / {statistics.totalTrades}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          {/* Status tabs */}
+          <div className="px-4 flex gap-5 border-b border-[var(--fx-color-border)]">
+            {[
+              { id: 'all', label: 'All' },
+              { id: 'open', label: `Open (${statistics.open})` },
+              { id: 'closed', label: 'History' }
+            ].map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setStatusTab(t.id)}
+                className={`relative pb-2.5 text-[13px] whitespace-nowrap transition ${
+                  statusTab === t.id
+                    ? 'text-[var(--fx-color-text)] font-semibold'
+                    : 'text-[var(--fx-color-text-muted)] font-medium'
+                }`}
+              >
+                {t.label}
+                {statusTab === t.id && (
+                  <span className="absolute left-0 right-0 bottom-0 h-0.5 rounded-full bg-[var(--fx-color-primary)]" />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Search + filters */}
+          <div className="px-4 py-2.5 space-y-2">
             <div className="relative">
-              <input
-                type="text"
-                placeholder="Search symbol..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              />
-              <svg className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fx-color-text-muted)]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search symbol"
+                className="w-full h-9 pl-9 pr-3 rounded-lg bg-[var(--fx-color-bg)] border border-[var(--fx-color-border)] text-[13px] placeholder:text-[var(--fx-color-text-muted)] focus:outline-none focus:border-[var(--fx-color-primary)]"
+              />
             </div>
-
-            {/* Filters Row */}
-            <div className="grid grid-cols-3 gap-2">
-              {/* Result Filter */}
-              <select
-                value={filterResult}
-                onChange={(e) => setFilterResult(e.target.value)}
-                className="px-2 py-2 text-xs sm:text-sm border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              >
-                <option value="all">All</option>
-                <option value="win">Wins</option>
-                <option value="loss">Loss</option>
-              </select>
-
-              {/* Side Filter */}
-              <select
-                value={filterSide}
-                onChange={(e) => setFilterSide(e.target.value)}
-                className="px-2 py-2 text-xs sm:text-sm border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              >
-                <option value="all">All</option>
-                <option value="buy">Long</option>
-                <option value="sell">Short</option>
-              </select>
-
-              {/* Sort */}
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+              {[
+                {
+                  label: 'All',
+                  active: filterResult === 'all' && filterSide === 'all',
+                  onClick: () => {
+                    setFilterResult('all')
+                    setFilterSide('all')
+                  }
+                },
+                {
+                  label: 'Win',
+                  active: filterResult === 'win',
+                  onClick: () => setFilterResult(filterResult === 'win' ? 'all' : 'win')
+                },
+                {
+                  label: 'Loss',
+                  active: filterResult === 'loss',
+                  onClick: () => setFilterResult(filterResult === 'loss' ? 'all' : 'loss')
+                },
+                {
+                  label: 'Long',
+                  active: filterSide === 'buy',
+                  onClick: () => setFilterSide(filterSide === 'buy' ? 'all' : 'buy')
+                },
+                {
+                  label: 'Short',
+                  active: filterSide === 'sell',
+                  onClick: () => setFilterSide(filterSide === 'sell' ? 'all' : 'sell')
+                }
+              ].map((chip) => (
+                <button
+                  key={chip.label}
+                  type="button"
+                  onClick={chip.onClick}
+                  className={`h-7 px-2.5 rounded-full text-[11px] font-medium whitespace-nowrap transition ${
+                    chip.active
+                      ? 'bg-[var(--fx-color-primary)] text-white'
+                      : 'bg-[var(--fx-color-surface-muted)] text-[var(--fx-color-text-muted)]'
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              ))}
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-2 py-2 text-xs sm:text-sm border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="h-7 px-2 rounded-full text-[11px] font-medium bg-[var(--fx-color-surface-muted)] text-[var(--fx-color-text-muted)] border-0 focus:outline-none"
               >
-                <option value="date">Date</option>
-                <option value="profit">Profit</option>
+                <option value="date">Newest</option>
+                <option value="profit">P&L</option>
                 <option value="symbol">Symbol</option>
               </select>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Statistics Cards - Mobile First */}
-      <div className="px-3 sm:px-4 py-3 sm:py-4">
-        <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
-          {/* Total Profit/Loss */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-2.5 sm:p-3 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-1">Total P/L</div>
-            <div className="flex items-baseline space-x-1 flex-wrap">
-              <div className={`text-sm sm:text-lg font-bold ${
-                parseFloat(statistics.totalProfit) >= 0 
-                  ? 'text-green-600 dark:text-green-400' 
-                  : 'text-red-600 dark:text-red-400'
-              }`}>
-                {parseFloat(statistics.totalProfit) >= 0 ? '+' : ''}{formatPrice(statistics.totalProfit)}
-              </div>
-              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">USDT</div>
-            </div>
-          </div>
-
-          {/* Win Rate */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-2.5 sm:p-3 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-1">Win Rate</div>
-            <div className="flex items-baseline space-x-1 flex-wrap">
-              <div className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white">{statistics.winRate}%</div>
-              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">({statistics.wins}W / {statistics.losses}L)</div>
-            </div>
-          </div>
-
-          {/* Avg Profit */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-2.5 sm:p-3 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-1">Avg Win</div>
-            <div className="flex items-baseline space-x-1 flex-wrap">
-              <div className="text-sm sm:text-lg font-bold text-green-600 dark:text-green-400">+{formatPrice(statistics.avgProfit)}</div>
-              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">USDT</div>
-            </div>
-          </div>
-
-          {/* Avg Loss */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-2.5 sm:p-3 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-1">Avg Loss</div>
-            <div className="flex items-baseline space-x-1 flex-wrap">
-              <div className="text-sm sm:text-lg font-bold text-red-600 dark:text-red-400">-{formatPrice(statistics.avgLoss)}</div>
-              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">USDT</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content - Mobile First */}
-      <div className="px-3 sm:px-4">
+      <main className="max-w-3xl mx-auto px-4 py-3">
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+          <div className="py-16 flex justify-center">
+            <div className="w-7 h-7 rounded-full border-2 border-[var(--fx-color-primary)] border-t-transparent animate-spin" />
           </div>
         ) : filteredAndSortedTrades.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
-            <svg className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-gray-500 dark:text-gray-400 font-medium">No trades found</p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-              {searchQuery || filterResult !== 'all' || filterSide !== 'all' 
-                ? 'Try adjusting your filters' 
-                : 'Your completed trades will appear here'}
+          <div className="py-16 text-center rounded-xl border border-[var(--fx-color-border)] bg-[var(--fx-color-surface)]">
+            <p className="text-[13px] font-medium">No orders found</p>
+            <p className="text-[12px] text-[var(--fx-color-text-muted)] mt-1 mb-4">
+              {searchQuery || filterResult !== 'all' || filterSide !== 'all'
+                ? 'Try clearing filters'
+                : 'Closed trades appear here'}
             </p>
+            <button
+              type="button"
+              onClick={() => navigate('/trade')}
+              className="inline-flex h-9 px-4 items-center rounded-lg text-[13px] font-semibold text-white bg-[var(--fx-color-primary)]"
+            >
+              Go to Trade
+            </button>
           </div>
         ) : (
           <div className="space-y-2">
-            {/* Desktop Table Header */}
-            <div className="hidden md:grid md:grid-cols-12 gap-3 px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-t-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-              <div className="col-span-2">Symbol</div>
-              <div className="col-span-1">Side</div>
-              <div className="col-span-1">Entry</div>
-              <div className="col-span-1">Exit</div>
-              <div className="col-span-1">Trade Amount</div>
-              <div className="col-span-1">Leverage</div>
-              <div className="col-span-1">P/L %</div>
-              <div className="col-span-1">P/L</div>
-              <div className="col-span-1">Date</div>
-              <div className="col-span-2">Time</div>
-            </div>
-
-            {/* Trade Cards */}
             {filteredAndSortedTrades.map((trade) => {
               const roiPercent = getTradeRoiPercent(trade)
               const isWin = trade.result ? trade.result === 'win' : roiPercent >= 0
               const netProfit = getTradeNetProfit(trade)
-              
+              const isOpen = trade.status === 'open' || trade.status === 'active'
+
               return (
-                      <div 
-                        key={trade._id} 
-                        onClick={() => navigate(`/order/${trade._id}`, { state: { trade } })}
-                  className={`group bg-white dark:bg-slate-900 rounded-xl border transition-all cursor-pointer overflow-hidden shadow-sm hover:shadow-md ${
-                    isWin 
-                      ? 'border-l-4 border-l-cyan-500 hover:border-l-cyan-600 border-r border-t border-b border-slate-200 dark:border-slate-700' 
-                      : 'border-l-4 border-l-rose-500 hover:border-l-rose-600 border-r border-t border-b border-slate-200 dark:border-slate-700'
-                  }`}
+                <button
+                  key={trade._id}
+                  type="button"
+                  onClick={() => navigate(`/order/${trade._id}`, { state: { trade } })}
+                  className="w-full text-left rounded-xl border border-[var(--fx-color-border)] bg-[var(--fx-color-surface)] p-3.5 hover:border-[var(--fx-color-primary)]/50 transition"
                 >
-                  {/* Desktop Card - Moderate Fonts and Alignment */}
-                  <div className="hidden md:block p-3">
-                    {/* Top Section - Symbol, Side, P/L with Icons */}
-                    <div className="flex items-start justify-between mb-3">
-                      {/* Left: Status Icon + Symbol */}
-                      <div className="flex items-center space-x-2.5 flex-1 min-w-0">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                          isWin 
-                            ? 'bg-cyan-500 text-white' 
-                            : 'bg-rose-500 text-white'
-                        }`}>
-                          {isWin ? '✓' : '✗'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 dark:text-white text-base mb-0.5">{trade.symbol}</div>
-                          <div className="flex items-center space-x-1.5">
-                            <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                              trade.side === 'buy' 
-                                ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400' 
-                                : 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
-                            }`}>
-                              {trade.side === 'buy' ? 'BUY' : 'SELL'}
-                            </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{trade.leverage}x</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Right: P/L with Icons */}
-                      <div className="text-right flex-shrink-0 ml-3">
-                        <div className={`flex items-center justify-end space-x-1.5 mb-1 ${
-                          isWin 
-                            ? 'text-cyan-600 dark:text-cyan-400' 
-                            : 'text-rose-600 dark:text-rose-400'
-                        }`}>
-                          {isWin ? (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                            </svg>
-                          ) : (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                            </svg>
-                          )}
-                          <div className="text-base font-bold">
-                            {roiPercent >= 0 ? '+' : ''}{roiPercent.toFixed(2)}%
-                          </div>
-                        </div>
-                        <div className={`flex items-center justify-end space-x-1.5 mb-1.5 ${
-                          isWin 
-                            ? 'text-cyan-600 dark:text-cyan-400' 
-                            : 'text-rose-600 dark:text-rose-400'
-                        }`}>
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <div className="text-sm font-bold">
-                            {netProfit >= 0 ? '+' : ''}{formatPrice(netProfit)}
-                          </div>
-                        </div>
-                        <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-bold ${
-                          isWin 
-                            ? 'bg-cyan-500 text-white' 
-                            : 'bg-rose-500 text-white'
-                        }`}>
-                          {isWin ? 'WIN' : 'LOSS'}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[14px] font-semibold">{trade.symbol}</span>
+                        <span
+                          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                            trade.side === 'buy'
+                              ? 'bg-emerald-500/12 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-rose-500/12 text-rose-600 dark:text-rose-400'
+                          }`}
+                        >
+                          {trade.side === 'buy' ? 'Long' : 'Short'}
                         </span>
+                        {trade.leverage ? (
+                          <span className="text-[10px] font-medium text-[var(--fx-color-text-muted)]">
+                            {trade.leverage}x
+                          </span>
+                        ) : null}
+                        {isOpen && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/12 text-amber-600">
+                            Open
+                          </span>
+                        )}
                       </div>
+                      <p className="text-[11px] text-[var(--fx-color-text-muted)] mt-1 tabular-nums">
+                        {formatDateTime(trade.closedAt || trade.createdAt)}
+                      </p>
                     </div>
-
-                    {/* Middle Section - Entry, Exit, Amount in Row */}
-                    <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-                      <div className="flex-1 text-center">
-                        <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Entry</div>
-                        <div className="font-semibold text-gray-900 dark:text-white text-sm">${formatPrice(trade.entryPrice)}</div>
-                      </div>
-                      <div className="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
-                      <div className="flex-1 text-center">
-                        <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Exit</div>
-                        <div className="font-semibold text-gray-900 dark:text-white text-sm">${formatPrice(trade.exitPrice)}</div>
-                      </div>
-                      <div className="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
-                      <div className="flex-1 text-center">
-                        <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Trade Amount</div>
-                        <div className="font-semibold text-gray-900 dark:text-white text-sm">${formatPrice(trade.marginUsed || trade.amount)}</div>
-                        <div className="text-[9px] text-gray-400 dark:text-gray-500 mt-0.5">USDT</div>
-                      </div>
-                    </div>
-
-                    {/* Bottom Section - Date and Time */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-1.5">
-                        <svg className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <div className="text-xs text-gray-600 dark:text-gray-400">{formatDate(trade.closedAt || trade.createdAt)}</div>
-                      </div>
-                      <div className="flex items-center space-x-1.5">
-                        <svg className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div className="text-xs text-gray-600 dark:text-gray-400">{formatTime(trade.closedAt || trade.createdAt)}</div>
-                      </div>
+                    <div className="text-right shrink-0">
+                      <p
+                        className={`text-[14px] font-bold tabular-nums ${
+                          isWin ? 'text-emerald-500' : 'text-rose-500'
+                        }`}
+                      >
+                        {netProfit >= 0 ? '+' : ''}
+                        {formatPrice(netProfit)}
+                      </p>
+                      <p
+                        className={`text-[11px] font-semibold tabular-nums mt-0.5 ${
+                          isWin ? 'text-emerald-500/80' : 'text-rose-500/80'
+                        }`}
+                      >
+                        {roiPercent >= 0 ? '+' : ''}
+                        {roiPercent.toFixed(2)}%
+                      </p>
                     </div>
                   </div>
 
-                  {/* Mobile Card - Moderate Fonts and Alignment */}
-                  <div className="md:hidden p-2.5">
-                    {/* Top Section - Symbol, Side, P/L with Icons */}
-                    <div className="flex items-start justify-between mb-2.5">
-                      {/* Left: Status Icon + Symbol + Side */}
-                      <div className="flex items-center space-x-2 flex-1 min-w-0">
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                          isWin 
-                            ? 'bg-cyan-500 text-white' 
-                            : 'bg-rose-500 text-white'
-                        }`}>
-                          {isWin ? '✓' : '✗'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 dark:text-white text-sm mb-0.5 truncate">{trade.symbol}</div>
-                          <div className="flex items-center space-x-1.5">
-                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                              trade.side === 'buy' 
-                                ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400' 
-                                : 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
-                            }`}>
-                              {trade.side === 'buy' ? 'BUY' : 'SELL'}
-                            </span>
-                            <span className="text-[10px] text-gray-500 dark:text-gray-400">{trade.leverage}x</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Right: P/L with Icons */}
-                      <div className="text-right flex-shrink-0 ml-2">
-                        <div className={`flex items-center justify-end space-x-1 mb-1 ${
-                          isWin 
-                            ? 'text-cyan-600 dark:text-cyan-400' 
-                            : 'text-rose-600 dark:text-rose-400'
-                        }`}>
-                          {isWin ? (
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                            </svg>
-                          ) : (
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                            </svg>
-                          )}
-                          <div className="text-sm font-bold">
-                            {roiPercent >= 0 ? '+' : ''}{roiPercent.toFixed(2)}%
-                          </div>
-                        </div>
-                        <div className={`flex items-center justify-end space-x-1 mb-1.5 ${
-                          isWin 
-                            ? 'text-cyan-600 dark:text-cyan-400' 
-                            : 'text-rose-600 dark:text-rose-400'
-                        }`}>
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <div className="text-xs font-bold">
-                            {netProfit >= 0 ? '+' : ''}{formatPrice(netProfit)}
-                          </div>
-                        </div>
-                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                          isWin 
-                            ? 'bg-cyan-500 text-white' 
-                            : 'bg-rose-500 text-white'
-                        }`}>
-                          {isWin ? 'WIN' : 'LOSS'}
-                        </span>
-                      </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2 pt-3 border-t border-[var(--fx-color-border)]">
+                    <div>
+                      <p className="text-[10px] text-[var(--fx-color-text-muted)]">Entry</p>
+                      <p className="text-[12px] font-semibold tabular-nums mt-0.5">
+                        {formatPrice(trade.entryPrice)}
+                      </p>
                     </div>
-
-                    {/* Middle Section - Entry, Exit, Amount in Row */}
-                    <div className="flex items-center justify-between mb-2.5 pb-2.5 border-b border-gray-200 dark:border-gray-700">
-                      <div className="flex-1 text-center">
-                        <div className="text-[9px] text-gray-500 dark:text-gray-400 mb-0.5">Entry</div>
-                        <div className="font-semibold text-gray-900 dark:text-white text-xs">${formatPrice(trade.entryPrice)}</div>
-                      </div>
-                      <div className="w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
-                      <div className="flex-1 text-center">
-                        <div className="text-[9px] text-gray-500 dark:text-gray-400 mb-0.5">Exit</div>
-                        <div className="font-semibold text-gray-900 dark:text-white text-xs">${formatPrice(trade.exitPrice)}</div>
-                      </div>
-                      <div className="w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
-                      <div className="flex-1 text-center">
-                        <div className="text-[9px] text-gray-500 dark:text-gray-400 mb-0.5">Trade Amount</div>
-                        <div className="font-semibold text-gray-900 dark:text-white text-xs">${formatPrice(trade.marginUsed || trade.amount)}</div>
-                        <div className="text-[8px] text-gray-400 dark:text-gray-500 mt-0.5">USDT</div>
-                      </div>
+                    <div>
+                      <p className="text-[10px] text-[var(--fx-color-text-muted)]">Exit</p>
+                      <p className="text-[12px] font-semibold tabular-nums mt-0.5">
+                        {trade.exitPrice != null ? formatPrice(trade.exitPrice) : '—'}
+                      </p>
                     </div>
-
-                    {/* Bottom Section - Date and Time */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-1">
-                        <svg className="w-3 h-3 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <div className="text-[10px] text-gray-600 dark:text-gray-400">{formatDate(trade.closedAt || trade.createdAt)}</div>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <svg className="w-3 h-3 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div className="text-[10px] text-gray-600 dark:text-gray-400">{formatTime(trade.closedAt || trade.createdAt)}</div>
-                      </div>
+                    <div>
+                      <p className="text-[10px] text-[var(--fx-color-text-muted)]">Amount</p>
+                      <p className="text-[12px] font-semibold tabular-nums mt-0.5">
+                        {formatPrice(trade.marginUsed || trade.amount)}
+                      </p>
                     </div>
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>
         )}
-      </div>
+      </main>
 
-      {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-30 safe-area-bottom">
-        <div className="flex items-center justify-around px-2 py-2">
-          {[
-            { name: 'Home', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', route: '/dashboard' },
-            { name: 'Market', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', route: '/market' },
-            { name: 'Trade', icon: 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z', route: '/trade' },
-            { name: 'History', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', route: '/history' },
-            { name: 'Asset', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', route: '/asset' }
-          ].map((item, index) => (
-            <button
-              key={index}
-              onClick={() => item.route && navigate(item.route)}
-              className={`flex flex-col items-center space-y-1 px-2 py-1.5 rounded-lg transition flex-1 ${
-                location.pathname === item.route
-                  ? 'text-cyan-600 dark:text-cyan-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-              </svg>
-              <span className="text-xs font-medium">{item.name}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
-
+      <BottomNav />
     </div>
   )
 }

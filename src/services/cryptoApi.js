@@ -714,3 +714,84 @@ const getTimeAgo = (timestamp) => {
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
   return `${Math.floor(seconds / 86400)}d ago`
 }
+
+/**
+ * Live BTC/USDT price for converting USDT balances to BTC.
+ * Uses Binance first, CoinGecko fallback. Cached for up to 1 hour if live fetch fails.
+ */
+const BTC_PRICE_CACHE_KEY = 'fx_btc_usdt_price_v1'
+const BTC_PRICE_MAX_AGE_MS = 60 * 60 * 1000 // 1 hour
+
+function readBtcPriceCache() {
+  try {
+    const raw = localStorage.getItem(BTC_PRICE_CACHE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed?.price || !parsed?.fetchedAt) return null
+    if (Date.now() - parsed.fetchedAt > BTC_PRICE_MAX_AGE_MS) return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+function writeBtcPriceCache(price, source) {
+  try {
+    localStorage.setItem(
+      BTC_PRICE_CACHE_KEY,
+      JSON.stringify({ price, source, fetchedAt: Date.now() })
+    )
+  } catch {
+    /* ignore */
+  }
+}
+
+export async function getBtcUsdtPrice() {
+  // 1) Binance live ticker
+  try {
+    const ticker = await getBinanceTicker('BTCUSDT')
+    const price = parseFloat(ticker?.lastPrice)
+    if (price > 0) {
+      writeBtcPriceCache(price, 'binance')
+      return { price, source: 'binance', fetchedAt: Date.now(), stale: false }
+    }
+  } catch {
+    /* continue */
+  }
+
+  // 2) CoinGecko live
+  try {
+    const url = `${COINGECKO_BASE_URL}/simple/price?ids=bitcoin&vs_currencies=usd`
+    const response = await fetch(url)
+    if (response.ok) {
+      const data = await response.json()
+      const price = parseFloat(data?.bitcoin?.usd)
+      if (price > 0) {
+        writeBtcPriceCache(price, 'coingecko')
+        return { price, source: 'coingecko', fetchedAt: Date.now(), stale: false }
+      }
+    }
+  } catch {
+    /* continue */
+  }
+
+  // 3) Cache from last hour
+  const cached = readBtcPriceCache()
+  if (cached?.price > 0) {
+    return {
+      price: cached.price,
+      source: cached.source || 'cache',
+      fetchedAt: cached.fetchedAt,
+      stale: true
+    }
+  }
+
+  return { price: null, source: null, fetchedAt: null, stale: true }
+}
+
+export function usdtToBtc(usdtAmount, btcUsdtPrice) {
+  const usdt = Number(usdtAmount) || 0
+  const btcPrice = Number(btcUsdtPrice) || 0
+  if (usdt <= 0 || btcPrice <= 0) return 0
+  return usdt / btcPrice
+}

@@ -148,7 +148,10 @@ export default function UsersList() {
     try {
       const response = await api.get(`/api/admin/users/${user._id}`)
       if (response.data.success) {
-        setUserDetails(response.data.user)
+        setUserDetails({
+          ...response.data.user,
+          lastLogin: response.data.user.lastLogin || user.lastLogin || null
+        })
         setAppNotice(response.data.user.appNotice || '')
         // The useEffect hook will automatically load winTradeSettings when userDetails changes
         // But we'll also load them here to be safe
@@ -188,10 +191,14 @@ export default function UsersList() {
   const handleViewUser = async (userId) => {
     setSelectedUser(userId)
     setTemporaryPassword('')
+    const listUser = users.find((u) => String(u._id) === String(userId))
     try {
       const response = await api.get(`/api/admin/users/${userId}`)
       if (response.data.success) {
-        setUserDetails(response.data.user)
+        setUserDetails({
+          ...response.data.user,
+          lastLogin: response.data.user.lastLogin || listUser?.lastLogin || null
+        })
         setAppNotice(response.data.user.appNotice || '')
         // Load winTradeSettings and preserve existing values, only use defaults if completely missing
         const defaultSettings = {
@@ -259,6 +266,7 @@ export default function UsersList() {
           isActive: userDetails.isActive,
           allowTrade: userDetails.allowTrade,
           allowWithdraw: userDetails.allowWithdraw,
+          isEmailVerified: userDetails.isEmailVerified,
           winTrade: userDetails.winTrade,
           tradeTimer: userDetails.tradeTimer,
           appNotice: appNotice,
@@ -323,16 +331,25 @@ export default function UsersList() {
       return
     }
     try {
+      // Sub-admin: always log deposit + always email customer (not optional)
       const response = await api.post(`/api/admin/users/${userDetails._id}/balance`, {
         amount: parseFloat(balanceAmount),
         addBalance: isSubAdmin ? true : addBalance,
-        logToDeposit,
-        logToWithdrawal,
+        logToDeposit: isSubAdmin ? true : logToDeposit,
+        logToWithdrawal: isSubAdmin ? false : logToWithdrawal,
         notifyUserEmail: isSubAdmin ? true : notifyUserEmail,
-        description: (isSubAdmin || addBalance) ? 'Deposit' : 'Withdrawal'
+        description: isSubAdmin || addBalance ? 'Deposit' : 'Withdrawal'
       })
       if (response.data.success) {
-        alert(addBalance ? 'Balance added successfully' : 'Balance subtracted successfully')
+        if (isSubAdmin) {
+          const parts = ['Balance added']
+          if (response.data.depositLogged !== false) parts.push('saved to deposit log')
+          if (response.data.emailSent) parts.push('email sent to customer')
+          else parts.push('email may have failed — check server logs')
+          alert(parts.join(' · '))
+        } else {
+          alert(addBalance ? 'Balance added successfully' : 'Balance subtracted successfully')
+        }
         setBalanceAmount('')
         await fetchUsers()
         const userResponse = await api.get(`/api/admin/users/${userDetails._id}`)
@@ -573,93 +590,143 @@ export default function UsersList() {
             </div>
           </div>
         </div>
-        <div className="hidden lg:block overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-          <div className="inline-block min-w-full align-middle">
-            <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 rounded-lg">
-              <table className="w-full min-w-[1120px] divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
+        {/* Compact responsive users table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 dark:bg-slate-800/80 text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Unique ID</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Email</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Name</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Balance</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Date Joined</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Last Login</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Email Verified</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">KYC Verified</th>
-                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Actions</th>
+                <th className="px-3 sm:px-4 py-2.5 font-semibold">User</th>
+                <th className="px-3 sm:px-4 py-2.5 font-semibold whitespace-nowrap">Balance</th>
+                <th className="hidden md:table-cell px-3 sm:px-4 py-2.5 font-semibold">Status</th>
+                <th className="hidden md:table-cell px-3 sm:px-4 py-2.5 font-semibold whitespace-nowrap">Last login</th>
+                <th className="hidden xl:table-cell px-3 sm:px-4 py-2.5 font-semibold">Joined</th>
+                <th className="px-3 sm:px-4 py-2.5 font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user) => (
-                  <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-mono">{user.uniqueId || user.payid || 'N/A'}</td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm">{user.email}</td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm">{user.fullName}</td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-semibold">{formatCurrency(user.balance || 0)}</td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                      {formatDate(user.createdAt || user.accountCreatedAt)}
+                  <tr
+                    key={user._id}
+                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                  >
+                    <td className="px-3 sm:px-4 py-2.5 min-w-0">
+                      <div className="min-w-0 max-w-[240px] sm:max-w-xs">
+                        <p className="font-semibold text-slate-900 dark:text-white truncate text-sm">
+                          {user.fullName || '—'}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                          {user.email}
+                        </p>
+                        <p className="text-[10px] font-mono text-slate-400 truncate mt-0.5">
+                          {user.uniqueId || user.payid || user._id}
+                        </p>
+                      </div>
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                      {formatDate(user.lastLogin?.loginAt)}
-                    </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        user.isEmailVerified 
-                          ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                          : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                      }`}>
-                        {user.isEmailVerified ? 'Yes' : 'No'}
+                    <td className="px-3 sm:px-4 py-2.5 whitespace-nowrap">
+                      <span className="font-semibold tabular-nums text-emerald-700 dark:text-emerald-400 text-sm">
+                        {formatCurrency(user.balance || 0)}
                       </span>
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        user.isKycVerified
-                          ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                          : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                      }`}>
-                        {user.isKycVerified ? 'Yes' : 'No'}
-                      </span>
+                    <td className="hidden md:table-cell px-3 sm:px-4 py-2.5">
+                      <div className="flex flex-wrap gap-1">
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                            user.isEmailVerified
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                              : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                          }`}
+                        >
+                          {user.isEmailVerified ? 'Email ✓' : 'Email —'}
+                        </span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                            user.isKycVerified
+                              ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300'
+                              : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                          }`}
+                        >
+                          {user.isKycVerified ? 'KYC ✓' : 'KYC —'}
+                        </span>
+                        {user.isActive === false && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                            Inactive
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-1">
+                    <td className="hidden md:table-cell px-3 sm:px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                      {user.lastLogin?.loginAt ? (
+                        <div>
+                          <p className="font-medium tabular-nums">
+                            {new Date(user.lastLogin.loginAt).toLocaleDateString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </p>
+                          <p className="text-[10px] text-slate-400 tabular-nums">
+                            {new Date(user.lastLogin.loginAt).toLocaleTimeString(undefined, {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                            {user.lastLogin.city || user.lastLogin.country
+                              ? ` · ${[user.lastLogin.city, user.lastLogin.country].filter(Boolean).join(', ')}`
+                              : ''}
+                          </p>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400">Never</span>
+                      )}
+                    </td>
+                    <td className="hidden xl:table-cell px-3 sm:px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">
+                      {user.createdAt || user.accountCreatedAt
+                        ? new Date(user.createdAt || user.accountCreatedAt).toLocaleDateString()
+                        : '—'}
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5">
+                      <div className="flex items-center justify-end gap-1 flex-wrap">
                         <button
+                          type="button"
                           onClick={() => handleViewUser(user._id)}
                           disabled={!canViewUsers}
-                          className="px-2 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition whitespace-nowrap"
+                          className="px-2 py-1 text-[11px] font-semibold rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
                         >
                           View
                         </button>
                         {(canEditUsers || canAddBalance || canActivateUser || canDeactivateUser) && (
                           <button
+                            type="button"
                             onClick={() => handleEdit(user)}
-                            className="px-2 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition whitespace-nowrap"
+                            className="px-2 py-1 text-[11px] font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
                           >
                             Edit
                           </button>
                         )}
                         {(canManageCoinAddress || !isSubAdmin) && (
                           <button
+                            type="button"
                             onClick={() => setCoinAddressUser(user)}
-                            className="px-2 py-1.5 text-xs bg-slate-700 hover:bg-slate-800 text-white rounded-lg transition whitespace-nowrap"
+                            className="hidden sm:inline-flex px-2 py-1 text-[11px] font-semibold rounded-md bg-slate-700 text-white hover:bg-slate-800"
                           >
-                            Coin Address
+                            Coins
                           </button>
                         )}
                         {!isSubAdmin && (
                           <>
                             <button
+                              type="button"
                               onClick={() => handleShowLogs(user._id)}
-                              className="px-2 py-1.5 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition whitespace-nowrap"
+                              className="hidden xl:inline-flex px-2 py-1 text-[11px] font-semibold rounded-md bg-violet-600 text-white hover:bg-violet-700"
                             >
                               Logs
                             </button>
                             <button
+                              type="button"
                               onClick={() => handleLoginAsUser(user._id)}
-                              className="px-2 py-1.5 text-xs bg-green-600 hover:bg-green-700 text-white rounded-lg transition whitespace-nowrap"
+                              className="px-2 py-1 text-[11px] font-semibold rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
                             >
-                              Login As
+                              Login
                             </button>
                           </>
                         )}
@@ -669,87 +736,13 @@ export default function UsersList() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="9" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                    {searchQuery ? 'No users found matching your search' : 'No users found'}
+                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-slate-500">
+                    {searchQuery ? 'No users match your search' : 'No users found'}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-            </div>
-          </div>
-        </div>
-
-        <div className="lg:hidden divide-y divide-slate-200 dark:divide-slate-700">
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((user) => (
-              <div key={user._id} className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">{user.fullName || 'N/A'}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">ID: {user.uniqueId || user.payid || 'N/A'}</p>
-                  </div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(user.balance || 0)}</p>
-                </div>
-
-                <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
-                  <span className={`px-2 py-1 rounded-full ${user.isEmailVerified ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'}`}>
-                    Email {user.isEmailVerified ? 'Yes' : 'No'}
-                  </span>
-                  <span className={`px-2 py-1 rounded-full ${user.isKycVerified ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'}`}>
-                    KYC {user.isKycVerified ? 'Yes' : 'No'}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => handleViewUser(user._id)}
-                    disabled={!canViewUsers}
-                    className="px-3 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-                  >
-                    View
-                  </button>
-                  {(canEditUsers || canAddBalance || canActivateUser || canDeactivateUser) && (
-                    <button
-                      onClick={() => handleEdit(user)}
-                      className="px-3 py-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
-                    >
-                      Edit
-                    </button>
-                  )}
-                  {(canManageCoinAddress || !isSubAdmin) && (
-                    <button
-                      onClick={() => setCoinAddressUser(user)}
-                      className="px-3 py-2 text-xs bg-slate-700 hover:bg-slate-800 text-white rounded-lg transition"
-                    >
-                      Coin Address
-                    </button>
-                  )}
-                  {!isSubAdmin && (
-                    <button
-                      onClick={() => handleShowLogs(user._id)}
-                      className="px-3 py-2 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
-                    >
-                      Logs
-                    </button>
-                  )}
-                  {!isSubAdmin && (
-                    <button
-                      onClick={() => handleLoginAsUser(user._id)}
-                      className="col-span-2 px-3 py-2 text-xs bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
-                    >
-                      Login As
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="px-6 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-              {searchQuery ? 'No users found matching your search' : 'No users found'}
-            </div>
-          )}
         </div>
       </div>
 
@@ -809,29 +802,55 @@ export default function UsersList() {
         </div>
       )}
 
-      {/* User Details Full Page - This is a very large component, continuing in next part due to size */}
+      {/* User Details Full Page */}
       {selectedUser && userDetails && (
-        <div className="fixed inset-0 bg-white dark:bg-slate-950 z-50 overflow-y-auto">
-          <div className="bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 sm:px-6 py-4 sm:py-5 sticky top-0 z-10 shadow-lg">
-            <div className="flex justify-between items-start sm:items-center">
-              <div className="flex-1 min-w-0">
-                <button
-                  onClick={() => {
-                    setSelectedUser(null)
-                    setUserDetails(null)
-                    setBalanceAmount('')
-                    setNewPassword('')
-                    setTemporaryPassword('')
-                    setAppNotice('')
-                  }}
-                  className="text-white hover:bg-white/20 p-2 rounded-lg transition mb-2"
-                >
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <h3 className="text-xl sm:text-2xl font-bold text-white truncate">User Management</h3>
-                <p className="text-indigo-100 text-xs sm:text-sm mt-1 truncate">{userDetails.email}</p>
+        <div className="fixed inset-0 bg-slate-50 dark:bg-slate-950 z-50 overflow-y-auto">
+          <div className="sticky top-0 z-10 border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedUser(null)
+                  setUserDetails(null)
+                  setBalanceAmount('')
+                  setNewPassword('')
+                  setTemporaryPassword('')
+                  setAppNotice('')
+                }}
+                className="h-10 w-10 shrink-0 inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
+                aria-label="Back to users"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white truncate">
+                    {userDetails.fullName || 'User'}
+                  </h3>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                      userDetails.isActive !== false
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                        : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+                    }`}
+                  >
+                    {userDetails.isActive !== false ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">
+                  {userDetails.email}
+                  {userDetails.lastLogin?.loginAt
+                    ? ` · Last login ${formatDate(userDetails.lastLogin.loginAt)}`
+                    : ' · Never logged in'}
+                </p>
+              </div>
+              <div className="hidden sm:block text-right shrink-0">
+                <p className="text-[10px] uppercase tracking-wide text-slate-400">Balance</p>
+                <p className="text-lg font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                  {formatCurrency(userDetails.balance || 0)}
+                </p>
               </div>
             </div>
           </div>
@@ -843,11 +862,13 @@ export default function UsersList() {
               {!isSubAdmin && (
               <div className="space-y-6">
                 {/* User Info Card */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-                  <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <h4 className="text-base font-semibold mb-4 text-slate-900 dark:text-white flex items-center">
+                    <span className="w-8 h-8 mr-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-300 inline-flex items-center justify-center">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </span>
                     User Information
                   </h4>
                   <div className="space-y-4">
@@ -895,16 +916,10 @@ export default function UsersList() {
                       <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Balance</label>
                       <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(userDetails.balance || 0)}</p>
                     </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Email Verified</label>
-                      <ToggleSwitch
-                        enabled={userDetails.isEmailVerified || false}
-                        onChange={(enabled) => setUserDetails({ ...userDetails, isEmailVerified: enabled })}
-                      />
-                    </div>
                   </div>
                   {!isSubAdmin && (
                     <button
+                      type="button"
                       onClick={async () => {
                         try {
                           const response = await api.put(`/api/admin/users/${userDetails._id}`, {
@@ -922,59 +937,73 @@ export default function UsersList() {
                           alert('Failed to update user info')
                         }
                       }}
-                      className="mt-4 w-full px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
+                      className="mt-4 w-full px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition shadow-md shadow-indigo-600/20"
                     >
-                      Save User Info
+                      Save user info
                     </button>
                   )}
                 </div>
 
                 {/* Settings Card */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-                  <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Trading Settings
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <h4 className="text-base font-semibold mb-4 text-slate-900 dark:text-white flex items-center">
+                    <span className="w-8 h-8 mr-2 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-300 inline-flex items-center justify-center">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                      </svg>
+                    </span>
+                    Account controls
                   </h4>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Active User</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Enable or disable user account</p>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-900 dark:text-white">Active account</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Off blocks login for this user</p>
                       </div>
                       <ToggleSwitch
                         enabled={userDetails.isActive !== false}
                         onChange={(enabled) => setUserDetails({ ...userDetails, isActive: enabled })}
+                        onLabel="Active"
+                        offLabel="Off"
                       />
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Allow Trade</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Permit user to place trades</p>
+                    <div className="flex items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-900 dark:text-white">Allow trade</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Permit placing trades</p>
                       </div>
                       <ToggleSwitch
                         enabled={userDetails.allowTrade !== false}
                         onChange={(enabled) => setUserDetails({ ...userDetails, allowTrade: enabled })}
                       />
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Allow Withdraw</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Permit user to withdraw funds</p>
+                    <div className="flex items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-900 dark:text-white">Allow withdraw</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Permit withdrawals</p>
                       </div>
                       <ToggleSwitch
                         enabled={userDetails.allowWithdraw !== false}
                         onChange={(enabled) => setUserDetails({ ...userDetails, allowWithdraw: enabled })}
                       />
                     </div>
+                    <div className="flex items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-900 dark:text-white">Email verified</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Mark email as verified</p>
+                      </div>
+                      <ToggleSwitch
+                        enabled={userDetails.isEmailVerified || false}
+                        onChange={(enabled) => setUserDetails({ ...userDetails, isEmailVerified: enabled })}
+                      />
+                    </div>
                   </div>
                   <button
+                    type="button"
                     onClick={handleUpdateSettings}
-                    className="mt-4 w-full px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
+                    className="mt-4 w-full px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold transition shadow-md shadow-violet-600/20"
                   >
-                    Save Settings
+                    Save settings
                   </button>
                 </div>
               </div>
@@ -1018,16 +1047,18 @@ export default function UsersList() {
                       )}
 
                       {(canActivateUser || canDeactivateUser) && (
-                        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                          <div>
-                            <p className="font-semibold text-gray-900 dark:text-white">User Status</p>
+                        <div className="flex items-center justify-between gap-3 p-4 bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-gray-900 dark:text-white">User status</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              {userDetails.isActive ? 'Currently active' : 'Currently inactive'}
+                              {userDetails.isActive !== false ? 'Currently active' : 'Currently inactive'}
                             </p>
                           </div>
-                          <button
-                            onClick={async () => {
-                              const nextStatus = !userDetails.isActive
+                          <ToggleSwitch
+                            enabled={userDetails.isActive !== false}
+                            onLabel="Active"
+                            offLabel="Off"
+                            onChange={async (nextStatus) => {
                               if (nextStatus && !canActivateUser) {
                                 alert('You do not have permission to activate users.')
                                 return
@@ -1048,26 +1079,23 @@ export default function UsersList() {
                                 alert(error.response?.data?.message || 'Failed to update user status')
                               }
                             }}
-                            className={`px-4 py-2 rounded-lg text-white ${
-                              userDetails.isActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
-                            }`}
-                          >
-                            {userDetails.isActive ? 'Deactivate' : 'Activate'}
-                          </button>
+                          />
                         </div>
                       )}
 
                       {canManageTradeAccess && (
-                        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                          <div>
-                            <p className="font-semibold text-gray-900 dark:text-white">Trading Access</p>
+                        <div className="flex items-center justify-between gap-3 p-4 bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-gray-900 dark:text-white">Trading access</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               {userDetails.allowTrade !== false ? 'Trading is enabled' : 'Trading is blocked'}
                             </p>
                           </div>
-                          <button
-                            onClick={async () => {
-                              const nextAllowTrade = !(userDetails.allowTrade !== false)
+                          <ToggleSwitch
+                            enabled={userDetails.allowTrade !== false}
+                            onLabel="On"
+                            offLabel="Off"
+                            onChange={async (nextAllowTrade) => {
                               try {
                                 const response = await api.put(`/api/admin/users/${userDetails._id}/settings`, {
                                   allowTrade: nextAllowTrade
@@ -1080,39 +1108,58 @@ export default function UsersList() {
                                 alert(error.response?.data?.message || 'Failed to update trading permission')
                               }
                             }}
-                            className={`px-4 py-2 rounded-lg text-white ${
-                              userDetails.allowTrade !== false ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
-                            }`}
-                          >
-                            {userDetails.allowTrade !== false ? 'Block Trade' : 'Allow Trade'}
-                          </button>
+                          />
                         </div>
                       )}
 
                       {canAddBalance && (
-                        <div className="space-y-3 p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                          <p className="font-semibold text-gray-900 dark:text-white">Add Balance</p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                            <div className="p-2 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600">
-                              <p className="text-xs text-gray-500 dark:text-gray-400">Current Balance</p>
-                              <p className="font-semibold text-gray-900 dark:text-white">
+                        <div className="space-y-3 p-4 bg-gradient-to-br from-emerald-50 to-cyan-50 dark:from-emerald-950/30 dark:to-slate-800 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-semibold text-gray-900 dark:text-white">Add customer balance</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                Credits USDT to this customer immediately
+                              </p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-[10px] uppercase text-slate-500">Current</p>
+                              <p className="font-bold text-emerald-700 dark:text-emerald-300 tabular-nums">
                                 {formatCurrency(userDetails.balance || 0)}
                               </p>
                             </div>
                           </div>
-                          <input
-                            type="number"
-                            step="0.01"
-                            value={balanceAmount}
-                            onChange={(e) => setBalanceAmount(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"
-                            placeholder="Amount to add"
-                          />
+
+                          {/* <div className="rounded-lg bg-white/80 dark:bg-slate-900/50 border border-emerald-100 dark:border-emerald-900 px-3 py-2 space-y-1">
+                            <p className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-200 uppercase tracking-wide">
+                              Always applied
+                            </p>
+                            <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-0.5">
+                              <li>✓ Written to <strong>Deposit Log</strong></li>
+                              <li>✓ <strong>Email</strong> sent to customer ({userDetails.email || '—'})</li>
+                              <li>✓ Your name / email recorded on the deposit</li>
+                            </ul>
+                          </div> */}
+
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">
+                              Amount (USDT)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0.01"
+                              value={balanceAmount}
+                              onChange={(e) => setBalanceAmount(e.target.value)}
+                              className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-lg font-semibold tabular-nums focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                              placeholder="0.00"
+                            />
+                          </div>
                           <button
+                            type="button"
                             onClick={handleBalanceChange}
-                            className="w-full px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+                            className="w-full px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-semibold shadow-md shadow-emerald-500/20"
                           >
-                            Add Balance
+                            Add balance & notify customer
                           </button>
                         </div>
                       )}

@@ -88,8 +88,8 @@ export default function TradeDetail() {
             theme: theme === 'dark' ? 'dark' : 'light',
             style: '1',
             locale: 'en',
-            backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-            gridColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+            backgroundColor: theme === 'dark' ? '#0b1426' : '#ffffff',
+            gridColor: theme === 'dark' ? '#1c2a3f' : '#e2e8f0',
             width: '100%',
             height: '100%',
             hide_side_toolbar: false,
@@ -390,7 +390,7 @@ export default function TradeDetail() {
     if (isNaN(numChange)) return '0.00%'
     const isPositive = numChange >= 0
     return (
-      <span className={isPositive ? 'text-green-500' : 'text-red-500'}>
+      <span className={isPositive ? 'text-emerald-500' : 'text-rose-500'}>
         {isPositive ? '+' : ''}{numChange.toFixed(2)}%
       </span>
     )
@@ -433,7 +433,32 @@ export default function TradeDetail() {
   }
 
   const [userBalance, setUserBalance] = useState(0)
+  const [balanceVisible, setBalanceVisible] = useState(() => {
+    try {
+      const v = localStorage.getItem('fx_balance_visible')
+      return v === null ? true : v === 'true'
+    } catch {
+      return true
+    }
+  })
   const [loading, setLoading] = useState(false)
+
+  const toggleBalanceVisible = () => {
+    setBalanceVisible((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('fx_balance_visible', String(next))
+      } catch {
+        /* ignore */
+      }
+      return next
+    })
+  }
+
+  const formatBalance = (value) => {
+    if (!balanceVisible) return '••••••'
+    return Number(value || 0).toFixed(2)
+  }
 
   useEffect(() => {
     // Fetch user balance
@@ -600,14 +625,18 @@ export default function TradeDetail() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white pb-20 sm:pb-0">
+    <div className="min-h-screen flex flex-col bg-[var(--fx-color-bg)] text-[var(--fx-color-text)] pb-20 sm:pb-0">
       {/* Top Header Bar */}
-      <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
+      <div className="flex-shrink-0 bg-[var(--fx-color-surface)] border-b border-[var(--fx-color-border)] sticky top-0 z-40">
         <div className="px-3 sm:px-4 py-2 flex items-center justify-between">
           <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
             <button
-              onClick={() => navigate('/market')}
-              className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex-shrink-0"
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) navigate(-1)
+                else navigate('/trade')
+              }}
+              className="p-1.5 rounded hover:bg-[var(--fx-color-surface-muted)] flex-shrink-0"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -616,35 +645,35 @@ export default function TradeDetail() {
             {/* Chart Icon Button - Top Left */}
             <button
               onClick={() => setChartVisible(!chartVisible)}
-              className={`p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex-shrink-0 ${
-                chartVisible ? 'bg-indigo-100 dark:bg-indigo-900' : ''
+              className={`p-1.5 rounded hover:bg-[var(--fx-color-surface-muted)] flex-shrink-0 ${
+                chartVisible ? 'bg-[#1199fa]/15 dark:bg-[#1199fa]/20' : ''
               }`}
               title={chartVisible ? 'Hide Chart' : 'Show Chart'}
             >
-              <svg className={`w-5 h-5 ${chartVisible ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-5 h-5 ${chartVisible ? 'text-[#1199fa]' : 'text-[var(--fx-color-text-muted)]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </button>
             <div className="min-w-0 flex-1">
               <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap">
                 <h1 className="text-base sm:text-lg font-bold truncate">{displayName}</h1>
-                <span className="text-xs text-gray-500 dark:text-gray-400">{displaySymbol}</span>
-                {type === 'crypto' && <span className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">Perp</span>}
+                <span className="text-xs text-[var(--fx-color-text-muted)]">{displaySymbol}</span>
+                {type === 'crypto' && <span className="text-xs px-1.5 py-0.5 bg-[var(--fx-color-surface-muted)] rounded">Perp</span>}
               </div>
               <div className="flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm flex-wrap">
                 {formatChange(priceChange)}
-                <span className="text-gray-500 dark:text-gray-400 hidden sm:inline">Funding (8h) / Countdown</span>
-                <span className="text-gray-700 dark:text-gray-300 text-xs">0.00229% / 00:58:42</span>
+                <span className="text-[var(--fx-color-text-muted)] hidden sm:inline">Funding (8h) / Countdown</span>
+                <span className="text-[var(--fx-color-text)] text-xs">0.00229% / 00:58:42</span>
               </div>
             </div>
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            <button className="p-1.5 sm:p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+            <button className="p-1.5 sm:p-2 rounded hover:bg-[var(--fx-color-surface-muted)]">
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
-            <button className="p-1.5 sm:p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+            <button className="p-1.5 sm:p-2 rounded hover:bg-[var(--fx-color-surface-muted)]">
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
               </svg>
@@ -656,8 +685,8 @@ export default function TradeDetail() {
       {/* Main Trading Interface - All in row with managed sizes */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Order Book - Compact on mobile */}
-        <div className="w-28 sm:w-32 md:w-40 lg:w-64 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-          <div className="p-1.5 sm:p-2 md:p-3 border-b border-gray-200 dark:border-gray-700">
+        <div className="w-28 sm:w-32 md:w-40 lg:w-64 flex-shrink-0 bg-[var(--fx-color-surface)] border-r border-[var(--fx-color-border)] flex flex-col">
+          <div className="p-1.5 sm:p-2 md:p-3 border-b border-[var(--fx-color-border)]">
             <div className="flex items-center justify-between mb-1 sm:mb-2">
               <h3 className="text-xs sm:text-sm font-semibold hidden sm:block">Order Book</h3>
               <h3 className="text-xs font-semibold sm:hidden">Book</h3>
@@ -665,16 +694,16 @@ export default function TradeDetail() {
                 <input
                   type="number"
                   defaultValue="0.1"
-                  className="w-8 sm:w-10 md:w-12 px-0.5 sm:px-1 py-0.5 text-xs bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded"
+                  className="w-8 sm:w-10 md:w-12 px-0.5 sm:px-1 py-0.5 text-xs bg-[var(--fx-color-bg)] dark:bg-[var(--fx-color-surface-muted)] border border-[var(--fx-color-border)] rounded"
                 />
-                <button className="p-0.5 sm:p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                <button className="p-0.5 sm:p-1 rounded hover:bg-[var(--fx-color-surface-muted)]">
                   <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-[var(--fx-color-text-muted)] font-medium">
               <div className="truncate">Price</div>
               <div className="text-right truncate">Amt</div>
               <div className="text-right truncate hidden sm:block">Total</div>
@@ -687,21 +716,21 @@ export default function TradeDetail() {
               {orderBook.asks.slice(0, 8).map((ask, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-2 sm:grid-cols-3 gap-0.5 sm:gap-1 px-1 sm:px-2 md:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer"
+                  className="grid grid-cols-2 sm:grid-cols-3 gap-0.5 sm:gap-1 px-1 sm:px-2 md:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs hover:bg-rose-50 dark:hover:bg-rose-900/10 cursor-pointer"
                   onClick={() => setPrice(parseFloat(ask.price))}
                 >
-                  <span className="text-red-500 truncate">{parseFloat(ask.price).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</span>
-                  <span className="text-right text-gray-600 dark:text-gray-400 truncate">{parseFloat(ask.amount).toFixed(1)}</span>
+                  <span className="text-rose-500 truncate">{parseFloat(ask.price).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</span>
+                  <span className="text-right text-[var(--fx-color-text-muted)] truncate">{parseFloat(ask.amount).toFixed(1)}</span>
                   <span className="text-right text-gray-500 dark:text-gray-500 truncate hidden sm:block">{parseFloat(ask.total).toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
                 </div>
               ))}
             </div>
 
             {/* Current Price */}
-            <div className="px-1 sm:px-2 md:px-3 py-1.5 sm:py-2 border-y border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+            <div className="px-1 sm:px-2 md:px-3 py-1.5 sm:py-2 border-y border-[var(--fx-color-border)] bg-[var(--fx-color-bg)]">
               <div className="text-center">
                 <div className="text-sm sm:text-base md:text-lg font-bold">{formatPrice(currentPrice)}</div>
-                <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">{formatChange(priceChange)}</div>
+                <div className="text-[10px] sm:text-xs text-[var(--fx-color-text-muted)]">{formatChange(priceChange)}</div>
               </div>
             </div>
 
@@ -710,11 +739,11 @@ export default function TradeDetail() {
               {orderBook.bids.slice(0, 8).map((bid, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-2 sm:grid-cols-3 gap-0.5 sm:gap-1 px-1 sm:px-2 md:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs hover:bg-green-50 dark:hover:bg-green-900/10 cursor-pointer"
+                  className="grid grid-cols-2 sm:grid-cols-3 gap-0.5 sm:gap-1 px-1 sm:px-2 md:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs hover:bg-emerald-50 dark:hover:bg-emerald-900/10 cursor-pointer"
                   onClick={() => setPrice(parseFloat(bid.price))}
                 >
-                  <span className="text-green-500 truncate">{parseFloat(bid.price).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</span>
-                  <span className="text-right text-gray-600 dark:text-gray-400 truncate">{parseFloat(bid.amount).toFixed(1)}</span>
+                  <span className="text-emerald-500 truncate">{parseFloat(bid.price).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</span>
+                  <span className="text-right text-[var(--fx-color-text-muted)] truncate">{parseFloat(bid.amount).toFixed(1)}</span>
                   <span className="text-right text-gray-500 dark:text-gray-500 truncate hidden sm:block">{parseFloat(bid.total).toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
                 </div>
               ))}
@@ -722,12 +751,12 @@ export default function TradeDetail() {
           </div>
 
           {/* Volume Bar */}
-          <div className="p-1.5 sm:p-2 md:p-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div className="p-1.5 sm:p-2 md:p-3 border-t border-[var(--fx-color-border)] flex-shrink-0">
             <div className="flex h-1 sm:h-1.5 rounded overflow-hidden mb-0.5 sm:mb-1">
-              <div className="bg-green-500" style={{ width: '34.83%' }}></div>
-              <div className="bg-red-500" style={{ width: '65.17%' }}></div>
+              <div className="bg-emerald-500" style={{ width: '34.83%' }}></div>
+              <div className="bg-rose-500" style={{ width: '65.17%' }}></div>
             </div>
-            <div className="flex justify-between text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex justify-between text-[10px] sm:text-xs text-[var(--fx-color-text-muted)]">
               <span>35%</span>
               <span>65%</span>
             </div>
@@ -736,16 +765,16 @@ export default function TradeDetail() {
 
 
         {/* Right: Order Entry - Optimized and compact */}
-        <div className="flex-1 min-w-0 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col overflow-y-auto">
-          <div className="p-2 sm:p-3 border-b border-gray-200 dark:border-gray-700 space-y-1.5 sm:space-y-2 flex-shrink-0">
+        <div className="flex-1 min-w-0 bg-[var(--fx-color-surface)] border-l border-[var(--fx-color-border)] flex flex-col overflow-y-auto">
+          <div className="p-2 sm:p-3 border-b border-[var(--fx-color-border)] space-y-1.5 sm:space-y-2 flex-shrink-0">
             {/* Margin Mode & Leverage */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setMarginMode('cross')}
                 className={`flex-1 px-3 py-1.5 rounded text-xs font-medium ${
                   marginMode === 'cross'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                    ? 'bg-[#1199fa] text-white'
+                    : 'bg-[var(--fx-color-surface-muted)] text-[var(--fx-color-text)]'
                 }`}
               >
                 Cross
@@ -754,8 +783,8 @@ export default function TradeDetail() {
                 onClick={() => setMarginMode('isolated')}
                 className={`flex-1 px-3 py-1.5 rounded text-xs font-medium ${
                   marginMode === 'isolated'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                    ? 'bg-[#1199fa] text-white'
+                    : 'bg-[var(--fx-color-surface-muted)] text-[var(--fx-color-text)]'
                 }`}
               >
                 Isolated
@@ -763,7 +792,7 @@ export default function TradeDetail() {
               <select
                 value={leverage}
                 onChange={(e) => setLeverage(parseInt(e.target.value))}
-                className="px-2 py-1.5 rounded text-xs bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+                className="px-2 py-1.5 rounded text-xs bg-[var(--fx-color-surface-muted)] border border-[var(--fx-color-border)]"
               >
                 {[1, 2, 3, 5, 10, 20, 50, 100].map(lev => (
                   <option key={lev} value={lev}>{lev}x</option>
@@ -772,15 +801,30 @@ export default function TradeDetail() {
             </div>
 
             {/* Available Balance */}
-            <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs">
+            <div className="p-2 bg-[var(--fx-color-bg)] rounded text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Available</span>
-                <div className="flex items-center space-x-1">
-                  <span className="font-semibold">{userBalance.toFixed(2)} USDT</span>
-                  <button className="p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                    </svg>
+                <span className="text-[var(--fx-color-text-muted)]">Available</span>
+                <div className="flex items-center space-x-1.5">
+                  <span className="font-semibold tabular-nums">
+                    {formatBalance(userBalance)}{' '}
+                    <span className="text-[var(--fx-color-text-muted)] font-medium">USDT</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={toggleBalanceVisible}
+                    className="p-1 rounded hover:bg-[var(--fx-color-surface-muted)] text-[var(--fx-color-text-muted)]"
+                    aria-label={balanceVisible ? 'Hide balance' : 'Show balance'}
+                  >
+                    {balanceVisible ? (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                      </svg>
+                    )}
                   </button>
                 </div>
               </div>
@@ -792,8 +836,8 @@ export default function TradeDetail() {
                 onClick={() => setOrderType('limit')}
                 className={`flex-1 py-1.5 rounded text-xs sm:text-sm font-medium ${
                   orderType === 'limit'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                    ? 'bg-[#1199fa] text-white'
+                    : 'bg-[var(--fx-color-surface-muted)] text-[var(--fx-color-text)]'
                 }`}
               >
                 Limit
@@ -802,8 +846,8 @@ export default function TradeDetail() {
                 onClick={() => setOrderType('market')}
                 className={`flex-1 py-1.5 rounded text-xs sm:text-sm font-medium ${
                   orderType === 'market'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                    ? 'bg-[#1199fa] text-white'
+                    : 'bg-[var(--fx-color-surface-muted)] text-[var(--fx-color-text)]'
                 }`}
               >
                 Market
@@ -813,11 +857,11 @@ export default function TradeDetail() {
             {/* Price Input - Compact */}
             {orderType === 'limit' && (
               <div>
-                <label className="block text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-0.5">Price (USDT)</label>
+                <label className="block text-[10px] sm:text-xs text-[var(--fx-color-text-muted)] mb-0.5">Price (USDT)</label>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handlePriceAdjust('down')}
-                    className="px-1.5 py-1.5 bg-gray-100 dark:bg-gray-700 rounded text-xs hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95"
+                    className="px-1.5 py-1.5 bg-[var(--fx-color-surface-muted)] rounded text-xs hover:bg-[var(--fx-color-border)] active:scale-95"
                   >
                     -
                   </button>
@@ -834,17 +878,17 @@ export default function TradeDetail() {
                         setPrice(currentPrice)
                       }
                     }}
-                    className="flex-1 px-2 py-1.5 text-xs sm:text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="flex-1 px-2 py-1.5 text-xs sm:text-sm bg-[var(--fx-color-bg)] dark:bg-[var(--fx-color-surface-muted)] border border-[var(--fx-color-border)] rounded focus:outline-none focus:ring-1 focus:ring-[#1199fa]"
                   />
                   <button
                     onClick={() => handlePriceAdjust('up')}
-                    className="px-1.5 py-1.5 bg-gray-100 dark:bg-gray-700 rounded text-xs hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95"
+                    className="px-1.5 py-1.5 bg-[var(--fx-color-surface-muted)] rounded text-xs hover:bg-[var(--fx-color-border)] active:scale-95"
                   >
                     +
                   </button>
                   <button
                     onClick={() => setPrice(currentPrice > 0 ? currentPrice : parseFloat(item.price) || 0)}
-                    className="px-2 py-1.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded text-[10px] sm:text-xs font-medium active:scale-95"
+                    className="px-2 py-1.5 bg-[#1199fa]/15 dark:bg-[#1199fa]/20 text-[#0b7dd4] dark:text-[#7dd3fc] rounded text-[10px] sm:text-xs font-medium active:scale-95"
                   >
                     BBO
                   </button>
@@ -854,13 +898,13 @@ export default function TradeDetail() {
 
             {/* Amount Input - Compact (USDT) */}
             <div>
-              <label className="block text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-0.5">
-                Amount <span className="text-indigo-600 dark:text-indigo-400 font-semibold">(USDT)</span>
+              <label className="block text-[10px] sm:text-xs text-[var(--fx-color-text-muted)] mb-0.5">
+                Amount <span className="text-[#1199fa] font-semibold">(USDT)</span>
               </label>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => handleAmountAdjust('down')}
-                  className="px-1.5 py-1.5 bg-gray-100 dark:bg-gray-700 rounded text-xs hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95"
+                  className="px-1.5 py-1.5 bg-[var(--fx-color-surface-muted)] rounded text-xs hover:bg-[var(--fx-color-border)] active:scale-95"
                 >
                   -
                 </button>
@@ -869,22 +913,22 @@ export default function TradeDetail() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="flex-1 px-2 py-1.5 text-xs sm:text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="flex-1 px-2 py-1.5 text-xs sm:text-sm bg-[var(--fx-color-bg)] dark:bg-[var(--fx-color-surface-muted)] border border-[var(--fx-color-border)] rounded focus:outline-none focus:ring-1 focus:ring-[#1199fa]"
                 />
                 <button
                   onClick={() => handleAmountAdjust('up')}
-                  className="px-1.5 py-1.5 bg-gray-100 dark:bg-gray-700 rounded text-xs hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95"
+                  className="px-1.5 py-1.5 bg-[var(--fx-color-surface-muted)] rounded text-xs hover:bg-[var(--fx-color-border)] active:scale-95"
                 >
                   +
                 </button>
-                <div className="px-2 py-1.5 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded text-[10px] sm:text-xs font-semibold">
+                <div className="px-2 py-1.5 bg-[#1199fa]/15 dark:bg-[#1199fa]/20 text-[#0b7dd4] dark:text-[#7dd3fc] rounded text-[10px] sm:text-xs font-semibold">
                   USDT
                 </div>
               </div>
               {/* Conversion Display */}
               {amount && parseFloat(amount) > 0 && currentPrice && (
-                <div className="mt-1.5 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-[10px] sm:text-xs">
-                  <div className="flex items-center justify-between text-blue-700 dark:text-blue-300">
+                <div className="mt-1.5 px-2 py-1 bg-[#1199fa]/10 border border-[#1199fa]/25 rounded text-[10px] sm:text-xs">
+                  <div className="flex items-center justify-between text-[#0b7dd4] dark:text-[#7dd3fc]">
                     <span>You will receive:</span>
                     <span className="font-semibold">{calculateAssetAmount()} {displaySymbol}</span>
                   </div>
@@ -904,7 +948,7 @@ export default function TradeDetail() {
                     // Round to 2 decimal places to avoid precision issues
                     setAmount(Math.floor(calculatedAmount * 100) / 100)
                   }}
-                  className="px-1.5 py-1 text-[10px] sm:text-xs bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95"
+                  className="px-1.5 py-1 text-[10px] sm:text-xs bg-[var(--fx-color-surface-muted)] rounded hover:bg-[var(--fx-color-border)] active:scale-95"
                 >
                   {percent}%
                 </button>
@@ -919,9 +963,9 @@ export default function TradeDetail() {
                   id="reduceOnly"
                   checked={reduceOnly}
                   onChange={(e) => setReduceOnly(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  className="w-3.5 h-3.5 rounded border-[var(--fx-color-border)] text-[#1199fa] focus:ring-[#1199fa]"
                 />
-                <label htmlFor="reduceOnly" className="text-[10px] sm:text-xs text-gray-700 dark:text-gray-300">
+                <label htmlFor="reduceOnly" className="text-[10px] sm:text-xs text-[var(--fx-color-text)]">
                   Reduce Only
                 </label>
               </div>
@@ -929,7 +973,7 @@ export default function TradeDetail() {
                 <select
                   value={timeInForce}
                   onChange={(e) => setTimeInForce(e.target.value)}
-                  className="flex-1 px-1.5 py-1 text-[10px] sm:text-xs bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="flex-1 px-1.5 py-1 text-[10px] sm:text-xs bg-[var(--fx-color-bg)] dark:bg-[var(--fx-color-surface-muted)] border border-[var(--fx-color-border)] rounded focus:outline-none focus:ring-1 focus:ring-[#1199fa]"
                 >
                   <option value="GTC">GTC</option>
                   <option value="IOC">IOC</option>
@@ -939,15 +983,15 @@ export default function TradeDetail() {
             </div>
 
             {/* Order Summary - Compact */}
-            <div className="flex items-center justify-between p-1.5 bg-gray-50 dark:bg-gray-900 rounded text-[10px] sm:text-xs">
+            <div className="flex items-center justify-between p-1.5 bg-[var(--fx-color-bg)] rounded text-[10px] sm:text-xs">
               <div className="flex items-center space-x-3">
                 <div>
-                  <span className="text-gray-600 dark:text-gray-400">Max: </span>
+                  <span className="text-[var(--fx-color-text-muted)]">Max: </span>
                   <span className="font-semibold">{calculateMax()} USDT</span>
                 </div>
                 {amount && parseFloat(amount) > 0 && (
                   <div>
-                    <span className="text-gray-600 dark:text-gray-400">Amount: </span>
+                    <span className="text-[var(--fx-color-text-muted)]">Amount: </span>
                     <span className="font-semibold">{calculateAssetAmount()} {displaySymbol}</span>
                   </div>
                 )}
@@ -956,11 +1000,11 @@ export default function TradeDetail() {
 
             {/* Trade Timer Selector */}
             <div>
-              <label className="block text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-0.5">Trade Timer</label>
+              <label className="block text-[10px] sm:text-xs text-[var(--fx-color-text-muted)] mb-0.5">Trade Timer</label>
               <select
                 value={tradeTimer}
                 onChange={(e) => setTradeTimer(parseInt(e.target.value))}
-                className="w-full px-2 py-1.5 text-xs sm:text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full px-2 py-1.5 text-xs sm:text-sm bg-[var(--fx-color-bg)] dark:bg-[var(--fx-color-surface-muted)] border border-[var(--fx-color-border)] rounded focus:outline-none focus:ring-1 focus:ring-[#1199fa]"
               >
                 <option value={30}>30 seconds</option>
                 <option value={60}>60 seconds</option>
@@ -977,7 +1021,7 @@ export default function TradeDetail() {
                   setSide('buy')
                   handleOrder('buy') // Pass 'buy' directly to handleOrder
                 }}
-                className="w-full py-2.5 sm:py-3 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded font-semibold text-sm transition active:scale-[0.98]"
+                className="w-full py-2.5 sm:py-3 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded font-semibold text-sm transition active:scale-[0.98]"
               >
                 Buy/Long
               </button>
@@ -986,7 +1030,7 @@ export default function TradeDetail() {
                   setSide('sell')
                   handleOrder('sell') // Pass 'sell' directly to handleOrder
                 }}
-                className="w-full py-2.5 sm:py-3 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded font-semibold text-sm transition active:scale-[0.98]"
+                className="w-full py-2.5 sm:py-3 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white rounded font-semibold text-sm transition active:scale-[0.98]"
               >
                 Sell/Short
               </button>
@@ -997,13 +1041,13 @@ export default function TradeDetail() {
 
       {/* Chart Overlay - Full screen when visible */}
       {chartVisible && (
-        <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-[var(--fx-color-surface)] z-50 flex flex-col animate-in fade-in duration-200">
           {/* Chart Header - Improved UI */}
-          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 shadow-sm">
+          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-[var(--fx-color-border)] bg-[var(--fx-color-surface)] flex-shrink-0 shadow-sm">
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               <button
                 onClick={() => setChartVisible(false)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex-shrink-0"
+                className="p-2 rounded-lg hover:bg-[var(--fx-color-surface-muted)] transition flex-shrink-0"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1011,7 +1055,7 @@ export default function TradeDetail() {
               </button>
               <div className="flex items-center space-x-2 min-w-0">
                 <h3 className="text-base sm:text-lg font-bold flex-shrink-0">{displayName}</h3>
-                <span className="text-xs text-gray-500 dark:text-gray-400">{displaySymbol}</span>
+                <span className="text-xs text-[var(--fx-color-text-muted)]">{displaySymbol}</span>
               </div>
             </div>
             <div className="flex items-center space-x-2 flex-shrink-0">
@@ -1019,7 +1063,7 @@ export default function TradeDetail() {
                 {['1m', '5m', '15m', '1h', '4h', '1d'].map((timeframe) => (
                   <button
                     key={timeframe}
-                    className="px-2.5 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 whitespace-nowrap transition"
+                    className="px-2.5 py-1.5 text-xs font-medium bg-[var(--fx-color-surface-muted)] rounded-lg hover:bg-[var(--fx-color-border)] whitespace-nowrap transition"
                   >
                     {timeframe}
                   </button>
@@ -1027,7 +1071,7 @@ export default function TradeDetail() {
               </div>
               <button
                 onClick={() => setChartVisible(false)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition ml-2"
+                className="p-2 rounded-lg hover:bg-[var(--fx-color-surface-muted)] transition ml-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1037,23 +1081,23 @@ export default function TradeDetail() {
           </div>
           
           {/* Chart Content - Full height */}
-          <div className="flex-1 relative min-h-0 bg-white dark:bg-gray-900 overflow-hidden">
+          <div className="flex-1 relative min-h-0 bg-[var(--fx-color-surface)] overflow-hidden">
             <div ref={chartRef} className="w-full h-full" style={{ minHeight: '500px' }}>
               {/* TradingView chart will be injected here */}
             </div>
           </div>
 
           {/* Bottom Action Buttons - Improved UI */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 space-y-2 flex-shrink-0 shadow-lg">
+          <div className="p-4 border-t border-[var(--fx-color-border)] bg-[var(--fx-color-surface)] space-y-2 flex-shrink-0 shadow-lg">
             <button
               onClick={() => setChartVisible(false)}
-              className="w-full py-3.5 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-xl font-semibold text-base transition active:scale-[0.98] shadow-md hover:shadow-lg"
+              className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded-xl font-semibold text-base transition active:scale-[0.98] shadow-md hover:shadow-lg"
             >
               Buy/Long
             </button>
             <button
               onClick={() => setChartVisible(false)}
-              className="w-full py-3.5 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-xl font-semibold text-base transition active:scale-[0.98] shadow-md hover:shadow-lg"
+              className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white rounded-xl font-semibold text-base transition active:scale-[0.98] shadow-md hover:shadow-lg"
             >
               Sell/Short
             </button>
@@ -1063,8 +1107,8 @@ export default function TradeDetail() {
 
       {/* Bottom Tabs: Positions, Orders, Trade History - Only show when chart is hidden */}
       {!chartVisible && (
-        <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 fixed bottom-0 left-0 right-0 z-30 sm:relative">
-          <div className="flex items-center border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+        <div className="flex-shrink-0 bg-[var(--fx-color-surface)] border-t border-[var(--fx-color-border)] fixed bottom-0 left-0 right-0 z-30 sm:relative">
+          <div className="flex items-center border-b border-[var(--fx-color-border)] overflow-x-auto">
             {[
               { id: 'positions', label: `Positions (${positions.length})` },
               { id: 'orders', label: `Orders (${openOrders.length})` },
@@ -1081,8 +1125,8 @@ export default function TradeDetail() {
               }}
                 className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium whitespace-nowrap flex-shrink-0 ${
                   activeTab === tab.id
-                    ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                    ? 'text-[#1199fa] border-b-2 border-[#1199fa]/600'
+                    : 'text-[var(--fx-color-text-muted)] hover:text-[var(--fx-color-text)]'
                 }`}
               >
                 {tab.label}
@@ -1092,7 +1136,7 @@ export default function TradeDetail() {
           
           <div 
             ref={activeTab === 'history' ? historyScrollRef : null}
-            className={`p-3 sm:p-4 overflow-y-auto bg-gray-50 dark:bg-gray-900 transition-all duration-700 ease-in-out ${
+            className={`p-3 sm:p-4 overflow-y-auto bg-[var(--fx-color-bg)] transition-all duration-700 ease-in-out ${
               activeTab === 'history' && historyScrollHeight 
                 ? '' 
                 : 'max-h-48 sm:max-h-64'
@@ -1125,7 +1169,7 @@ export default function TradeDetail() {
             {activeTab === 'orders' && (
               <div className="space-y-3">
                 {openOrders.length === 0 ? (
-                  <div className="text-center text-sm text-gray-500 dark:text-gray-400 py-12">
+                  <div className="text-center text-sm text-[var(--fx-color-text-muted)] py-12">
                     <svg className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
@@ -1143,21 +1187,21 @@ export default function TradeDetail() {
                       <div 
                         key={order._id} 
                         onClick={() => setSelectedTradeDetail({ ...order, result: 'pending', status: 'open' })}
-                        className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all cursor-pointer overflow-hidden shadow-sm hover:shadow-md"
+                        className="bg-[var(--fx-color-surface)] rounded-lg border border-[var(--fx-color-border)] hover:border-gray-300 dark:hover:border-gray-600 transition-all cursor-pointer overflow-hidden shadow-sm hover:shadow-md"
                       >
                         {/* Header */}
-                        <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <div className="px-4 py-3 bg-[var(--fx-color-bg)] border-b border-[var(--fx-color-border)] flex items-center justify-between">
                           <div className="flex items-center space-x-3">
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm shadow-sm ${
                               order.side === 'buy' 
-                                ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400' 
-                                : 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
+                                ? 'bg-green-100 dark:bg-emerald-500/20 text-green-700 dark:text-green-400' 
+                                : 'bg-red-100 dark:bg-rose-500/20 text-red-700 dark:text-red-400'
                             }`}>
                               {order.side === 'buy' ? 'L' : 'S'}
                             </div>
                             <div>
-                              <div className="font-semibold text-gray-900 dark:text-white text-base">{order.symbol} / USDT</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                              <div className="font-semibold text-[var(--fx-color-text)] text-base">{order.symbol} / USDT</div>
+                              <div className="text-xs text-[var(--fx-color-text-muted)]">
                                 {order.side === 'buy' ? 'Long' : 'Short'} • {order.leverage}x
                               </div>
                             </div>
@@ -1181,37 +1225,37 @@ export default function TradeDetail() {
                         </div>
 
                         {/* Content */}
-                        <div className="p-4 space-y-3 bg-white dark:bg-gray-900">
+                        <div className="p-4 space-y-3 bg-[var(--fx-color-surface)]">
                           {/* Timer Progress */}
                           <div>
-                            <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-2">
+                            <div className="flex items-center justify-between text-xs text-[var(--fx-color-text-muted)] mb-2">
                               <span className="font-medium">Time Remaining</span>
-                              <span className="font-bold text-gray-900 dark:text-white">{timeRemaining}s</span>
+                              <span className="font-bold text-[var(--fx-color-text)]">{timeRemaining}s</span>
                             </div>
-                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                            <div className="w-full bg-[var(--fx-color-surface-muted)] rounded-full h-2 overflow-hidden">
                               <div 
-                                className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-1000 shadow-sm"
+                                className="h-full bg-gradient-to-r from-[#1199fa] to-[#0b7dd4] transition-all duration-1000 shadow-sm"
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
                           </div>
 
                           {/* Trade Details Grid */}
-                          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-[var(--fx-color-border)]">
                             <div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Entry Price</div>
-                              <div className="font-semibold text-gray-900 dark:text-white text-sm">${formatPrice(order.entryPrice)}</div>
+                              <div className="text-xs text-[var(--fx-color-text-muted)] mb-1">Entry Price</div>
+                              <div className="font-semibold text-[var(--fx-color-text)] text-sm">${formatPrice(order.entryPrice)}</div>
                             </div>
                             <div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Trade Amount</div>
-                              <div className="font-semibold text-gray-900 dark:text-white text-sm">${formatPrice(order.marginUsed || order.amount)} USDT</div>
+                              <div className="text-xs text-[var(--fx-color-text-muted)] mb-1">Trade Amount</div>
+                              <div className="font-semibold text-[var(--fx-color-text)] text-sm">${formatPrice(order.marginUsed || order.amount)} USDT</div>
                             </div>
                             <div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Order ID</div>
+                              <div className="text-xs text-[var(--fx-color-text-muted)] mb-1">Order ID</div>
                               <div className="font-mono text-xs text-gray-600 dark:text-gray-500 truncate">{order._id?.slice(-8) || 'N/A'}</div>
                             </div>
                             <div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Created</div>
+                              <div className="text-xs text-[var(--fx-color-text-muted)] mb-1">Created</div>
                               <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
                                 {new Date(order.createdAt).toLocaleTimeString()}
                               </div>
@@ -1227,7 +1271,7 @@ export default function TradeDetail() {
             {activeTab === 'history' && (
               <div className="space-y-2.5">
                 {tradeHistory.length === 0 ? (
-                  <div className="text-center text-sm text-gray-500 dark:text-gray-400 py-12">
+                  <div className="text-center text-sm text-[var(--fx-color-text-muted)] py-12">
                     <svg className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -1244,10 +1288,10 @@ export default function TradeDetail() {
                         <div 
                           key={trade._id} 
                           onClick={() => setSelectedTradeDetail(trade)}
-                          className={`group bg-white dark:bg-gray-900 rounded-lg border-l-4 transition-all cursor-pointer overflow-hidden ${
+                          className={`group bg-[var(--fx-color-surface)] rounded-lg border-l-4 transition-all cursor-pointer overflow-hidden ${
                             isWin 
-                              ? 'border-l-green-500 hover:border-l-green-600 border-r border-t border-b border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700/50 shadow-sm hover:shadow-md bg-gradient-to-r from-white via-green-50/30 to-white dark:from-gray-900 dark:via-green-900/5 dark:to-gray-900' 
-                              : 'border-l-red-500 hover:border-l-red-600 border-r border-t border-b border-gray-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-700/50 shadow-sm hover:shadow-md bg-gradient-to-r from-white via-red-50/30 to-white dark:from-gray-900 dark:via-red-900/5 dark:to-gray-900'
+                              ? 'border-l-emerald-500 hover:border-l-emerald-600 border-r border-t border-b border-[var(--fx-color-border)] hover:border-green-300 dark:hover:border-green-700/50 shadow-sm hover:shadow-md bg-gradient-to-r from-white via-green-50/30 to-white dark:from-gray-900 dark:via-green-900/5 dark:to-gray-900' 
+                              : 'border-l-rose-500 hover:border-l-rose-600 border-r border-t border-b border-[var(--fx-color-border)] hover:border-red-300 dark:hover:border-red-700/50 shadow-sm hover:shadow-md bg-gradient-to-r from-white via-red-50/30 to-white dark:from-gray-900 dark:via-red-900/5 dark:to-gray-900'
                           }`}
                         >
                           {/* Main Content - Professional Layout */}
@@ -1267,8 +1311,8 @@ export default function TradeDetail() {
                                   {/* Symbol & Type */}
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-baseline space-x-2 mb-1.5">
-                                      <div className="font-bold text-gray-900 dark:text-white text-lg">{trade.symbol}</div>
-                                      <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">/ USDT</div>
+                                      <div className="font-bold text-[var(--fx-color-text)] text-lg">{trade.symbol}</div>
+                                      <div className="text-xs text-[var(--fx-color-text-muted)] font-medium">/ USDT</div>
                                     </div>
                                     <div className="flex items-center space-x-2">
                                       <span className={`px-2.5 py-1 rounded-md text-xs font-bold shadow-sm ${
@@ -1279,7 +1323,7 @@ export default function TradeDetail() {
                                         {trade.side === 'buy' ? 'LONG' : 'SHORT'}
                                       </span>
                                       <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">•</span>
-                                      <span className="text-xs text-gray-600 dark:text-gray-400 font-semibold">{trade.leverage}x</span>
+                                      <span className="text-xs text-[var(--fx-color-text-muted)] font-semibold">{trade.leverage}x</span>
                                     </div>
                                   </div>
                               </div>
@@ -1287,13 +1331,13 @@ export default function TradeDetail() {
                               {/* Center Section - Prices */}
                               <div className="hidden sm:flex items-center space-x-6 flex-shrink-0">
                                 <div className="text-center">
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 font-semibold uppercase tracking-wide">Entry</div>
-                                  <div className="font-bold text-gray-900 dark:text-white text-sm">${formatPrice(trade.entryPrice)}</div>
+                                  <div className="text-xs text-[var(--fx-color-text-muted)] mb-1 font-semibold uppercase tracking-wide">Entry</div>
+                                  <div className="font-bold text-[var(--fx-color-text)] text-sm">${formatPrice(trade.entryPrice)}</div>
                                 </div>
                                 <div className="text-gray-300 dark:text-gray-600 text-xl font-bold">→</div>
                                 <div className="text-center">
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 font-semibold uppercase tracking-wide">Exit</div>
-                                  <div className="font-bold text-gray-900 dark:text-white text-sm">${formatPrice(trade.exitPrice)}</div>
+                                  <div className="text-xs text-[var(--fx-color-text-muted)] mb-1 font-semibold uppercase tracking-wide">Exit</div>
+                                  <div className="font-bold text-[var(--fx-color-text)] text-sm">${formatPrice(trade.exitPrice)}</div>
                                 </div>
                               </div>
 
@@ -1315,8 +1359,8 @@ export default function TradeDetail() {
                                 </div>
                                 <span className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-md ${
                                   isWin 
-                                    ? 'bg-green-500 hover:bg-green-600 text-white' 
-                                    : 'bg-red-500 hover:bg-red-600 text-white'
+                                    ? 'bg-emerald-500 hover:bg-green-600 text-white' 
+                                    : 'bg-rose-500 hover:bg-red-600 text-white'
                                 }`}>
                                   {isWin ? 'WIN' : 'LOSS'}
                                 </span>
@@ -1324,24 +1368,24 @@ export default function TradeDetail() {
                             </div>
 
                             {/* Mobile View - Details */}
-                            <div className="sm:hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="sm:hidden mt-4 pt-4 border-t border-[var(--fx-color-border)]">
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 font-semibold">Entry Price</div>
-                                  <div className="font-bold text-gray-900 dark:text-white text-sm">${formatPrice(trade.entryPrice)}</div>
+                                  <div className="text-xs text-[var(--fx-color-text-muted)] mb-1 font-semibold">Entry Price</div>
+                                  <div className="font-bold text-[var(--fx-color-text)] text-sm">${formatPrice(trade.entryPrice)}</div>
                                 </div>
                                 <div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 font-semibold">Exit Price</div>
-                                  <div className="font-bold text-gray-900 dark:text-white text-sm">${formatPrice(trade.exitPrice)}</div>
+                                  <div className="text-xs text-[var(--fx-color-text-muted)] mb-1 font-semibold">Exit Price</div>
+                                  <div className="font-bold text-[var(--fx-color-text)] text-sm">${formatPrice(trade.exitPrice)}</div>
                                 </div>
                                 <div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 font-semibold">Date</div>
+                                  <div className="text-xs text-[var(--fx-color-text-muted)] mb-1 font-semibold">Date</div>
                                   <div className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
                                     {new Date(trade.closedAt || trade.createdAt).toLocaleDateString()}
                                   </div>
                                 </div>
                                 <div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 font-semibold">Time</div>
+                                  <div className="text-xs text-[var(--fx-color-text-muted)] mb-1 font-semibold">Time</div>
                                   <div className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
                                     {new Date(trade.closedAt || trade.createdAt).toLocaleTimeString()}
                                   </div>
@@ -1357,7 +1401,7 @@ export default function TradeDetail() {
               </div>
             )}
             {activeTab === 'positions' && (
-              <div className="text-center text-sm text-gray-500 dark:text-gray-400 py-4">
+              <div className="text-center text-sm text-[var(--fx-color-text-muted)] py-4">
                 No open positions
               </div>
             )}

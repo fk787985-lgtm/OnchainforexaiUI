@@ -1,19 +1,20 @@
 :root {
-  /* Brand + semantic colors */
-  --fx-color-bg: #f1f5f9;
+  /* Crypto exchange — Crypto.com inspired */
+  --fx-color-bg: #f4f7fb;
   --fx-color-surface: #ffffff;
-  --fx-color-surface-muted: #e2e8f0;
+  --fx-color-surface-muted: #eef2f7;
   --fx-color-border: #e2e8f0;
-  --fx-color-text: #0f172a;
-  --fx-color-text-muted: #475569;
-  --fx-color-primary: #06b6d4;
-  --fx-color-primary-strong: #2563eb;
-  --fx-color-success: #16a34a;
-  --fx-color-warning: #d97706;
-  --fx-color-danger: #dc2626;
-  --fx-color-info: #0284c7;
+  --fx-color-text: #0b1426;
+  --fx-color-text-muted: #5b6b82;
+  --fx-color-primary: #1199fa;
+  --fx-color-primary-strong: #0b7dd4;
+  --fx-color-accent: #00d4aa;
+  --fx-color-navy: #0b1426;
+  --fx-color-success: #00c087;
+  --fx-color-warning: #f0b90b;
+  --fx-color-danger: #ea3943;
+  --fx-color-info: #1199fa;
 
-  /* Spacing system */
   --fx-space-1: 4px;
   --fx-space-2: 8px;
   --fx-space-3: 12px;
@@ -21,7 +22,6 @@
   --fx-space-6: 24px;
   --fx-space-8: 32px;
 
-  /* Typography */
   --fx-text-xs: 12px;
   --fx-text-sm: 14px;
   --fx-text-base: 16px;
@@ -29,29 +29,38 @@
   --fx-text-xl: 20px;
   --fx-text-2xl: 24px;
 
-  /* Radius */
-  --fx-radius-sm: 8px;
-  --fx-radius-md: 12px;
-  --fx-radius-lg: 16px;
-  --fx-radius-xl: 20px;
+  --fx-radius-sm: 10px;
+  --fx-radius-md: 14px;
+  --fx-radius-lg: 18px;
+  --fx-radius-xl: 24px;
 
-  /* Shadow */
-  --fx-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --fx-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-  --fx-shadow-lg: 0 16px 48px rgba(15, 23, 42, 0.12);
+  --fx-shadow-sm: 0 1px 2px rgba(11, 20, 38, 0.05);
+  --fx-shadow-md: 0 8px 24px rgba(11, 20, 38, 0.08);
+  --fx-shadow-lg: 0 20px 48px rgba(11, 20, 38, 0.12);
+  --fx-shadow-btn: 0 8px 20px rgba(17, 153, 250, 0.28);
+
+  --fx-font: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --fx-font-display: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 .dark {
-  --fx-color-bg: #020617;
-  --fx-color-surface: #0b1220;
-  --fx-color-surface-muted: #111827;
-  --fx-color-border: #1f2937;
-  --fx-color-text: #f8fafc;
-  --fx-color-text-muted: #94a3b8;
-  --fx-color-primary: #22d3ee;
-  --fx-color-primary-strong: #3b82f6;
-  --fx-color-success: #22c55e;
-  --fx-color-warning: #f59e0b;
-  --fx-color-danger: #ef4444;
-  --fx-color-info: #38bdf8;
+  --fx-color-bg: #060b14;
+  --fx-color-surface: #0b1426;
+  --fx-color-surface-muted: #111c2e;
+  --fx-color-border: #1c2a3f;
+  --fx-color-text: #f5f7fa;
+  --fx-color-text-muted: #8b9bb4;
+  --fx-color-primary: #2da8ff;
+  --fx-color-primary-strong: #1199fa;
+  --fx-color-accent: #00e0b0;
+  --fx-color-navy: #060b14;
+  --fx-color-success: #00d4a1;
+  --fx-color-warning: #f0b90b;
+  --fx-color-danger: #ff5c65;
+  --fx-color-info: #2da8ff;
+
+  --fx-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --fx-shadow-md: 0 8px 28px rgba(0, 0, 0, 0.4);
+  --fx-shadow-lg: 0 24px 56px rgba(0, 0, 0, 0.5);
+  --fx-shadow-btn: 0 8px 24px rgba(45, 168, 255, 0.25);
 }
