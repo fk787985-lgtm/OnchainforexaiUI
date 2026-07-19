@@ -286,7 +286,7 @@ export default function LandingPage() {
                 </div>
               )}
               <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">
-                {siteSettings.site.name || 'XCrypto'}
+                {siteSettings.site.name || 'Onchainforexai'}
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
@@ -866,7 +866,7 @@ export default function LandingPage() {
                   </div>
                 )}
                 <span className="text-xl font-extrabold text-white">
-                  {siteSettings.site.name || 'XCrypto'}
+                  {siteSettings.site.name || 'Onchainforexai'}
                 </span>
               </div>
               <p className="text-sm text-slate-400 max-w-xs leading-relaxed">
@@ -912,7 +912,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-slate-800 mt-10 pt-8 flex flex-col sm:flex-row justify-between gap-3 text-slate-500 text-sm">
-            <p>© {new Date().getFullYear()} {siteSettings.site.name || 'XCrypto'}. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} {siteSettings.site.name || 'Onchainforexai'}. All rights reserved.</p>
             <p className="text-xs text-slate-600">Trade responsibly. Crypto assets can be volatile.</p>
           </div>
         </div>

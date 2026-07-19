@@ -122,7 +122,7 @@ function SectionLabel({ children }) {
 export default function UserSidebar({
   open,
   onClose,
-  siteName = 'XCrypto',
+  siteName = 'Onchainforexai',
   logo,
   onLogout,
   onOpenTransfer,

@@ -12,7 +12,7 @@ const SIDE =
  */
 export default function AuthFancyShell({
   children,
-  siteName = 'XCrypto',
+  siteName = 'Onchainforexai',
   logo,
   title = 'Trade crypto with confidence',
   subtitle = 'Real-time markets · Secure wallet · Instant deposits'

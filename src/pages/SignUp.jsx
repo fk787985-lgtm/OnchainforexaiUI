@@ -396,7 +396,7 @@ export default function SignUp() {
 
   return (
     <AuthFancyShell
-      siteName={siteSettings.site.name || 'XCrypto'}
+      siteName={siteSettings.site.name || 'Onchainforexai'}
       logo={siteSettings.site.logo}
       title="Start your trading journey"
       subtitle="Create an account in minutes and access crypto markets worldwide."

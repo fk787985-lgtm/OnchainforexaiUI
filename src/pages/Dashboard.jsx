@@ -268,7 +268,7 @@ export default function Dashboard() {
       <UserSidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        siteName={siteSettings.site.name || 'XCrypto'}
+        siteName={siteSettings.site.name || 'Onchainforexai'}
         logo={siteSettings.site.logo}
         onLogout={handleLogout}
         onOpenTransfer={() => setShowTransferModal(true)}

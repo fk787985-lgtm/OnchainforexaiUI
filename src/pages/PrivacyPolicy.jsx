@@ -32,7 +32,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-bold mb-4">1. Introduction</h2>
             <p className="text-gray-700 dark:text-gray-300 mb-4">
-              Welcome to {siteSettings.site.name || 'XCrypto'}. We are committed to protecting your personal information and your right to privacy. 
+              Welcome to {siteSettings.site.name || 'Onchainforexai'}. We are committed to protecting your personal information and your right to privacy. 
               This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use 
               our trading platform.
             </p>

@@ -83,7 +83,7 @@ export default function ResetPassword() {
               </div>
             )}
             <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              {siteSettings.site.name || 'XCrypto'}
+              {siteSettings.site.name || 'Onchainforexai'}
             </span>
           </Link>
         </div>

@@ -14,7 +14,7 @@ export const useSiteSettings = () => {
 export const SiteSettingsProvider = ({ children }) => {
   const [settings, setSettings] = useState({
     site: {
-      name: 'XCrypto',
+      name: 'Onchainforexai',
       logo: '',
       favicon: '',
       currency: 'USDT',
@@ -55,7 +55,7 @@ export const SiteSettingsProvider = ({ children }) => {
         const fetchedSettings = response.data.settings
         setSettings({
           site: {
-            name: fetchedSettings.site?.name || 'XCrypto',
+            name: fetchedSettings.site?.name || 'Onchainforexai',
             logo: fetchedSettings.site?.logo || '',
             favicon: fetchedSettings.site?.favicon || '',
             currency: fetchedSettings.site?.currency || 'USDT',

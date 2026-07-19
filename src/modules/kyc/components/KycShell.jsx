@@ -22,7 +22,7 @@ export default function KycShell({
 }) {
   const navigate = useNavigate()
   const { settings: siteSettings } = useSiteSettings()
-  const siteName = siteSettings?.site?.name || 'XCrypto'
+  const siteName = siteSettings?.site?.name || 'Onchainforexai'
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-teal-50/30 to-slate-100 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 text-slate-900 dark:text-slate-100">

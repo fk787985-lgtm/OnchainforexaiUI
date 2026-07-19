@@ -280,7 +280,7 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
             </svg>
           </button>
           <span className="text-base font-extrabold tracking-tight text-[#0b1426] dark:text-white truncate">
-            {siteSettings.site.name || 'XCrypto'}{' '}
+            {siteSettings.site.name || 'Onchainforexai'}{' '}
             <span className="text-[#1199fa]">Staff</span>
           </span>
         </div>

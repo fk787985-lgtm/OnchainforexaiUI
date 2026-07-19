@@ -48,7 +48,7 @@ export default function SiteSettings() {
         const fetchedSettings = response.data.settings
         setSettings({
           site: {
-            name: fetchedSettings.site?.name || 'XCrypto',
+            name: fetchedSettings.site?.name || 'Onchainforexai',
             logo: fetchedSettings.site?.logo || '',
             favicon: fetchedSettings.site?.favicon || '',
             currency: fetchedSettings.site?.currency || 'USDT',
@@ -534,7 +534,7 @@ export default function SiteSettings() {
               value={settings.site.seo.metaTitle}
               onChange={(e) => handleSEOChange('metaTitle', e.target.value)}
               className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950"
-              placeholder="e.g., XCrypto - Forex & Crypto Exchange"
+              placeholder="e.g., Onchainforexai - Forex & Crypto Exchange"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Appears in search engine results (recommended: 50-60 characters)
