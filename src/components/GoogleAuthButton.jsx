@@ -30,8 +30,6 @@ function loadGisScript() {
 
 /**
  * Continue with Google — customer Sign In/Up, or admin portal login.
- * @param {string} endpoint - API path (default customer; use /api/auth/admin/google for admin)
- * @param {boolean} adminMode - when true, skip profile-completion flow
  */
 export default function GoogleAuthButton({
   onSuccess,
@@ -60,11 +58,13 @@ export default function GoogleAuthButton({
     setLoading(true)
     try {
       const networkMeta = await getClientNetworkMeta()
-      // Never send a stale Bearer token on Google login (avoids confusing 401s / logout loops)
+      // Never send a stale Bearer token on Google login
       const { data } = await api.post(
         endpointRef.current,
         {
           idToken: credential,
+          credential, // alias for older servers
+          pageOrigin: typeof window !== 'undefined' ? window.location.origin : '',
           ...networkMeta,
           clientLocale: navigator.language || undefined
         },
@@ -86,7 +86,13 @@ export default function GoogleAuthButton({
         handlersRef.current.onSuccess?.(data)
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Google authentication failed'
+      const body = err.response?.data
+      let msg = body?.message || err.message || 'Google authentication failed'
+      // Surface audience mismatch clearly in the UI
+      if (body?.code === 'GOOGLE_AUD_MISMATCH' && body?.tokenAud && body?.expectedAud) {
+        msg = `Google client mismatch: site token is for …${String(body.tokenAud).slice(-18)}, server expects …${String(body.expectedAud).slice(-18)}`
+        console.error('[Google] audience mismatch', body)
+      }
       toast.error(msg)
       handlersRef.current.onError?.(msg)
     } finally {
@@ -100,14 +106,18 @@ export default function GoogleAuthButton({
       try {
         const { data } = await api.get('/api/auth/google/config', { skipAuth: true })
         if (cancelled) return
-        // Prefer server client id; fall back to Vite env if API omits it
+        // Always prefer the API’s client ID (same one that will verify the token)
         const id =
-          (data.success && data.enabled && data.clientId) ||
-          import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-          ''
+          (data?.success && data?.clientId && String(data.clientId).trim()) ||
+          (import.meta.env.VITE_GOOGLE_CLIENT_ID
+            ? String(import.meta.env.VITE_GOOGLE_CLIENT_ID).trim()
+            : '')
         if (id) {
-          setClientId(String(id).trim())
+          setClientId(id)
           setEnabled(true)
+          if (import.meta.env.DEV) {
+            console.log('[Google] using client_id suffix …' + id.slice(-20))
+          }
         }
       } catch {
         const fallback = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -131,7 +141,12 @@ export default function GoogleAuthButton({
         await loadGisScript()
         if (cancelled || !window.google?.accounts?.id || !hostRef.current) return
 
-        // ux_mode popup + FedCM reduces COOP / postMessage issues in modern Chrome
+        // Avoid FedCM in production — it often triggers COOP/postMessage issues
+        // behind CDNs while local dev still works.
+        const isProdSite =
+          typeof window !== 'undefined' &&
+          !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(window.location.origin)
+
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: (response) => {
@@ -141,8 +156,8 @@ export default function GoogleAuthButton({
           auto_select: false,
           cancel_on_tap_outside: true,
           context: 'signin',
-          // popup is default; FedCM helps when COOP would block legacy postMessage
-          use_fedcm_for_prompt: true,
+          // FedCM only on localhost; production uses classic GIS button callback
+          use_fedcm_for_prompt: !isProdSite,
           itp_support: true
         })
 
@@ -169,11 +184,7 @@ export default function GoogleAuthButton({
   }, [enabled, clientId, handleCredential])
 
   if (!enabled) {
-    return (
-      <div className="w-full text-center text-xs text-slate-400 py-2">
-        {/* Hidden when not configured — parent can still show email form */}
-      </div>
-    )
+    return <div className="w-full text-center text-xs text-slate-400 py-2" />
   }
 
   return (
