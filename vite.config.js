@@ -16,10 +16,16 @@ export default defineConfig(({ mode }) => {
 
   console.log(`[vite] /api proxy → ${proxyTarget}`)
 
+  // Google Identity Services needs popups / postMessage; strict COOP breaks GIS.
+  const coopHeaders = {
+    'Cross-Origin-Opener-Policy': 'same-origin-allow-popups'
+  }
+
   return {
     plugins: [react()],
     server: {
       port: 3000,
+      headers: coopHeaders,
       proxy: {
         '/api': {
           target: proxyTarget,
@@ -54,6 +60,9 @@ export default defineConfig(({ mode }) => {
           }
         }
       }
+    },
+    preview: {
+      headers: coopHeaders
     }
   }
 })

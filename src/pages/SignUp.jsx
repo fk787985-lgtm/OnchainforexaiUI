@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import api from '../utils/axios'
 import { useTheme } from '../context/ThemeContext'
 import { useSiteSettings } from '../context/SiteSettingsContext'
@@ -27,7 +27,6 @@ export default function SignUp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const navigate = useNavigate()
   const { theme } = useTheme()
-  const emailCheckTimeoutRef = useRef(null)
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -109,48 +108,15 @@ export default function SignUp() {
     return ''
   }
 
-  // Debounced email check
-  const checkEmailExists = async (emailValue) => {
-    if (emailCheckTimeoutRef.current) {
-      clearTimeout(emailCheckTimeoutRef.current)
-    }
-
-    emailCheckTimeoutRef.current = setTimeout(async () => {
-      if (!emailValue || validateEmail(emailValue)) {
-        return
-      }
-
-      setCheckingEmail(true)
-      try {
-        const response = await api.post('/api/auth/check-email', { 
-          email: emailValue.toLowerCase() 
-        }, {
-          timeout: 5000 // 5 second timeout
-        })
-        
-        if (response.data.exists) {
-          navigate('/signin', { state: { email: emailValue } })
-        } else {
-          setStep('password')
-        }
-      } catch (err) {
-        // If check fails, allow user to proceed
-        setStep('password')
-      } finally {
-        setCheckingEmail(false)
-      }
-    }, 800) // Wait 800ms after user stops typing
-  }
-
+  // Only update the field while typing — do not advance until Continue is clicked
   const handleEmailChange = (e) => {
     const value = e.target.value
     setEmail(value)
-    const validation = validateEmail(value)
-    setEmailError(validation)
-    
-    // Auto-check email after validation passes
-    if (!validation && value.length > 5) {
-      checkEmailExists(value)
+    setError('')
+    if (fieldTouched.email) {
+      setEmailError(validateEmail(value))
+    } else {
+      setEmailError('')
     }
   }
 
@@ -386,17 +352,9 @@ export default function SignUp() {
     }
   }
 
-  useEffect(() => {
-    return () => {
-      if (emailCheckTimeoutRef.current) {
-        clearTimeout(emailCheckTimeoutRef.current)
-      }
-    }
-  }, [])
-
   return (
     <AuthFancyShell
-      siteName={siteSettings.site.name || 'Onchainforexai'}
+      siteName={siteSettings.site.name || 'XCrypto'}
       logo={siteSettings.site.logo}
       title="Start your trading journey"
       subtitle="Create an account in minutes and access crypto markets worldwide."
@@ -452,7 +410,7 @@ export default function SignUp() {
 
                 <button
                   type="submit"
-                  disabled={checkingEmail || !!emailError || !email}
+                  disabled={checkingEmail || !email.trim()}
                   className="fx-btn fx-btn-primary fx-btn-block"
                 >
                   {checkingEmail ? (

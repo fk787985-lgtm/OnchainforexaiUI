@@ -10,7 +10,7 @@ import PasswordInput from '../components/PasswordInput'
 export default function Settings() {
   const navigate = useNavigate()
   const { settings: siteSettings } = useSiteSettings()
-  const name = siteSettings?.site?.name || 'Onchainforexai'
+  const name = siteSettings?.site?.name || 'XCrypto'
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')

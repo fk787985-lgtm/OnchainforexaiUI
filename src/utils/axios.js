@@ -42,9 +42,16 @@ const api = axios.create({
   }
 })
 
-// Add token to requests
+// Add token to requests (unless skipAuth — e.g. Google login)
 api.interceptors.request.use(
   (config) => {
+    if (config.skipAuth) {
+      if (config.headers) {
+        delete config.headers.Authorization
+        delete config.headers.authorization
+      }
+      return config
+    }
     const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -62,11 +69,17 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       const url = String(error.config?.url || '')
-      // Don't force-logout on background notification polls (avoids loop/noise)
+      // Don't force-logout on background polls or login/auth attempts
       const isBackgroundPoll =
         url.includes('/notifications/unread-count') ||
         url.includes('/api/notifications/unread-count')
-      if (!isBackgroundPoll) {
+      const isAuthAttempt =
+        url.includes('/auth/google') ||
+        url.includes('/auth/signin') ||
+        url.includes('/auth/signup') ||
+        url.includes('/auth/login') ||
+        url.includes('/auth/admin')
+      if (!isBackgroundPoll && !isAuthAttempt && !error.config?.skipAuth) {
         localStorage.removeItem('token')
         const path = window.location.pathname || ''
         if (!path.startsWith('/signin') && !path.startsWith('/admin/signin')) {

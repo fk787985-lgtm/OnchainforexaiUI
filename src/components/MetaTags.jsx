@@ -6,7 +6,7 @@ export default function MetaTags() {
   const { settings } = useSiteSettings()
 
   useEffect(() => {
-    const siteName = settings.site?.name || 'Onchainforexai'
+    const siteName = settings.site?.name || 'XCrypto'
     const seo = settings.site?.seo || {}
     const favicon = settings.site?.favicon
 

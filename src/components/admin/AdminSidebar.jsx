@@ -150,7 +150,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             </svg>
           </button>
           <span className="text-base font-extrabold tracking-tight text-[#0b1426] dark:text-white truncate">
-            {siteSettings.site.name || 'Onchainforexai'}{' '}
+            {siteSettings.site.name || 'XCrypto'}{' '}
             <span className="text-[#1199fa]">Admin</span>
           </span>
         </div>
@@ -186,7 +186,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
               )}
               <div className="min-w-0">
                 <p className="text-base font-extrabold tracking-tight truncate">
-                  {siteSettings.site.name || 'Onchainforexai'}
+                  {siteSettings.site.name || 'XCrypto'}
                 </p>
                 <p className="text-[10px] uppercase tracking-[0.14em] text-white/60 font-semibold">Admin panel</p>
               </div>

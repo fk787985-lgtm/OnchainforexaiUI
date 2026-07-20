@@ -53,14 +53,26 @@ export default function GoogleAuthButton({
   adminModeRef.current = adminMode
 
   const handleCredential = useCallback(async (credential) => {
+    if (!credential) {
+      toast.error('Google sign-in was cancelled')
+      return
+    }
     setLoading(true)
     try {
       const networkMeta = await getClientNetworkMeta()
-      const { data } = await api.post(endpointRef.current, {
-        idToken: credential,
-        ...networkMeta,
-        clientLocale: navigator.language || undefined
-      })
+      // Never send a stale Bearer token on Google login (avoids confusing 401s / logout loops)
+      const { data } = await api.post(
+        endpointRef.current,
+        {
+          idToken: credential,
+          ...networkMeta,
+          clientLocale: navigator.language || undefined
+        },
+        {
+          headers: { Authorization: undefined },
+          skipAuth: true
+        }
+      )
       if (!data.success) {
         throw new Error(data.message || 'Google authentication failed')
       }
@@ -86,14 +98,23 @@ export default function GoogleAuthButton({
     let cancelled = false
     ;(async () => {
       try {
-        const { data } = await api.get('/api/auth/google/config')
+        const { data } = await api.get('/api/auth/google/config', { skipAuth: true })
         if (cancelled) return
-        if (data.success && data.enabled && data.clientId) {
-          setClientId(data.clientId)
+        // Prefer server client id; fall back to Vite env if API omits it
+        const id =
+          (data.success && data.enabled && data.clientId) ||
+          import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+          ''
+        if (id) {
+          setClientId(String(id).trim())
           setEnabled(true)
         }
       } catch {
-        /* not configured */
+        const fallback = import.meta.env.VITE_GOOGLE_CLIENT_ID
+        if (!cancelled && fallback) {
+          setClientId(String(fallback).trim())
+          setEnabled(true)
+        }
       }
     })()
     return () => {
@@ -110,6 +131,7 @@ export default function GoogleAuthButton({
         await loadGisScript()
         if (cancelled || !window.google?.accounts?.id || !hostRef.current) return
 
+        // ux_mode popup + FedCM reduces COOP / postMessage issues in modern Chrome
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: (response) => {
@@ -119,10 +141,13 @@ export default function GoogleAuthButton({
           auto_select: false,
           cancel_on_tap_outside: true,
           context: 'signin',
-          ux_mode: 'popup'
+          // popup is default; FedCM helps when COOP would block legacy postMessage
+          use_fedcm_for_prompt: true,
+          itp_support: true
         })
 
         hostRef.current.innerHTML = ''
+        const width = Math.min(Math.max(hostRef.current.offsetWidth || 320, 240), 400)
         window.google.accounts.id.renderButton(hostRef.current, {
           type: 'standard',
           theme: 'outline',
@@ -130,7 +155,7 @@ export default function GoogleAuthButton({
           text: 'continue_with',
           shape: 'rectangular',
           logo_alignment: 'left',
-          width: Math.min(hostRef.current.offsetWidth || 360, 400)
+          width
         })
       } catch (err) {
         console.error('Google button render failed:', err)

@@ -181,7 +181,7 @@ export default function SignIn() {
 
   return (
     <AuthFancyShell
-      siteName={siteSettings.site.name || 'Onchainforexai'}
+      siteName={siteSettings.site.name || 'XCrypto'}
       logo={siteSettings.site.logo}
       title="Welcome back, trader"
       subtitle="Sign in to access markets, portfolio PnL, and secure funding."

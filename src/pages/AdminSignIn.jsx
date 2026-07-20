@@ -343,7 +343,7 @@ export default function AdminSignIn() {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-purple-300/50">
-            © 2026 {siteSettings.site.name || 'Onchainforexai'} Admin Portal. All rights reserved.
+            © 2026 {siteSettings.site.name || 'XCrypto'} Admin Portal. All rights reserved.
           </p>
         </div>
       </div>

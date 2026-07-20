@@ -123,7 +123,7 @@ export default function ConfirmEmail() {
               </div>
             )}
             <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              {siteSettings.site.name || 'Onchainforexai'}
+              {siteSettings.site.name || 'XCrypto'}
             </span>
           </Link>
         </div>

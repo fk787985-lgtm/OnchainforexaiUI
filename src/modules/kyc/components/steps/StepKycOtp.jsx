@@ -23,7 +23,7 @@ export default function StepKycOtp({
   statusPath = '/api/kyc/otp/status'
 }) {
   const { settings: siteSettings } = useSiteSettings()
-  const siteName = siteSettings?.site?.name || 'Onchainforexai'
+  const siteName = siteSettings?.site?.name || 'XCrypto'
   const [digits, setDigits] = useState(Array(LENGTH).fill(''))
   const [seconds, setSeconds] = useState(expiresInSec)
   const [phase, setPhase] = useState('entry') // entry | waiting
