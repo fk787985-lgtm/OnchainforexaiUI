@@ -781,10 +781,13 @@ export default function KYCVerify() {
       continueDisabled={loading}
       showNav={step !== 6}
     >
-      {kycMeta?.status === 'rejected' && step < 11 ? (
+      {(kycMeta?.status === 'rejected' || kycMeta?.resubmissionRequested) && step < 11 ? (
         <div className="mb-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-300">
-          Previous submission rejected
-          {kycMeta.rejectionReason ? `: ${kycMeta.rejectionReason}` : '.'} Please update and resubmit.
+          {kycMeta.status === 'rejected' ? 'Previous submission rejected' : 'Admin requested document resubmission'}
+          {kycMeta.rejectionReason || kycMeta.resubmissionNote
+            ? `: ${kycMeta.rejectionReason || kycMeta.resubmissionNote}`
+            : '.'}{' '}
+          Please update and resubmit.
         </div>
       ) : null}
 

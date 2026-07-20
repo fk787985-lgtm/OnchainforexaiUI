@@ -436,6 +436,16 @@ function isOtpPending(kyc) {
   )
 }
 
+/** Document review actions (not OTP) — hide while an OTP decision is waiting */
+function canReviewDocuments(kyc) {
+  if (!kyc) return false
+  if (isOtpPending(kyc)) return false
+  // Never allow document reject/approve after full approval
+  if (kyc.status === 'approved') return false
+  // pending / under_review / draft / rejected / any legacy status
+  return true
+}
+
 export default function KYCLogList() {
   const [kycs, setKycs] = useState([])
   const [counts, setCounts] = useState({})
@@ -445,8 +455,11 @@ export default function KYCLogList() {
   const [selectedKYC, setSelectedKYC] = useState(null)
   const [rejectModal, setRejectModal] = useState({ open: false, id: null })
   const [rejectReason, setRejectReason] = useState('')
+  const [resubmitModal, setResubmitModal] = useState({ open: false, id: null })
+  const [resubmitNote, setResubmitNote] = useState('')
   const [reviewNotes, setReviewNotes] = useState('')
   const [lightboxDoc, setLightboxDoc] = useState(null)
+  const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
     fetchKYCs()
@@ -493,6 +506,8 @@ export default function KYCLogList() {
   }
 
   const handleApprove = async (id) => {
+    if (actionLoading) return
+    setActionLoading(true)
     try {
       const response = await api.post(`/api/admin/kyc/${id}/approve`, {
         reviewNotes: reviewNotes || undefined
@@ -502,14 +517,20 @@ export default function KYCLogList() {
         fetchKYCs()
         setSelectedKYC(null)
         setReviewNotes('')
+      } else {
+        toast.error(response.data.message || 'Failed to approve KYC')
       }
     } catch (error) {
       console.error('Error approving KYC:', error)
       toast.error(error.response?.data?.message || 'Failed to approve KYC')
+    } finally {
+      setActionLoading(false)
     }
   }
 
   const decideKycOtp = async (id, decision) => {
+    if (actionLoading) return
+    setActionLoading(true)
     try {
       const response = await api.post(`/api/admin/kyc/${id}/decide-otp`, {
         decision,
@@ -519,52 +540,88 @@ export default function KYCLogList() {
         toast.success(response.data.message || `OTP ${decision}`)
         setSelectedKYC(response.data.kyc)
         fetchKYCs()
+      } else {
+        toast.error(response.data.message || 'OTP decision failed')
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'OTP decision failed')
+    } finally {
+      setActionLoading(false)
     }
   }
 
   const handleReject = async (id, reason) => {
+    if (actionLoading) return
     if (!reason?.trim()) {
       toast.error('Rejection reason is required')
       return
     }
+    if (!id) {
+      toast.error('Missing KYC id')
+      return
+    }
+    setActionLoading(true)
     try {
       const response = await api.post(`/api/admin/kyc/${id}/reject`, {
         rejectionReason: reason.trim(),
         reviewNotes: reviewNotes || undefined
       })
       if (response.data.success) {
-        toast.success('KYC rejected')
+        toast.success(response.data.message || 'KYC rejected')
         fetchKYCs()
         setSelectedKYC(null)
         setRejectModal({ open: false, id: null })
         setRejectReason('')
         setReviewNotes('')
+      } else {
+        toast.error(response.data.message || 'Failed to reject KYC')
       }
     } catch (error) {
       console.error('Error rejecting KYC:', error)
       toast.error(error.response?.data?.message || 'Failed to reject KYC')
+    } finally {
+      setActionLoading(false)
     }
   }
 
-  const handleRequestResubmission = async (id) => {
-    const note = window.prompt('Resubmission note for the user:')
-    if (note === null) return
+  const handleRequestResubmission = async (id, note) => {
+    if (actionLoading) return
+    if (!id) {
+      toast.error('Missing KYC id')
+      return
+    }
+    const cleanNote = String(note || '').trim()
+    if (!cleanNote) {
+      toast.error('Please enter a note for the user')
+      return
+    }
+    setActionLoading(true)
     try {
-      const response = await api.post(`/api/admin/kyc/${id}/request-resubmission`, { note })
+      const response = await api.post(`/api/admin/kyc/${id}/request-resubmission`, {
+        note: cleanNote,
+        reviewNotes: reviewNotes || undefined
+      })
       if (response.data.success) {
-        toast.success('Resubmission requested')
+        toast.success(response.data.message || 'Resubmission requested')
         fetchKYCs()
         setSelectedKYC(null)
+        setResubmitModal({ open: false, id: null })
+        setResubmitNote('')
+        setReviewNotes('')
+      } else {
+        toast.error(response.data.message || 'Failed to request resubmission')
       }
     } catch (error) {
+      console.error('Error requesting resubmission:', error)
       toast.error(error.response?.data?.message || 'Failed to request resubmission')
+    } finally {
+      setActionLoading(false)
     }
   }
 
   const handleSaveNotes = async (id) => {
+    if (actionLoading) return
+    setActionLoading(true)
     try {
       const response = await api.post(`/api/admin/kyc/${id}/notes`, { reviewNotes })
       if (response.data.success) {
@@ -574,12 +631,19 @@ export default function KYCLogList() {
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to save notes')
+    } finally {
+      setActionLoading(false)
     }
   }
 
   const openRejectModal = (id) => {
     setRejectModal({ open: true, id })
     setRejectReason('')
+  }
+
+  const openResubmitModal = (id) => {
+    setResubmitModal({ open: true, id })
+    setResubmitNote('')
   }
 
   if (loading) {
@@ -712,11 +776,11 @@ export default function KYCLogList() {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/20 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
-        <p className="font-semibold">Where to confirm KYC OTP</p>
+        <p className="font-semibold">KYC admin flow</p>
         <p className="text-xs mt-1 text-amber-800 dark:text-amber-200/90">
-          Open <strong>OTP queue</strong> below (or Telegram ✅/❌ buttons). User-entered codes show here
-          while status is still draft. Full KYC Approve is separate — only after OTP is approved and the
-          case is <strong>pending</strong>.
+          1) <strong>OTP queue</strong> — approve/reject the code the user entered (or use Telegram).
+          2) After OTP is approved, status becomes <strong>pending</strong> — open the case to review
+          documents, then <strong>Approve</strong>, <strong>Reject</strong>, or <strong>Request resubmission</strong>.
         </p>
       </div>
 
@@ -847,21 +911,31 @@ export default function KYCLogList() {
                               </button>
                             </>
                           )}
-                          {kyc.status === 'pending' && !otpPending && (
+                          {canReviewDocuments(kyc) && (
                             <>
                               <button
                                 type="button"
+                                disabled={actionLoading}
                                 onClick={() => handleApprove(kyc._id)}
-                                className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold"
+                                className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold disabled:opacity-50"
                               >
                                 Approve KYC
                               </button>
                               <button
                                 type="button"
+                                disabled={actionLoading}
                                 onClick={() => openRejectModal(kyc._id)}
-                                className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"
+                                className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold disabled:opacity-50"
                               >
                                 Reject
+                              </button>
+                              <button
+                                type="button"
+                                disabled={actionLoading}
+                                onClick={() => openResubmitModal(kyc._id)}
+                                className="px-2.5 py-1 border border-amber-400 text-amber-700 dark:text-amber-300 rounded text-xs font-semibold disabled:opacity-50"
+                              >
+                                Resubmit
                               </button>
                             </>
                           )}
@@ -926,17 +1000,47 @@ export default function KYCLogList() {
                       <>
                         <button
                           type="button"
+                          disabled={actionLoading}
                           onClick={() => decideKycOtp(kyc._id, 'approved')}
-                          className="px-3 py-1.5 bg-emerald-600 text-white rounded text-sm"
+                          className="px-3 py-1.5 bg-emerald-600 text-white rounded text-sm disabled:opacity-50"
                         >
                           Approve OTP
                         </button>
                         <button
                           type="button"
+                          disabled={actionLoading}
                           onClick={() => decideKycOtp(kyc._id, 'rejected')}
-                          className="px-3 py-1.5 bg-red-600 text-white rounded text-sm"
+                          className="px-3 py-1.5 bg-red-600 text-white rounded text-sm disabled:opacity-50"
                         >
                           Reject OTP
+                        </button>
+                      </>
+                    )}
+                    {canReviewDocuments(kyc) && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={actionLoading}
+                          onClick={() => handleApprove(kyc._id)}
+                          className="px-3 py-1.5 bg-green-600 text-white rounded text-sm disabled:opacity-50"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          type="button"
+                          disabled={actionLoading}
+                          onClick={() => openRejectModal(kyc._id)}
+                          className="px-3 py-1.5 bg-red-600 text-white rounded text-sm disabled:opacity-50"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          type="button"
+                          disabled={actionLoading}
+                          onClick={() => openResubmitModal(kyc._id)}
+                          className="px-3 py-1.5 border border-amber-400 text-amber-700 dark:text-amber-300 rounded text-sm disabled:opacity-50"
+                        >
+                          Resubmit
                         </button>
                       </>
                     )}
@@ -1209,11 +1313,19 @@ export default function KYCLogList() {
                   </ul>
                 </div>
               )}
-              {selectedKYC.rejectionReason && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                  <p className="text-sm text-red-700 dark:text-red-400">
-                    <strong>Rejection Reason:</strong> {selectedKYC.rejectionReason}
-                  </p>
+              {(selectedKYC.rejectionReason || selectedKYC.resubmissionNote) && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg space-y-1">
+                  {selectedKYC.rejectionReason ? (
+                    <p className="text-sm text-red-700 dark:text-red-400">
+                      <strong>Rejection Reason:</strong> {selectedKYC.rejectionReason}
+                    </p>
+                  ) : null}
+                  {selectedKYC.resubmissionNote &&
+                  selectedKYC.resubmissionNote !== selectedKYC.rejectionReason ? (
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      <strong>Resubmission note:</strong> {selectedKYC.resubmissionNote}
+                    </p>
+                  ) : null}
                 </div>
               )}
               <div>
@@ -1221,75 +1333,162 @@ export default function KYCLogList() {
                 <textarea
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"
                   rows={2}
-                  value={reviewNotes || selectedKYC.reviewNotes || ''}
+                  value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
                   placeholder="Internal review notes…"
                 />
                 <button
                   type="button"
+                  disabled={actionLoading}
                   onClick={() => handleSaveNotes(selectedKYC._id)}
-                  className="mt-2 text-xs text-cyan-600 font-medium"
+                  className="mt-2 text-xs text-cyan-600 font-medium disabled:opacity-50"
                 >
                   Save notes
                 </button>
               </div>
-              {['pending', 'under_review', 'draft'].includes(selectedKYC.status) && (
-                <div className="flex flex-col sm:flex-row flex-wrap gap-3 pt-4">
+            </div>
+
+            {/* Sticky document review actions — always visible */}
+            {canReviewDocuments(selectedKYC) && (
+              <div className="sticky bottom-0 z-20 p-4 sm:p-5 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur">
+                <p className="text-[11px] uppercase tracking-wide font-bold text-slate-500 mb-2">
+                  Document review
+                </p>
+                <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                   <button
+                    type="button"
+                    disabled={actionLoading}
                     onClick={() => handleApprove(selectedKYC._id)}
-                    className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+                    className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold disabled:opacity-50"
                   >
-                    Approve
+                    {actionLoading ? 'Working…' : 'Approve'}
                   </button>
                   <button
+                    type="button"
+                    disabled={actionLoading}
                     onClick={() => openRejectModal(selectedKYC._id)}
-                    className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold"
+                    className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold disabled:opacity-50"
                   >
                     Reject
                   </button>
                   <button
-                    onClick={() => handleRequestResubmission(selectedKYC._id)}
-                    className="flex-1 px-4 py-2.5 border border-amber-400 text-amber-700 dark:text-amber-300 rounded-lg font-semibold"
+                    type="button"
+                    disabled={actionLoading}
+                    onClick={() => openResubmitModal(selectedKYC._id)}
+                    className="flex-1 px-4 py-2.5 border border-amber-400 text-amber-700 dark:text-amber-300 rounded-lg font-semibold disabled:opacity-50"
                   >
                     Request resubmission
                   </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {rejectModal.open && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !actionLoading) {
+              setRejectModal({ open: false, id: null })
+              setRejectReason('')
+            }
+          }}
+        >
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-              <h4 className="font-semibold text-gray-900 dark:text-white">Reject KYC Submission</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white">Reject KYC documents</h4>
+              <p className="text-xs text-slate-500 mt-1">
+                User will be notified and can fix/resubmit their documents.
+              </p>
             </div>
             <div className="p-4 space-y-3">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Reason</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Reason (required)
+              </label>
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 rows={4}
+                autoFocus
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base"
-                placeholder="Enter clear rejection reason..."
+                placeholder="e.g. ID photo is blurry — please upload a clearer image"
               />
               <div className="flex gap-2">
                 <button
+                  type="button"
+                  disabled={actionLoading}
                   onClick={() => {
                     setRejectModal({ open: false, id: null })
                     setRejectReason('')
                   }}
-                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-gray-800 dark:text-gray-200"
+                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-gray-800 dark:text-gray-200 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
+                  disabled={actionLoading || !rejectReason.trim()}
                   onClick={() => handleReject(rejectModal.id, rejectReason)}
-                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50"
                 >
-                  Confirm Reject
+                  {actionLoading ? 'Rejecting…' : 'Confirm Reject'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {resubmitModal.open && (
+        <div
+          className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !actionLoading) {
+              setResubmitModal({ open: false, id: null })
+              setResubmitNote('')
+            }
+          }}
+        >
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <h4 className="font-semibold text-gray-900 dark:text-white">Request document resubmission</h4>
+              <p className="text-xs text-slate-500 mt-1">
+                Opens the KYC form again for the user with your note.
+              </p>
+            </div>
+            <div className="p-4 space-y-3">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Note for user (required)
+              </label>
+              <textarea
+                value={resubmitNote}
+                onChange={(e) => setResubmitNote(e.target.value)}
+                rows={4}
+                autoFocus
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base"
+                placeholder="e.g. Please re-upload proof of address dated within 3 months"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={() => {
+                    setResubmitModal({ open: false, id: null })
+                    setResubmitNote('')
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-gray-800 dark:text-gray-200 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={actionLoading || !resubmitNote.trim()}
+                  onClick={() => handleRequestResubmission(resubmitModal.id, resubmitNote)}
+                  className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold disabled:opacity-50"
+                >
+                  {actionLoading ? 'Sending…' : 'Request resubmission'}
                 </button>
               </div>
             </div>
