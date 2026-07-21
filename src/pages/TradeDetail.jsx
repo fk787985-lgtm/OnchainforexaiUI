@@ -625,9 +625,9 @@ export default function TradeDetail() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--fx-color-bg)] text-[var(--fx-color-text)] pb-20 sm:pb-0">
+    <div className="h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden bg-[var(--fx-color-bg)] text-[var(--fx-color-text)]">
       {/* Top Header Bar */}
-      <div className="flex-shrink-0 bg-[var(--fx-color-surface)] border-b border-[var(--fx-color-border)] sticky top-0 z-40">
+      <div className="flex-shrink-0 bg-[var(--fx-color-surface)] border-b border-[var(--fx-color-border)] z-40">
         <div className="px-3 sm:px-4 py-2 flex items-center justify-between">
           <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
             <button
@@ -683,9 +683,9 @@ export default function TradeDetail() {
       </div>
 
       {/* Main Trading Interface - All in row with managed sizes */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* Left: Order Book - Compact on mobile */}
-        <div className="w-28 sm:w-32 md:w-40 lg:w-64 flex-shrink-0 bg-[var(--fx-color-surface)] border-r border-[var(--fx-color-border)] flex flex-col">
+        <div className="w-28 sm:w-32 md:w-40 lg:w-64 flex-shrink-0 min-h-0 bg-[var(--fx-color-surface)] border-r border-[var(--fx-color-border)] flex flex-col">
           <div className="p-1.5 sm:p-2 md:p-3 border-b border-[var(--fx-color-border)]">
             <div className="flex items-center justify-between mb-1 sm:mb-2">
               <h3 className="text-xs sm:text-sm font-semibold hidden sm:block">Order Book</h3>
@@ -764,9 +764,9 @@ export default function TradeDetail() {
         </div>
 
 
-        {/* Right: Order Entry - Optimized and compact */}
-        <div className="flex-1 min-w-0 bg-[var(--fx-color-surface)] border-l border-[var(--fx-color-border)] flex flex-col overflow-y-auto">
-          <div className="p-2 sm:p-3 border-b border-[var(--fx-color-border)] space-y-1.5 sm:space-y-2 flex-shrink-0">
+        {/* Right: Order Entry - scrollable form + sticky Buy/Sell so Sell is never clipped on small screens */}
+        <div className="flex-1 min-w-0 min-h-0 bg-[var(--fx-color-surface)] border-l border-[var(--fx-color-border)] flex flex-col">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2 sm:p-3 border-b border-[var(--fx-color-border)] space-y-1.5 sm:space-y-2">
             {/* Margin Mode & Leverage */}
             <div className="flex items-center space-x-2">
               <button
@@ -1013,24 +1013,28 @@ export default function TradeDetail() {
                 <option value={600}>10 minutes</option>
               </select>
             </div>
+          </div>
 
-            {/* Action Buttons - Compact */}
-            <div className="space-y-1.5">
+          {/* Sticky action bar — always visible on any device (Buy + Sell side by side) */}
+          <div className="flex-shrink-0 p-2 sm:p-3 border-t border-[var(--fx-color-border)] bg-[var(--fx-color-surface)] safe-area-bottom">
+            <div className="grid grid-cols-2 gap-2">
               <button
+                type="button"
                 onClick={() => {
                   setSide('buy')
-                  handleOrder('buy') // Pass 'buy' directly to handleOrder
+                  handleOrder('buy')
                 }}
-                className="w-full py-2.5 sm:py-3 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded font-semibold text-sm transition active:scale-[0.98]"
+                className="w-full min-h-[44px] py-2.5 sm:py-3 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded font-semibold text-sm transition active:scale-[0.98]"
               >
                 Buy/Long
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setSide('sell')
-                  handleOrder('sell') // Pass 'sell' directly to handleOrder
+                  handleOrder('sell')
                 }}
-                className="w-full py-2.5 sm:py-3 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white rounded font-semibold text-sm transition active:scale-[0.98]"
+                className="w-full min-h-[44px] py-2.5 sm:py-3 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white rounded font-semibold text-sm transition active:scale-[0.98]"
               >
                 Sell/Short
               </button>
@@ -1087,28 +1091,32 @@ export default function TradeDetail() {
             </div>
           </div>
 
-          {/* Bottom Action Buttons - Improved UI */}
-          <div className="p-4 border-t border-[var(--fx-color-border)] bg-[var(--fx-color-surface)] space-y-2 flex-shrink-0 shadow-lg">
-            <button
-              onClick={() => setChartVisible(false)}
-              className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded-xl font-semibold text-base transition active:scale-[0.98] shadow-md hover:shadow-lg"
-            >
-              Buy/Long
-            </button>
-            <button
-              onClick={() => setChartVisible(false)}
-              className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white rounded-xl font-semibold text-base transition active:scale-[0.98] shadow-md hover:shadow-lg"
-            >
-              Sell/Short
-            </button>
+          {/* Bottom Action Buttons — side by side so Sell is never off-screen */}
+          <div className="p-3 sm:p-4 border-t border-[var(--fx-color-border)] bg-[var(--fx-color-surface)] flex-shrink-0 shadow-lg safe-area-bottom">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <button
+                type="button"
+                onClick={() => setChartVisible(false)}
+                className="w-full min-h-[44px] py-3 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded-xl font-semibold text-sm sm:text-base transition active:scale-[0.98] shadow-md hover:shadow-lg"
+              >
+                Buy/Long
+              </button>
+              <button
+                type="button"
+                onClick={() => setChartVisible(false)}
+                className="w-full min-h-[44px] py-3 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white rounded-xl font-semibold text-sm sm:text-base transition active:scale-[0.98] shadow-md hover:shadow-lg"
+              >
+                Sell/Short
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Bottom Tabs: Positions, Orders, Trade History - Only show when chart is hidden */}
+      {/* Bottom Tabs: Positions, Orders, Trade History — in document flow so they never cover Buy/Sell */}
       {!chartVisible && (
-        <div className="flex-shrink-0 bg-[var(--fx-color-surface)] border-t border-[var(--fx-color-border)] fixed bottom-0 left-0 right-0 z-30 sm:relative">
-          <div className="flex items-center border-b border-[var(--fx-color-border)] overflow-x-auto">
+        <div className="flex-shrink-0 bg-[var(--fx-color-surface)] border-t border-[var(--fx-color-border)] z-30 max-h-[40vh] sm:max-h-[45vh] flex flex-col min-h-0">
+          <div className="flex items-center border-b border-[var(--fx-color-border)] overflow-x-auto flex-shrink-0">
             {[
               { id: 'positions', label: `Positions (${positions.length})` },
               { id: 'orders', label: `Orders (${openOrders.length})` },
@@ -1136,10 +1144,10 @@ export default function TradeDetail() {
           
           <div 
             ref={activeTab === 'history' ? historyScrollRef : null}
-            className={`p-3 sm:p-4 overflow-y-auto bg-[var(--fx-color-bg)] transition-all duration-700 ease-in-out ${
+            className={`p-3 sm:p-4 overflow-y-auto bg-[var(--fx-color-bg)] transition-all duration-700 ease-in-out flex-1 min-h-0 ${
               activeTab === 'history' && historyScrollHeight 
                 ? '' 
-                : 'max-h-48 sm:max-h-64'
+                : 'max-h-32 sm:max-h-48'
             }`}
             style={activeTab === 'history' && historyScrollHeight ? { maxHeight: `${historyScrollHeight}px` } : {}}
             onScroll={(e) => {

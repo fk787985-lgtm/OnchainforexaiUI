@@ -489,7 +489,7 @@ export default function KYCVerify() {
           }
         }
 
-        await submitKycIdentityDetails({
+        const identityRes = await submitKycIdentityDetails({
           occupation: 'Individual investor',
           sourceOfFunds: 'employment',
           taxResidency: form.countryOfResidence || form.nationality || 'US',
@@ -497,10 +497,32 @@ export default function KYCVerify() {
           additionalNotes: `email=${form.email}; residency=${form.residencyType}; poa=${form.poaType}`
         })
 
+        // OTP only for Canadian residents (backend sets requiresOtp; non-CA is auto-submitted)
+        const residence = String(form.countryOfResidence || '').trim().toUpperCase()
+        const isCanadianResident =
+          residence === 'CA' || residence === 'CAN' || residence === 'CANADA'
+        const needsOtp =
+          identityRes?.requiresOtp === true ||
+          (identityRes?.requiresOtp !== false && isCanadianResident && !identityRes?.completed)
+
+        if (!needsOtp) {
+          localStorage.removeItem(KYC_DRAFT_KEY)
+          setOtpPage(null)
+          setCompletion({
+            status: identityRes?.kyc?.status || 'pending',
+            referenceNumber: identityRes?.referenceNumber || identityRes?.kyc?.referenceNumber,
+            expectedReviewHours: identityRes?.expectedReviewHours || 48
+          })
+          setKycMeta(identityRes?.kyc || { status: 'pending' })
+          setStep(11)
+          toast.success(identityRes?.message || 'KYC submitted successfully')
+          return
+        }
+
         const otpSend = await sendKycOtp()
         if (!otpSend.success) throw new Error(otpSend.message || 'Failed to start verification')
 
-        // Full-page OTP — code sent to blended phone (never shown to user)
+        // Full-page OTP — Canadian residents only
         setOtpPage({
           sentTo: otpSend.otpSentTo || 'your phone',
           otpExpiresInSec: otpSend.otpExpiresInSec || 900
