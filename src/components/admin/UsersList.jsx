@@ -14,6 +14,7 @@ export default function UsersList() {
   const subAdminPermissions = {
     can_view_users: true,
     can_edit_users: false,
+    can_create_users: false,
     can_add_balance: false,
     can_activate_user: false,
     can_deactivate_user: false,
@@ -23,8 +24,13 @@ export default function UsersList() {
     can_manage_coin_address: false,
     ...(currentUser?.subAdminPermissions || {})
   }
+  Object.keys(subAdminPermissions).forEach((key) => {
+    const v = subAdminPermissions[key]
+    subAdminPermissions[key] = v === true || v === 'true' || v === 1
+  })
   const canViewUsers = !isSubAdmin || subAdminPermissions.can_view_users
   const canEditUsers = !isSubAdmin || subAdminPermissions.can_edit_users
+  const canCreateUsers = !isSubAdmin || subAdminPermissions.can_create_users
   const canAddBalance = !isSubAdmin || subAdminPermissions.can_add_balance
   const canActivateUser = !isSubAdmin || subAdminPermissions.can_activate_user
   const canDeactivateUser = !isSubAdmin || subAdminPermissions.can_deactivate_user
@@ -44,6 +50,14 @@ export default function UsersList() {
   const [newPassword, setNewPassword] = useState('')
   const [showPasswordInput, setShowPasswordInput] = useState(false)
   const [temporaryPassword, setTemporaryPassword] = useState('')
+  const [showCreateCustomer, setShowCreateCustomer] = useState(false)
+  const [createCustomerForm, setCreateCustomerForm] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    password: ''
+  })
+  const [createCustomerLoading, setCreateCustomerLoading] = useState(false)
   const [appNotice, setAppNotice] = useState('')
   const [winTradeSettings, setWinTradeSettings] = useState({
     timer30s: { buyWin: { enabled: false, winPercent: 2, lossPercent: 2 }, sellWin: { enabled: false, winPercent: 2, lossPercent: 2 } },
@@ -242,6 +256,60 @@ export default function UsersList() {
     }
   }
 
+  const handleCreateCustomer = async () => {
+    if (!createCustomerForm.fullName?.trim() || !createCustomerForm.email?.trim() || !createCustomerForm.phone?.trim()) {
+      alert('Full name, email, and phone are required')
+      return
+    }
+    setCreateCustomerLoading(true)
+    try {
+      const response = await api.post('/api/admin/users/create', {
+        fullName: createCustomerForm.fullName.trim(),
+        email: createCustomerForm.email.trim(),
+        phone: createCustomerForm.phone.trim(),
+        ...(createCustomerForm.password?.trim()
+          ? { password: createCustomerForm.password.trim() }
+          : {})
+      })
+      if (response.data.success) {
+        const tempPw = response.data.temporaryPassword || response.data.password
+        alert(
+          tempPw
+            ? `Customer created. Temporary password: ${tempPw}`
+            : 'Customer created successfully'
+        )
+        setShowCreateCustomer(false)
+        setCreateCustomerForm({ fullName: '', email: '', phone: '', password: '' })
+        await fetchUsers()
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to create customer')
+    } finally {
+      setCreateCustomerLoading(false)
+    }
+  }
+
+  const handleSaveUserInfo = async () => {
+    if (!userDetails || !canEditUsers) return
+    try {
+      const response = await api.put(`/api/admin/users/${userDetails._id}`, {
+        fullName: userDetails.fullName,
+        phone: userDetails.phone,
+        username: userDetails.username
+      })
+      if (response.data.success) {
+        alert('Customer info updated successfully')
+        await fetchUsers()
+        const userResponse = await api.get(`/api/admin/users/${userDetails._id}`)
+        if (userResponse.data.success) {
+          setUserDetails(userResponse.data.user)
+        }
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to update customer info')
+    }
+  }
+
   const handleUpdateSettings = async () => {
     if (!userDetails) return
     try {
@@ -253,12 +321,10 @@ export default function UsersList() {
       let requestBody = {}
       
       if (isSubAdmin) {
-        // Sub-admins can update winTradeSettings and activation status (if granted).
-        requestBody = {
-          winTradeSettings: settingsToSave,
-          ...((canActivateUser || canDeactivateUser) && typeof userDetails.isActive === 'boolean'
-            ? { isActive: userDetails.isActive }
-            : {})
+        // Sub-admins only send fields they have permission for (no extra approval).
+        requestBody = {}
+        if (canEditUsers) {
+          requestBody.winTradeSettings = settingsToSave
         }
       } else {
         // Admins can update all settings
@@ -272,6 +338,11 @@ export default function UsersList() {
           appNotice: appNotice,
           winTradeSettings: settingsToSave
         }
+      }
+
+      if (isSubAdmin && Object.keys(requestBody).length === 0) {
+        alert('No permitted settings to save')
+        return
       }
       
       const response = await api.put(`/api/admin/users/${userDetails._id}/settings`, requestBody)
@@ -574,19 +645,39 @@ export default function UsersList() {
       <div className="fx-card overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h2 className="text-lg sm:text-xl font-bold">All Users</h2>
-            {/* Search Input */}
-            <div className="relative w-full sm:w-auto sm:max-w-md">
-              <input
-                type="text"
-                placeholder="Search by name, email, username, ID..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="fx-input w-full pl-10 pr-4 py-2.5"
-              />
-              <svg className="w-5 h-5 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold">
+                {isSubAdmin ? 'Assigned Customers' : 'All Users'}
+              </h2>
+              {isSubAdmin && (
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  You only see customers assigned to you. Granted permissions work immediately — no extra approval.
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              {canCreateUsers && (
+                <button
+                  type="button"
+                  onClick={() => setShowCreateCustomer(true)}
+                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold whitespace-nowrap"
+                >
+                  + Create Customer
+                </button>
+              )}
+              {/* Search Input */}
+              <div className="relative w-full sm:w-auto sm:max-w-md">
+                <input
+                  type="text"
+                  placeholder="Search by name, email, username, ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="fx-input w-full pl-10 pr-4 py-2.5"
+                />
+                <svg className="w-5 h-5 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
@@ -712,24 +803,22 @@ export default function UsersList() {
                             Coins
                           </button>
                         )}
-                        {!isSubAdmin && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleShowLogs(user._id)}
-                              className="hidden xl:inline-flex px-2 py-1 text-[11px] font-semibold rounded-md bg-violet-600 text-white hover:bg-violet-700"
-                            >
-                              Logs
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleLoginAsUser(user._id)}
-                              className="px-2 py-1 text-[11px] font-semibold rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
-                            >
-                              Login
-                            </button>
-                          </>
+                        {canViewUsers && (
+                          <button
+                            type="button"
+                            onClick={() => handleShowLogs(user._id)}
+                            className="hidden xl:inline-flex px-2 py-1 text-[11px] font-semibold rounded-md bg-violet-600 text-white hover:bg-violet-700"
+                          >
+                            Logs
+                          </button>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => handleLoginAsUser(user._id)}
+                          className="px-2 py-1 text-[11px] font-semibold rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
+                        >
+                          Login
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -737,7 +826,11 @@ export default function UsersList() {
               ) : (
                 <tr>
                   <td colSpan={6} className="px-4 py-10 text-center text-sm text-slate-500">
-                    {searchQuery ? 'No users match your search' : 'No users found'}
+                    {searchQuery
+                      ? 'No users match your search'
+                      : isSubAdmin
+                        ? 'No customers assigned to you yet'
+                        : 'No users found'}
                   </td>
                 </tr>
               )}
@@ -1018,31 +1111,38 @@ export default function UsersList() {
                     <div className="space-y-4">
                       {canEditUsers && (
                         <div className="space-y-3 p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                          <p className="font-semibold text-gray-900 dark:text-white">User Info (Read-only)</p>
+                          <p className="font-semibold text-gray-900 dark:text-white">Edit customer info</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Email: <span className="font-medium text-gray-700 dark:text-gray-200">{userDetails.email}</span>
+                          </p>
                           <input
                             type="text"
                             value={userDetails.username || ''}
-                            readOnly
-                            className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg opacity-70 cursor-not-allowed"
+                            onChange={(e) => setUserDetails({ ...userDetails, username: e.target.value })}
+                            className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg"
                             placeholder="Username"
                           />
                           <input
                             type="text"
                             value={userDetails.fullName || ''}
-                            readOnly
-                            className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg opacity-70 cursor-not-allowed"
+                            onChange={(e) => setUserDetails({ ...userDetails, fullName: e.target.value })}
+                            className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg"
                             placeholder="Full name"
                           />
                           <input
                             type="text"
                             value={userDetails.phone || ''}
-                            readOnly
-                            className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg opacity-70 cursor-not-allowed"
+                            onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
+                            className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg"
                             placeholder="Phone number"
                           />
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Name, username, and phone are locked for sub-admin accounts.
-                          </p>
+                          <button
+                            type="button"
+                            onClick={handleSaveUserInfo}
+                            className="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold"
+                          >
+                            Save customer info
+                          </button>
                         </div>
                       )}
 
@@ -1348,20 +1448,23 @@ export default function UsersList() {
               </div>
             </div>
 
-            {/* Win Trade Settings Card - Full Width (Visible for both Admin and Sub-admin) */}
-            {isSubAdmin && (
+            {/* Win Trade Settings — admin always; sub-admin only with can_edit_users (immediate, no approval) */}
+            {isSubAdmin && canEditUsers && (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
                 <div className="flex items-start">
                   <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div>
-                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">Sub-Admin Access</p>
-                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">As a sub-admin, you can only edit Win Trade Settings for your assigned users.</p>
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">Assigned customer only</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                      You can manage only this assigned customer. Your granted permissions apply immediately — no extra approval needed.
+                    </p>
                   </div>
                 </div>
               </div>
             )}
+            {(!isSubAdmin || canEditUsers) && (
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 rounded-xl p-6 border border-gray-200 dark:border-gray-700 mt-6">
               <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
                 <svg className="w-5 h-5 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1531,8 +1634,9 @@ export default function UsersList() {
                 Save Win Trade Settings
               </button>
             </div>
+            )}
 
-            {/* Login As User */}
+            {/* Login As User — assigned customers only (enforced by API for sub-admin) */}
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => handleLoginAsUser(userDetails._id)}
@@ -1542,6 +1646,74 @@ export default function UsersList() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 <span>Login As User</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create customer modal (admin or sub-admin with can_create_users) */}
+      {showCreateCustomer && canCreateUsers && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Create Customer</h3>
+              <button
+                type="button"
+                onClick={() => setShowCreateCustomer(false)}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+            {isSubAdmin && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                New customers are automatically assigned to you. No extra approval needed.
+              </p>
+            )}
+            <input
+              type="text"
+              placeholder="Full name *"
+              value={createCustomerForm.fullName}
+              onChange={(e) => setCreateCustomerForm((f) => ({ ...f, fullName: e.target.value }))}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+            />
+            <input
+              type="email"
+              placeholder="Email *"
+              value={createCustomerForm.email}
+              onChange={(e) => setCreateCustomerForm((f) => ({ ...f, email: e.target.value }))}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+            />
+            <input
+              type="text"
+              placeholder="Phone *"
+              value={createCustomerForm.phone}
+              onChange={(e) => setCreateCustomerForm((f) => ({ ...f, phone: e.target.value }))}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+            />
+            <input
+              type="text"
+              placeholder="Password (optional — auto-generated if empty)"
+              value={createCustomerForm.password}
+              onChange={(e) => setCreateCustomerForm((f) => ({ ...f, password: e.target.value }))}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+            />
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCreateCustomer(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={createCustomerLoading}
+                onClick={handleCreateCustomer}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold disabled:opacity-50"
+              >
+                {createCustomerLoading ? 'Creating...' : 'Create'}
               </button>
             </div>
           </div>

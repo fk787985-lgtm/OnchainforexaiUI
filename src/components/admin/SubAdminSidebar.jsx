@@ -5,13 +5,25 @@ import { useSiteSettings } from '../../context/SiteSettingsContext'
 import api from '../../utils/axios'
 import { getImageUrl } from '../../utils/imageUrl.js'
 
-export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, onLogout, onChangePassword }) {
+export default function SubAdminSidebar({
+  activeTab,
+  setActiveTab,
+  sidebarOpen,
+  setSidebarOpen,
+  onLogout,
+  onChangePassword,
+  currentUser: currentUserProp = null
+}) {
   const { settings: siteSettings } = useSiteSettings()
-  const [currentUser, setCurrentUser] = useState(null)
+  const [currentUser, setCurrentUser] = useState(currentUserProp)
 
   useEffect(() => {
+    if (currentUserProp) {
+      setCurrentUser(currentUserProp)
+      return
+    }
     fetchCurrentUser()
-  }, [])
+  }, [currentUserProp])
 
   const fetchCurrentUser = async () => {
     try {
@@ -117,6 +129,10 @@ export default function SubAdminSidebar({ activeTab, setActiveTab, sidebarOpen, 
     can_manage_coin_address: false,
     ...(currentUser?.subAdminPermissions || {})
   }
+  Object.keys(subAdminPermissions).forEach((key) => {
+    const v = subAdminPermissions[key]
+    subAdminPermissions[key] = v === true || v === 'true' || v === 1
+  })
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },

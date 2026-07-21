@@ -108,6 +108,11 @@ export default function SubAdminDashboard() {
     can_manage_coin_address: false,
     ...(currentUser?.subAdminPermissions || {})
   }
+  // Normalize permission flags (handle string "true" from older data)
+  Object.keys(subAdminPermissions).forEach((key) => {
+    const v = subAdminPermissions[key]
+    subAdminPermissions[key] = v === true || v === 'true' || v === 1
+  })
 
   useEffect(() => {
     if (activeTab === 'notify' && !subAdminPermissions.can_notify_users) {
@@ -133,7 +138,9 @@ export default function SubAdminDashboard() {
   }
 
   return (
-    <NotificationProvider mode="admin">
+    // Sub-admins do not use the main-admin notification inbox (admin-only API).
+    // Customer notify uses /api/admin/notifications/send with can_notify_users.
+    <NotificationProvider mode="user">
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors">
       <SubAdminSidebar
         activeTab={activeTab}
@@ -142,6 +149,7 @@ export default function SubAdminDashboard() {
         setSidebarOpen={setSidebarOpen}
         onLogout={handleLogout}
         onChangePassword={() => setShowChangePassword(true)}
+        currentUser={currentUser}
       />
 
       {/* Main Content */}
