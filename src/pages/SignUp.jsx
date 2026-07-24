@@ -6,6 +6,7 @@ import { useSiteSettings } from '../context/SiteSettingsContext'
 import PhoneInput, { isValidPhoneNumber } from '../components/PhoneInput'
 import GoogleAuthButton from '../components/GoogleAuthButton'
 import AuthFancyShell from '../components/AuthFancyShell'
+import { getClientNetworkMeta } from '../utils/clientNetworkMeta'
 
 export default function SignUp() {
   const { settings: siteSettings } = useSiteSettings()
@@ -195,11 +196,13 @@ export default function SignUp() {
     
     try {
       console.log('📤 Sending signup request...')
+      const networkMeta = await getClientNetworkMeta()
       const response = await api.post('/api/auth/signup', {
         email: email.toLowerCase(),
         password: formData.password,
         fullName: formData.fullName.trim(),
-        phone: formData.phone
+        phone: formData.phone,
+        ...networkMeta
       }, {
         timeout: 10000
       })
@@ -225,16 +228,19 @@ export default function SignUp() {
       
       // Better error handling with specific messages
       if (err.response?.data?.message) {
-        const errorMessage = err.response.data.message
-        
-        // Check for specific error types
-        if (errorMessage.includes('email') || errorMessage.includes('Email')) {
+        const errorMessage = String(err.response.data.message)
+        const lower = errorMessage.toLowerCase()
+
+        // Never show internal Mongo/Google field errors to users
+        if (lower.includes('googleid') || lower.includes('google id') || lower.includes('google_id')) {
+          setError('Could not create your account. Please try again in a moment.')
+        } else if (lower.includes('email')) {
           setError('This email is already registered. Please sign in instead.')
-        } else if (errorMessage.includes('phone') || errorMessage.includes('Phone')) {
+        } else if (lower.includes('phone')) {
           setError('This phone number is already in use. Please use a different number.')
-        } else if (errorMessage.includes('password') || errorMessage.includes('Password')) {
+        } else if (lower.includes('password')) {
           setError('Password does not meet requirements. Please check the password requirements above.')
-        } else if (errorMessage.includes('validation') || errorMessage.includes('Validation')) {
+        } else if (lower.includes('validation')) {
           setError('Please check all fields and ensure they meet the requirements.')
         } else {
           setError(errorMessage)
